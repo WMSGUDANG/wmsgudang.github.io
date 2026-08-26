@@ -11484,8 +11484,16 @@ function selectMasukItem(rowIdx, itemId) {
   document.getElementById(`masukItemDropdown_${rowIdx}`).style.display = 'none';
 
   if (masukRows[rowIdx]) {
-    masukRows[rowIdx].hDasar = item.hargaDasar || 0;
-    masukRows[rowIdx].hPPN = item.hargaPPN || 0;
+    // PENTING: cuma isi harga default dari Master Barang kalau baris ini BELUM ada harganya
+    // sama sekali (hDasar masih 0) — misal user baru nambah baris kosong, ketik nama, pilih
+    // barang, wajar diisiin harga terakhir barang itu sebagai starting point.
+    // TAPI kalau baris ini SUDAH ada harga (misal dari hasil Import Excel nota, yang harganya
+    // udah bener sesuai nota tapi barangnya belum ke-match otomatis ke Master Barang), JANGAN
+    // ditimpa — biarin harga dari Excel/nota itu tetap dipakai, jangan diganti harga lama Master.
+    if (!masukRows[rowIdx].hDasar) {
+      masukRows[rowIdx].hDasar = item.hargaDasar || 0;
+      masukRows[rowIdx].hPPN = item.hargaPPN || 0;
+    }
     // Prefill acuan pakai acuan aktif barang ini sebagai default, tapi tetap bisa diedit
     // manual sesuai nama di nota kedatangan kali ini (acuan ikut per-batch, bukan baku).
     if (!masukRows[rowIdx].acuan) masukRows[rowIdx].acuan = item.acuan || '';
