@@ -278,12 +278,12 @@
     <div class="sub">Masuk untuk kelola stok gudang</div>
     <div class="field">
       <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="nama@perusahaan.com">
+      <input type="email" id="loginEmail" placeholder="nama@perusahaan.com" autocapitalize="off" autocorrect="off">
     </div>
     <div class="field">
       <label>Password</label>
       <div style="position:relative;">
-        <input type="password" id="loginPass" placeholder="••••••••" style="padding-right:44px;" onkeydown="if(event.key==='Enter')doLogin();">
+        <input type="password" id="loginPass" placeholder="••••••••" style="padding-right:44px;" autocapitalize="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin();">
         <button type="button" onclick="toggleLoginPassVisibility()" title="Lihat/sembunyikan password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:4px;line-height:1;">👁️</button>
       </div>
     </div>
@@ -524,8 +524,8 @@
           <span id="stokManualBadge" class="pill" style="display:none;background:var(--accent-dim);color:var(--accent);"></span>
         </div>
         <div style="overflow-x:auto;">
-        <table><thead><tr><th><input type="checkbox" id="stokSelectAll" onchange="toggleStokSelectAll(this.checked)"></th><th>#</th><th>Nama Barang</th><th>Kode</th><th>Kategori</th><th>Acuan</th><th>Jumlah</th><th>Satuan</th><th>Rak</th><th>H. Non PPN</th><th>H. PPN</th><th>H. Gabungan</th><th>H. KSI</th><th>H. KI</th><th>Min Aman</th><th>Status</th><th>Keterangan</th><th>Opsi</th></tr></thead>
-        <tbody id="itemsTable"><tr><td colspan="18" class="empty">Memuat...</td></tr></tbody></table>
+        <table><thead><tr><th><input type="checkbox" id="stokSelectAll" onchange="toggleStokSelectAll(this.checked)"></th><th>#</th><th>Nama Barang</th><th>Kode</th><th>Kategori</th><th>Acuan</th><th>Jumlah</th><th>Satuan</th><th>Rak</th><th>Harga Beli</th><th>H. Gabungan</th><th>H. KSI</th><th>H. KI</th><th>Min Aman</th><th>Status</th><th>Keterangan</th><th>Opsi</th></tr></thead>
+        <tbody id="itemsTable"><tr><td colspan="17" class="empty">Memuat...</td></tr></tbody></table>
         </div>
         <div id="itemsLoadMoreWrap" style="display:none;text-align:center;margin-top:14px;">
           <div style="font-size:12px;color:var(--ink-dim);margin-bottom:8px;" id="itemsShowingInfo"></div>
@@ -786,6 +786,8 @@
           <button class="btn ghost" onclick="addMasukRow()">+ Tambah Barang</button>
           <button class="btn ghost" onclick="openScanner('masuk')">📷 Scan Barang</button>
           <button class="btn" style="background:#8A6A3C;" onclick="openIsiDariOrderModal()">📥 Isi dari Order Barang</button>
+          <button class="btn" style="background:#2E7D5B;" onclick="document.getElementById('masukImportExcelInput').click()">📊 Import dari Excel</button>
+          <input type="file" id="masukImportExcelInput" accept=".xlsx,.xls" style="display:none;" onchange="handleImportExcelMasuk(this)">
         </div>
         <div class="row" style="margin-top:14px;">
           <button class="btn accent" onclick="submitMasuk()">Simpan Transaksi</button>
@@ -833,8 +835,8 @@
         </div>
         <h3>Riwayat Masuk</h3>
         <div style="overflow-x:auto;">
-        <table><thead><tr><th><input type="checkbox" id="masukSelectAll" onchange="toggleMasukSelectAll(this.checked)"></th><th>#</th><th>Tanggal</th><th>Supplier</th><th>Kode</th><th>Barang</th><th>Acuan</th><th>Jumlah</th><th>Satuan</th><th>H.Non PPN</th><th>H.PPN</th><th>Keterangan</th><th>Status</th><th>Opsi</th></tr></thead>
-        <tbody id="masukHistTable"><tr><td colspan="14" class="empty">Memuat...</td></tr></tbody></table>
+        <table><thead><tr><th><input type="checkbox" id="masukSelectAll" onchange="toggleMasukSelectAll(this.checked)"></th><th>#</th><th>Tanggal</th><th>Supplier</th><th>Kode</th><th>Barang</th><th>Acuan</th><th>Jumlah</th><th>Satuan</th><th>Harga Beli</th><th>Keterangan</th><th>Status</th><th>Opsi</th></tr></thead>
+        <tbody id="masukHistTable"><tr><td colspan="13" class="empty">Memuat...</td></tr></tbody></table>
         </div>
       </div>
     </section>
@@ -861,6 +863,15 @@
           <div class="field" style="min-width:220px;"><label>Keterangan</label><input type="text" id="klKeterangan" placeholder="Keperluan/pekerjaan" oninput="saveDraftKl()"></div>
           <div class="field"><label>No. Plat Kendaraan</label><input type="text" id="klPlat" placeholder="mis. BH 1234 XY" oninput="saveDraftKl()" style="text-transform:uppercase;"></div>
           <div class="field"><label>Nama Sopir</label><input type="text" id="klSopir" placeholder="Nama sopir pembawa" oninput="saveDraftKl()"></div>
+        </div>
+        <div class="field" style="margin-top:10px;max-width:300px;">
+          <label>Foto Nota/Surat Jalan <span style="color:var(--ink-dim);font-weight:400;">(opsional)</span></label>
+          <input type="file" id="klLampiranInput" accept="image/*" onchange="handleKlLampiranUpload(this)">
+          <div id="klLampiranPreviewWrap" style="margin-top:8px;display:none;">
+            <img id="klLampiranPreview" style="max-width:150px;max-height:150px;border-radius:8px;border:1px solid var(--border);display:block;">
+            <button type="button" class="btn ghost" style="margin-top:6px;padding:4px 10px;font-size:11px;" onclick="hapusLampiranKl()">🗑 Hapus Lampiran</button>
+          </div>
+          <input type="hidden" id="klLampiranBase64">
         </div>
 
         <h3 style="margin-top:20px;">Daftar Barang Dikeluarkan</h3>
@@ -1887,6 +1898,38 @@
       </div>
     </div>
 
+    <!-- KOREKSI HARGA BATCH — buat benerin salah ketik harga pas Barang Masuk dulu, tanpa perlu
+         bikin batch baru. Cuma Admin, batch yang bukan status "Menunggu Approval". -->
+    <div class="modal-bg" id="koreksiHargaBatchModalBg">
+      <div class="modal" style="width:min(420px,92vw);">
+        <h3>✏️ Koreksi Harga Batch</h3>
+        <div id="koreksiHargaBatchInfo" style="font-size:12px;color:var(--ink-dim);margin:6px 0 14px;"></div>
+        <div class="field" style="margin-bottom:10px;"><label>Harga Non PPN</label><input type="number" id="koreksiHBDasar" placeholder="0"></div>
+        <div class="field" style="margin-bottom:10px;"><label>Harga PPN</label><input type="number" id="koreksiHBPPN" placeholder="0"></div>
+        <div style="background:var(--accent-dim);border-radius:8px;padding:8px 10px;font-size:11px;margin-bottom:6px;">
+          ⚠️ Ini cuma benerin ANGKA harga di batch ini (misal salah ketik dulu) — bukan bikin batch baru, gak ngubah Qty/Tanggal. Kalau batch ini lagi "aktif" (dipakai buat harga FIFO sekarang), Master Barang bakal langsung ke-update ikutan.
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeKoreksiHargaBatchModal()">Batal</button>
+          <button class="btn accent" onclick="simpanKoreksiHargaBatch()">Simpan Koreksi</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPORT EXCEL — Stok Masuk. Kalau file-nya punya beberapa grup supplier (format rekap
+         yang dikelompokin per supplier), user pilih 1 grup buat diimport ke form yang lagi
+         kebuka (form Stok Masuk = 1 supplier per submit). -->
+    <div class="modal-bg" id="importExcelMasukModalBg">
+      <div class="modal" style="width:min(480px,92vw);">
+        <h3>📊 Import dari Excel</h3>
+        <div id="importExcelMasukInfo" style="font-size:12px;color:var(--ink-dim);margin:6px 0 14px;"></div>
+        <div id="importExcelMasukSupplierList" style="max-height:280px;overflow-y:auto;"></div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeImportExcelMasukModal()">Batal</button>
+        </div>
+      </div>
+    </div>
+
     <!-- USER & ROLE -->
     <section id="view-user" style="display:none;">
       <div class="topbar">
@@ -2050,34 +2093,26 @@
     <div class="field" style="margin-bottom:10px;"><label>Stok Awal</label><input type="number" id="itemStokAwal" value="0" step="any"></div>
     <div class="field" style="margin-bottom:10px;"><label>Status Aman (Min. Stok)</label><input type="number" id="itemMin" value="5"></div>
     <div class="field" style="margin-bottom:10px;"><label>Lokasi Rak</label><input type="text" id="itemRak" placeholder="mis. R-01"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
-      <div class="field"><label>Harga Non PPN</label><input type="number" id="itemHDasar" placeholder="0"></div>
-      <div class="field"><label>Harga PPN</label><input type="number" id="itemHPPN" placeholder="0"></div>
-      <div class="field">
-        <label>% Markup dari Modal <span style="color:var(--ink-dim);font-weight:400;">(opsional, alat bantu hitung)</span></label>
-        <div style="display:flex;gap:4px;">
-          <input type="number" step="any" id="itemPersenGabungan" placeholder="mis. 20" style="flex:1;">
-          <button type="button" class="btn ghost" style="padding:8px 10px;font-size:11px;white-space:nowrap;" onclick="hitungHargaJualDariPersen('Gabungan')">🧮 Hitung</button>
-        </div>
-      </div>
-      <div class="field"><label>Harga Gabungan</label><input type="number" id="itemHGabungan" placeholder="0"></div>
-      <div class="field">
-        <label>% Markup dari Modal <span style="color:var(--ink-dim);font-weight:400;">(opsional, alat bantu hitung)</span></label>
-        <div style="display:flex;gap:4px;">
-          <input type="number" step="any" id="itemPersenKSI" placeholder="mis. 15" style="flex:1;">
-          <button type="button" class="btn ghost" style="padding:8px 10px;font-size:11px;white-space:nowrap;" onclick="hitungHargaJualDariPersen('KSI')">🧮 Hitung</button>
-        </div>
-      </div>
-      <div class="field"><label>Harga KSI</label><input type="number" id="itemHKSI" placeholder="0"></div>
-      <div class="field">
-        <label>% Markup dari Modal <span style="color:var(--ink-dim);font-weight:400;">(opsional, alat bantu hitung)</span></label>
-        <div style="display:flex;gap:4px;">
-          <input type="number" step="any" id="itemPersenKI" placeholder="mis. 10" style="flex:1;">
-          <button type="button" class="btn ghost" style="padding:8px 10px;font-size:11px;white-space:nowrap;" onclick="hitungHargaJualDariPersen('KI')">🧮 Hitung</button>
-        </div>
-      </div>
-      <div class="field" style="grid-column:1/3;"><label>Harga KI</label><input type="number" id="itemHKI" placeholder="0"></div>
+    <div class="field" style="margin-bottom:6px;"><label>Harga Beli</label><input type="number" id="itemHBeli" placeholder="0" oninput="updateItemDariHargaBeli()"></div>
+    <div style="font-size:11px;color:var(--ink-dim);margin-bottom:10px;">Harga beli barang ini (langsung angka final dari nota, gak dipecah lagi)</div>
+    <input type="hidden" id="itemHDasar">
+    <input type="hidden" id="itemHPPN">
+    <div style="background:var(--accent-dim);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;">
+      <b>ℹ️ Harga Jual KI & KSI = Modal (Harga Beli)</b> — otomatis sama persis dengan Harga Beli di atas, gak bisa diedit terpisah (transaksi internal antar-cabang/PT sendiri, gak ambil untung). Naik-turun ngikutin batch FIFO secara otomatis.
+      <div id="itemPreviewKIKSI" style="margin-top:4px;font-weight:600;"></div>
     </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
+      <div class="field">
+        <label>% Markup Harga Gabungan <span style="color:var(--ink-dim);font-weight:400;">(dari Modal)</span></label>
+        <input type="number" step="any" id="itemPersenGabungan" placeholder="mis. 20" oninput="updateItemGabunganDariPersen()">
+      </div>
+      <div class="field">
+        <label>Harga Gabungan <span style="color:var(--ink-dim);font-weight:400;">(atau isi manual)</span></label>
+        <input type="number" id="itemHargaGabunganManual" placeholder="0" oninput="updateItemGabunganManual()">
+      </div>
+    </div>
+    <div id="itemGabunganModeInfo" style="font-size:11px;color:var(--ink-dim);margin-bottom:10px;"></div>
+    <input type="hidden" id="itemGabunganManualFlag" value="false">
     <div class="row" style="margin-bottom:10px;" id="itemSamakanHargaWrap">
       <button type="button" class="btn ghost" style="font-size:11px;padding:5px 10px;" onclick="samakanHargaGudangUtama()">🔄 Samakan harga dengan Gudang Utama</button>
     </div>
@@ -2104,7 +2139,7 @@
     <h3>Tambah User</h3>
     <div class="field" style="margin-bottom:10px;"><label>Nama</label><input type="text" id="newUserName"></div>
     <div class="field" style="margin-bottom:10px;"><label>Email</label><input type="email" id="newUserEmail"></div>
-    <div class="field" style="margin-bottom:10px;"><label>Password Awal</label><input type="password" id="newUserPass" autocomplete="new-password"></div>
+    <div class="field" style="margin-bottom:10px;"><label>Password Awal</label><input type="password" id="newUserPass" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
     <div class="field" style="margin-bottom:10px;"><label>Role</label>
       <select id="newUserRole" onchange="toggleUserPemesanPicker()">
         <option value="staff">Staff</option>
@@ -2168,12 +2203,12 @@
       <tbody id="histModalTable"><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody></table>
     </div>
     <div id="histBatchWrap" style="display:none;overflow-x:auto;">
-      <div style="font-size:11px;color:var(--ink-dim);margin-bottom:8px;">Urut dari kedatangan terbaru — batch dengan pill <span class="pill ok" style="font-size:10px;">AKTIF</span> adalah harga BELI yang sedang dipakai FIFO di Master Stok. Harga Jual (KI/KSI/Gabungan) SEKARANG diatur terpisah di tab "Riwayat Harga Jual" — gak lagi ikut FIFO per batch kayak Harga Beli.</div>
-      <table><thead><tr><th>Tanggal</th><th>Acuan/Supplier</th><th>Qty Masuk</th><th>Sisa Qty</th><th>Non PPN</th><th>PPN</th><th>Status</th></tr></thead>
-      <tbody id="histModalBatchTable"><tr><td colspan="7" class="empty">Memuat...</td></tr></tbody></table>
+      <div style="font-size:11px;color:var(--ink-dim);margin-bottom:8px;">Urut dari kedatangan terbaru — batch dengan pill <span class="pill ok" style="font-size:10px;">AKTIF</span> adalah harga BELI yang sedang dipakai FIFO di Master Stok (Harga KI/KSI/Modal ikut batch ini, Harga Gabungan = batch ini + % markup).</div>
+      <table><thead><tr><th>Tanggal</th><th>Acuan/Supplier</th><th>Qty Masuk</th><th>Sisa Qty</th><th>Harga Beli</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody id="histModalBatchTable"><tr><td colspan="8" class="empty">Memuat...</td></tr></tbody></table>
     </div>
     <div id="histJualWrap" style="display:none;overflow-x:auto;">
-      <div style="font-size:11px;color:var(--ink-dim);margin-bottom:8px;">Harga Jual (KI/KSI/Gabungan) sekarang FIXED per barang — diedit langsung di form Edit Barang, gak berubah otomatis ngikutin batch mana yang lagi aktif. Riwayat di bawah nyatet tiap kali harga ini diubah manual.</div>
+      <div style="font-size:11px;color:var(--ink-dim);margin-bottom:8px;">Harga KI & KSI otomatis = Modal (Harga Dasar+PPN), ikut naik-turun ngikutin batch — gak dicatet di sini (udah ada di tab "Riwayat Harga Beli"). Riwayat di bawah cuma nyatet perubahan % Markup Harga Gabungan.</div>
       <table><thead><tr><th>Tanggal Diubah</th><th>Tipe</th><th>Harga Sebelum</th><th>Harga Baru</th><th>Selisih</th><th>Diubah Oleh</th></tr></thead>
       <tbody id="histModalJualTable"><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody></table>
     </div>
@@ -2254,9 +2289,9 @@
 
     <div style="border-top:1px solid var(--border);padding-top:14px;">
       <h3 style="font-size:16px;">Ganti Password</h3>
-      <div class="field" style="margin-bottom:10px;"><label>Password Lama</label><input type="password" id="accOldPass"></div>
-      <div class="field" style="margin-bottom:10px;"><label>Password Baru</label><input type="password" id="accNewPass"></div>
-      <div class="field" style="margin-bottom:14px;"><label>Konfirmasi Password Baru</label><input type="password" id="accNewPass2"></div>
+      <div class="field" style="margin-bottom:10px;"><label>Password Lama</label><input type="password" id="accOldPass" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+      <div class="field" style="margin-bottom:10px;"><label>Password Baru</label><input type="password" id="accNewPass" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+      <div class="field" style="margin-bottom:14px;"><label>Konfirmasi Password Baru</label><input type="password" id="accNewPass2" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
       <button class="btn accent" style="width:100%;" onclick="changeAccountPassword()">Ganti Password</button>
     </div>
 
@@ -2708,7 +2743,7 @@ if (firebaseConfig.apiKey === "GANTI_INI") {
   // secondary app instance so creating new users doesn't log out the admin
   firebase.initializeApp(firebaseConfig, "secondary");
   db = firebase.firestore();
-  db.settings({ ignoreUndefinedProperties: true }); // FIX: cegah error "Unsupported field value: undefined" di semua form (Barang Keluar, Servis, dll) — Firestore akan otomatis abaikan field yg kebetulan undefined, bukan gagal total
+  db.settings({ ignoreUndefinedProperties: true, merge: true }); // FIX: cegah error "Unsupported field value: undefined" di semua form (Barang Keluar, Servis, dll) — Firestore akan otomatis abaikan field yg kebetulan undefined, bukan gagal total. merge:true biar gak nimpa setting host bawaan Firestore (nyebabin warning "overriding original host" di console — gak bahaya, tapi ganggu keliatannya).
   auth = firebase.auth();
 
   auth.onAuthStateChanged(async (user) => {
@@ -3661,6 +3696,94 @@ function closeGrafikHargaModal() {
   document.getElementById('grafikHargaModalBg').classList.remove('show');
 }
 
+// ===== KOREKSI HARGA BATCH — benerin salah ketik harga pas Barang Masuk dulu, TANPA bikin
+// batch baru. Beda dari alur normal (yang selalu nambah batch baru lewat Stok Masuk) — ini
+// ngedit ANGKA di batch yang udah ada. Sengaja dibatesin Admin doang karena ini nyentuh data
+// finansial historis yang udah kepake buat laporan.
+let koreksiHargaBatchTarget = null; // { itemId, trxId, jenis }
+
+function bukaKoreksiHargaBatch(itemId, trxId, jenis) {
+  const item = itemsCache.find(i => i.id === itemId);
+  if (!item) { showToast('Barang tidak ditemukan', true); return; }
+  const batches = getBatchesMasuk(item);
+  const batch = batches.find(b => (b.trxId || '') === trxId);
+  if (!batch) { showToast('Batch tidak ditemukan (mungkin sudah kepake habis & data batch-nya sudah tidak ada)', true); return; }
+
+  koreksiHargaBatchTarget = { itemId, trxId, jenis };
+  document.getElementById('koreksiHargaBatchInfo').innerHTML =
+    `<b>${item.kode} — ${item.nama}</b><br>Batch tanggal ${batch.tanggal ? fmtDate(batch.tanggal) : '-'} (${batch.acuan || '-'}), Qty ${batch.qty}`;
+  document.getElementById('koreksiHBDasar').value = batch.hargaDasar || 0;
+  document.getElementById('koreksiHBPPN').value = batch.hargaPPN || 0;
+  document.getElementById('koreksiHargaBatchModalBg').classList.add('show');
+}
+
+function closeKoreksiHargaBatchModal() {
+  document.getElementById('koreksiHargaBatchModalBg').classList.remove('show');
+  koreksiHargaBatchTarget = null;
+}
+
+async function simpanKoreksiHargaBatch() {
+  if (!koreksiHargaBatchTarget) return;
+  const { itemId, trxId, jenis } = koreksiHargaBatchTarget;
+  const hargaDasarBaru = Number(document.getElementById('koreksiHBDasar').value) || 0;
+  const hargaPPNBaru = Number(document.getElementById('koreksiHBPPN').value) || 0;
+  if (hargaDasarBaru < 0 || hargaPPNBaru < 0) { showToast('Harga tidak boleh minus', true); return; }
+
+  try {
+    const itemRef = db.collection('items').doc(itemId);
+    let hargaLamaBatch = null;
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(itemRef);
+      if (!snap.exists) throw new Error('Barang sudah tidak ada');
+      const itemFresh = { id: snap.id, ...snap.data() };
+      const batches = getBatchesMasuk(itemFresh);
+      const idx = batches.findIndex(b => (b.trxId || '') === trxId);
+      if (idx === -1) throw new Error('Batch tidak ditemukan (mungkin sudah berubah, coba buka ulang)');
+      hargaLamaBatch = { hargaDasar: batches[idx].hargaDasar||0, hargaPPN: batches[idx].hargaPPN||0 };
+      batches[idx] = { ...batches[idx], hargaDasar: hargaDasarBaru, hargaPPN: hargaPPNBaru };
+      // Recompute harga aktif (batch mana yang lagi FIFO) dari batch yang UDAH DIKOREKSI ini,
+      // terus turunin ulang Harga KI/KSI/Gabungan-nya juga — biar Master Barang langsung
+      // kebawa kalau batch yang dikoreksi ini emang lagi aktif.
+      const hargaAktif = hargaAktifDariBatches(batches);
+      tx.update(itemRef, {
+        batchesMasuk: batches,
+        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
+      });
+    });
+
+    // Kalau batch ini asalnya dari transaksi Barang Masuk beneran (bukan legacy/koreksi stok),
+    // benerin juga catatan di 'transactions' — biar Riwayat Harga Beli (yang bacanya dari situ,
+    // bukan dari batchesMasuk) ikut kebawa, gak nyisa data lama yang salah.
+    if (jenis === 'transaksi') {
+      await db.collection('transactions').doc(trxId).update({ hargaDasar: hargaDasarBaru, hargaPPN: hargaPPNBaru });
+    }
+
+    logActivity('barang', 'Koreksi Harga Batch',
+      `${itemsCache.find(i=>i.id===itemId)?.kode||itemId}: Non PPN ${rupiah(hargaLamaBatch.hargaDasar)}→${rupiah(hargaDasarBaru)}, PPN ${rupiah(hargaLamaBatch.hargaPPN)}→${rupiah(hargaPPNBaru)}`);
+    showToast('Harga batch berhasil dikoreksi');
+    closeKoreksiHargaBatchModal();
+    // Update itemsCache LANGSUNG di sini (jangan nunggu listener Firestore sinkron balik) —
+    // biar tabel Riwayat Harga langsung kebawa perubahannya, gak keliatan "belum kesimpen"
+    // padahal udah beneran tersimpan (masalah jeda sync yang sama kayak kasus barang baru).
+    const itemUpdated = itemsCache.find(i => i.id === itemId);
+    if (itemUpdated) {
+      const batches = getBatchesMasuk(itemUpdated);
+      const idx = batches.findIndex(b => (b.trxId || '') === trxId);
+      if (idx !== -1) {
+        batches[idx] = { ...batches[idx], hargaDasar: hargaDasarBaru, hargaPPN: hargaPPNBaru };
+        itemUpdated.batchesMasuk = batches;
+        const hargaAktif = hargaAktifDariBatches(batches);
+        Object.assign(itemUpdated, { hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN },
+          hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemUpdated.persenGabungan, itemUpdated));
+      }
+      renderHistBatchTable(itemUpdated);
+    }
+  } catch(e) {
+    showToast('Gagal koreksi: ' + e.message, true);
+  }
+}
+
 function exportRiwayatHargaCSV() {
   // Filter-nya SAMA PERSIS kayak yang dipakai tabel (renderRiwayatHarga) — biar yang di-export
   // konsisten sama yang lagi ditampilin di layar, bukan malah export semua data tanpa filter.
@@ -4090,7 +4213,7 @@ function renderItems() {
       <td><span class="pill ${low?'low':'ok'}">${i.saldo ?? 0}</span></td>
       <td>${i.satuan||'-'}</td>
       <td>${i.lokasiRak||'-'}</td>
-      <td>${rupiah(i.hargaDasar)}</td><td>${rupiah(i.hargaPPN)}</td>
+      <td>${rupiah((i.hargaDasar||0)+(i.hargaPPN||0))}</td>
       <td>${rupiah(i.hargaGabungan)}</td><td>${rupiah(i.hargaKSI)}</td><td>${rupiah(i.hargaKI)}</td>
       <td>${i.stokMinimum ?? 0}</td>
       <td><span class="pill ${low?'low':'ok'}">${low?'KRITIS':'AMAN'}</span></td>
@@ -4104,7 +4227,7 @@ function renderItems() {
         <button class="btn danger" style="padding:4px 8px;font-size:12px;" onclick="deleteItem('${i.id}')">Hapus</button>
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="18" class="empty">Belum ada barang / tidak ditemukan.</td></tr>';
+  }).join('') : '<tr><td colspan="17" class="empty">Belum ada barang / tidak ditemukan.</td></tr>';
   updateStokManualBadge();
 }
 
@@ -4178,10 +4301,10 @@ async function deleteItemsSemua() {
 
 function exportItemsCSV() {
   if (!itemsCache.length) { showToast('Belum ada data barang', true); return; }
-  const aoa = [['Kode','Nama','Kategori','Acuan','Satuan','Jumlah','Min','Status','Rak','H.Non PPN','H.PPN','H.Gabungan','H.KSI','H.KI','Keterangan']];
+  const aoa = [['Kode','Nama','Kategori','Acuan','Satuan','Jumlah','Min','Status','Rak','Harga Beli','H.Gabungan','H.KSI','H.KI','Keterangan']];
   itemsCache.forEach(i => {
     const low = (i.saldo ?? 0) <= (i.stokMinimum ?? 0);
-    aoa.push([i.kode||'', i.nama||'', i.kategori||'', i.acuan||'', i.satuan||'', i.saldo??0, i.stokMinimum??0, low?'KRITIS':'AMAN', i.lokasiRak||'', i.hargaDasar||0, i.hargaPPN||0, i.hargaGabungan||0, i.hargaKSI||0, i.hargaKI||0, i.keterangan||'']);
+    aoa.push([i.kode||'', i.nama||'', i.kategori||'', i.acuan||'', i.satuan||'', i.saldo??0, i.stokMinimum??0, low?'KRITIS':'AMAN', i.lokasiRak||'', (i.hargaDasar||0)+(i.hargaPPN||0), i.hargaGabungan||0, i.hargaKSI||0, i.hargaKI||0, i.keterangan||'']);
   });
   exportAOAToExcel(`master-barang-${new Date().toISOString().slice(0,10)}.xlsx`, 'Master Barang', aoa);
 }
@@ -4490,7 +4613,10 @@ function openItemModal() {
   document.getElementById('itemModalTitle').textContent = 'Tambah Barang';
   document.getElementById('itemId').value = '';
   ['itemKode','itemNama','itemKategori','itemSatuan','itemRak','itemKeterangan','itemSatuanBesar','itemIsiSatuanBesar'].forEach(id => document.getElementById(id).value = '');
-  ['itemHDasar','itemHPPN','itemHGabungan','itemHKSI','itemHKI','itemPersenGabungan','itemPersenKSI','itemPersenKI'].forEach(id => document.getElementById(id).value = '');
+  ['itemHDasar','itemHPPN','itemHBeli','itemPersenGabungan','itemHargaGabunganManual'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('itemGabunganManualFlag').value = 'false';
+  document.getElementById('itemGabunganModeInfo').textContent = '';
+  updateItemPreviewGabungan();
   document.getElementById('itemAcuanHistori').textContent = '-';
   document.getElementById('itemStokAwal').value = 0;
   document.getElementById('itemMin').value = 5;
@@ -4529,12 +4655,18 @@ function editItem(id) {
   document.getElementById('itemRak').value = i.lokasiRak||'';
   document.getElementById('itemHDasar').value = i.hargaDasar ?? '';
   document.getElementById('itemHPPN').value = i.hargaPPN ?? '';
-  document.getElementById('itemHGabungan').value = i.hargaGabungan ?? '';
-  document.getElementById('itemHKSI').value = i.hargaKSI ?? '';
-  document.getElementById('itemHKI').value = i.hargaKI ?? '';
-  // Kotak % markup selalu dikosongin ulang pas buka Edit — itu alat bantu hitung SEKALI PAKAI,
-  // bukan bagian dari data barang yang tersimpan, jadi gak ada nilai "asli" buat ditampilin balik.
-  ['itemPersenGabungan','itemPersenKSI','itemPersenKI'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('itemHBeli').value = (Number(i.hargaDasar||0) + Number(i.hargaPPN||0)) || '';
+  // Persen Gabungan itu SEKARANG bagian data barang beneran (bukan alat bantu hitung sekali
+  // pakai lagi) — jadi diisi ulang sesuai yang tersimpan, bukan dikosongin.
+  document.getElementById('itemPersenGabungan').value = i.persenGabungan ?? '';
+  document.getElementById('itemGabunganManualFlag').value = i.gabunganManual ? 'true' : 'false';
+  document.getElementById('itemHargaGabunganManual').value = i.hargaGabungan ?? '';
+  if (i.gabunganManual) {
+    updateItemInfoKIKSI((Number(i.hargaDasar||0) + Number(i.hargaPPN||0)));
+    document.getElementById('itemGabunganModeInfo').textContent = `Mode: manual (fixed) — gak ikut Modal lagi sampai diedit manual lagi atau isi ulang % Markup`;
+  } else {
+    updateItemGabunganDariPersen();
+  }
   document.getElementById('itemKeterangan').value = i.keterangan||'';
   document.getElementById('itemTrackSerial').checked = !!i.trackSerial;
   document.getElementById('itemAktif').checked = i.aktif !== false;
@@ -4554,25 +4686,65 @@ function editItem(id) {
   document.getElementById('itemModalBg').classList.add('show');
 }
 
-// Alat bantu hitung Harga Jual dari % markup — SEKALI PAKAI doang (ngitung terus ngisi angka
-// Rupiah ke kolom manual), BUKAN rumus hidup yang otomatis ngitung ulang tiap Harga Dasar
-// berubah. Sengaja gitu — Harga Jual sekarang emang harus FIXED, gak ikut naik-turun ngikutin
-// modal/batch (itu yang bikin bingung sebelumnya). Basisnya Harga Dasar + Harga PPN (modal
-// total yang beneran dikeluarin), bukan Harga Dasar doang.
-function hitungHargaJualDariPersen(tipe) {
+// Preview LIVE (bukan sekali hitung doang) — update otomatis tiap kali Harga Dasar/PPN/Persen
+// diketik, biar user langsung liat hasil akhirnya sebelum Simpan. Rumus SAMA PERSIS kayak yang
+// dipakai beneran pas approve transaksi (hitungHargaJualOtomatis) — biar preview di sini gak
+// pernah beda sama hasil nyata setelah disimpan.
+// Splitting "Harga Beli" (total, udah termasuk PPN) jadi hargaDasar + hargaPPN di belakang
+// layar — user cuma liat/isi 1 angka doang, tapi data internal (buat FIFO/HPP/laporan) tetap
+// kesimpen terpisah kayak sebelumnya. Rumus kebalikan dari "harga dasar + PPN 11%":
+// hargaBeli = hargaDasar × 1.11, jadi hargaDasar = hargaBeli ÷ 1.11.
+// Harga Beli langsung dipakai APA ADANYA sebagai modal (hargaDasar) — TANPA dipecah/dihitung
+// PPN lagi. Alasannya: pemecahan otomatis (asumsi "pasti udah termasuk PPN 11%") itu rawan
+// salah kalau angka yang diketik ternyata BUKAN angka gabungan dari nota (misal kepencet
+// ketik angka Non-PPN doang) — makanya disederhanain, apa yang diketik itu yang dipakai persis.
+function updateItemDariHargaBeli() {
+  const hargaBeli = Number(document.getElementById('itemHBeli').value) || 0;
+  document.getElementById('itemHDasar').value = hargaBeli;
+  document.getElementById('itemHPPN').value = 0;
+  updateItemPreviewGabungan();
+}
+
+// Ada 2 cara isi Harga Gabungan: (1) lewat % Markup — otomatis ke-itung dari Modal, ikut
+// naik-turun tiap Modal berubah; (2) ketik LANGSUNG angka Rupiah-nya — begitu ini dipakai,
+// harga itu jadi FIXED, gak ikut Modal lagi sampai diketik ulang manual atau balik pakai %.
+// Flag `itemGabunganManualFlag` nentuin mode mana yang lagi aktif buat item ini.
+function updateItemGabunganDariPersen() {
+  document.getElementById('itemGabunganManualFlag').value = 'false';
   const hargaDasar = Number(document.getElementById('itemHDasar').value) || 0;
   const hargaPPN = Number(document.getElementById('itemHPPN').value) || 0;
-  const modal = hargaDasar + hargaPPN;
-  if (modal <= 0) { showToast('Isi Harga Non PPN / Harga PPN dulu, baru bisa dihitung dari %', true); return; }
+  const persen = Number(document.getElementById('itemPersenGabungan').value) || 0;
+  const hasil = hitungHargaJualOtomatis(hargaDasar, hargaPPN, persen);
+  document.getElementById('itemHargaGabunganManual').value = hasil.hargaGabungan;
+  updateItemInfoKIKSI(hasil.hargaKI);
+  document.getElementById('itemGabunganModeInfo').textContent = `Mode: otomatis dari % Markup — ikut naik-turun kalau Modal berubah`;
+}
 
-  const idPersen = { 'Gabungan': 'itemPersenGabungan', 'KSI': 'itemPersenKSI', 'KI': 'itemPersenKI' }[tipe];
-  const idHarga = { 'Gabungan': 'itemHGabungan', 'KSI': 'itemHKSI', 'KI': 'itemHKI' }[tipe];
-  const persen = Number(document.getElementById(idPersen).value);
-  if (isNaN(persen)) { showToast('Isi persen markup-nya dulu', true); return; }
+function updateItemGabunganManual() {
+  document.getElementById('itemGabunganManualFlag').value = 'true';
+  const hargaDasar = Number(document.getElementById('itemHDasar').value) || 0;
+  const hargaPPN = Number(document.getElementById('itemHPPN').value) || 0;
+  updateItemInfoKIKSI(hargaDasar + hargaPPN);
+  document.getElementById('itemGabunganModeInfo').textContent = `Mode: manual (fixed) — gak ikut Modal lagi sampai diedit manual lagi atau isi ulang % Markup`;
+}
 
-  const hasil = Math.round(modal * (1 + persen / 100));
-  document.getElementById(idHarga).value = hasil;
-  showToast(`Harga ${tipe} = ${rupiah(modal)} (modal) + ${persen}% = ${rupiah(hasil)} — masih bisa diedit manual sebelum disimpan`);
+function updateItemInfoKIKSI(hargaKI) {
+  const previewKIKSI = document.getElementById('itemPreviewKIKSI');
+  if (previewKIKSI) previewKIKSI.textContent = `Harga KI & KSI sekarang: ${rupiah(hargaKI)}`;
+}
+
+// Dipanggil pas Harga Beli (Modal) diketik ulang — kalau lagi mode %, Harga Gabungan ikut
+// ke-update; kalau lagi mode manual, Harga Gabungan dibiarin gak disentuh (tapi KI/KSI tetap
+// ke-update ngikutin Modal, itu emang selalu otomatis).
+function updateItemPreviewGabungan() {
+  const isManual = document.getElementById('itemGabunganManualFlag').value === 'true';
+  const hargaDasar = Number(document.getElementById('itemHDasar').value) || 0;
+  const hargaPPN = Number(document.getElementById('itemHPPN').value) || 0;
+  if (isManual) {
+    updateItemInfoKIKSI(hargaDasar + hargaPPN);
+  } else {
+    updateItemGabunganDariPersen();
+  }
 }
 
 function samakanHargaGudangUtama() {
@@ -4583,14 +4755,26 @@ function samakanHargaGudangUtama() {
   if (!sumber) { showToast(`Barang dengan kode "${kode}" tidak ditemukan di Gudang Utama`, true); return; }
   document.getElementById('itemHDasar').value = sumber.hargaDasar ?? 0;
   document.getElementById('itemHPPN').value = sumber.hargaPPN ?? 0;
-  document.getElementById('itemHGabungan').value = sumber.hargaGabungan ?? 0;
-  document.getElementById('itemHKSI').value = sumber.hargaKSI ?? 0;
-  document.getElementById('itemHKI').value = sumber.hargaKI ?? 0;
-  showToast('Harga disamakan dengan Gudang Utama — klik "Simpan" untuk menerapkan');
+  document.getElementById('itemHBeli').value = (Number(sumber.hargaDasar||0) + Number(sumber.hargaPPN||0)) || 0;
+  // Samain juga mode Gabungan-nya (manual/persen) biar strategi markup konsisten sama GU.
+  document.getElementById('itemGabunganManualFlag').value = sumber.gabunganManual ? 'true' : 'false';
+  document.getElementById('itemHargaGabunganManual').value = sumber.hargaGabungan ?? 0;
+  document.getElementById('itemPersenGabungan').value = sumber.persenGabungan ?? 0;
+  updateItemPreviewGabungan();
+  showToast('Harga & markup disamakan dengan Gudang Utama — klik "Simpan" untuk menerapkan');
 }
 
 async function saveItem() {
   const id = document.getElementById('itemId').value;
+  const hargaDasarInput = Number(document.getElementById('itemHDasar').value || 0);
+  const hargaPPNInput = Number(document.getElementById('itemHPPN').value || 0);
+  const persenGabunganInput = Number(document.getElementById('itemPersenGabungan').value || 0);
+  const gabunganManual = document.getElementById('itemGabunganManualFlag').value === 'true';
+  const hargaGabunganManualInput = Number(document.getElementById('itemHargaGabunganManual').value || 0);
+  // Harga KI/KSI selalu otomatis = Modal. Harga Gabungan ada 2 mode: otomatis dari %, atau
+  // manual (fixed) — dipilih berdasarkan mana yang terakhir diketik user (gabunganManual flag).
+  const hargaJualOtomatis = hitungHargaJualOtomatis(hargaDasarInput, hargaPPNInput, persenGabunganInput,
+    gabunganManual ? { gabunganManual: true, hargaGabungan: hargaGabunganManualInput } : null);
   const data = {
     kode: document.getElementById('itemKode').value.trim(),
     nama: document.getElementById('itemNama').value.trim(),
@@ -4598,11 +4782,13 @@ async function saveItem() {
     satuan: document.getElementById('itemSatuan').value.trim(),
     stokMinimum: Number(document.getElementById('itemMin').value || 0),
     lokasiRak: document.getElementById('itemRak').value.trim(),
-    hargaDasar: Number(document.getElementById('itemHDasar').value || 0),
-    hargaPPN: Number(document.getElementById('itemHPPN').value || 0),
-    hargaGabungan: Number(document.getElementById('itemHGabungan').value || 0),
-    hargaKSI: Number(document.getElementById('itemHKSI').value || 0),
-    hargaKI: Number(document.getElementById('itemHKI').value || 0),
+    hargaDasar: hargaDasarInput,
+    hargaPPN: hargaPPNInput,
+    persenGabungan: persenGabunganInput,
+    gabunganManual: gabunganManual,
+    hargaGabungan: hargaJualOtomatis.hargaGabungan,
+    hargaKSI: hargaJualOtomatis.hargaKSI,
+    hargaKI: hargaJualOtomatis.hargaKI,
     keterangan: document.getElementById('itemKeterangan').value.trim(),
     trackSerial: document.getElementById('itemTrackSerial').checked,
     aktif: document.getElementById('itemAktif').checked,
@@ -4628,21 +4814,35 @@ async function saveItem() {
   try {
     let linked = false;
     if (id) {
-      // Riwayat Harga Jual — dicatat kalau ada perubahan di Harga KI/KSI/Gabungan dibanding
-      // sebelumnya, biar ada jejak kapan harga jual berubah, dari berapa ke berapa, siapa yang
-      // ubah. Beda dari Riwayat Harga Beli (yang otomatis ke-track dari tiap Barang Masuk) —
-      // ini KHUSUS nyatet perubahan Harga Jual yang sekarang emang diedit manual di sini.
+      // Riwayat Harga Jual — nyatet perubahan Harga Gabungan, baik dari % Markup (mode otomatis)
+      // maupun dari input manual langsung (mode fixed). KI/KSI gak dicatet di sini soalnya itu
+      // SELALU otomatis ngikutin Modal tiap ada Barang Masuk/Keluar/dll — bukan keputusan user.
       const itemLama = itemsCache.find(x => x.id === id);
       if (itemLama) {
-        const perubahan = [];
-        [['KI','hargaKI'],['KSI','hargaKSI'],['Gabungan','hargaGabungan']].forEach(([label, field]) => {
-          const lama = itemLama[field] || 0;
-          const baru = data[field] || 0;
-          if (lama !== baru) perubahan.push({ tipe: label, hargaSebelum: lama, hargaBaru: baru, tanggal: new Date().toISOString(), user: currentUserData.name });
-        });
-        if (perubahan.length) {
+        const gabunganLamaManual = !!itemLama.gabunganManual;
+        if (gabunganLamaManual !== gabunganManual) {
+          // Ganti mode (otomatis <-> manual) — selalu dicatet biar jelas kapan pindah mode
           const riwayatLama = Array.isArray(itemLama.riwayatHargaJual) ? itemLama.riwayatHargaJual : [];
-          data.riwayatHargaJual = [...riwayatLama, ...perubahan];
+          data.riwayatHargaJual = [...riwayatLama, {
+            tipe: gabunganManual ? 'Gabungan (pindah ke manual)' : 'Gabungan (pindah ke % otomatis)',
+            hargaSebelum: gabunganLamaManual ? (itemLama.hargaGabungan||0) : (itemLama.persenGabungan||0),
+            hargaBaru: gabunganManual ? hargaGabunganManualInput : persenGabunganInput,
+            tanggal: new Date().toISOString(), user: currentUserData.name
+          }];
+        } else if (gabunganManual && (itemLama.hargaGabungan||0) !== hargaGabunganManualInput) {
+          // Tetap mode manual, tapi angkanya diubah
+          const riwayatLama = Array.isArray(data.riwayatHargaJual || itemLama.riwayatHargaJual) ? (data.riwayatHargaJual || itemLama.riwayatHargaJual) : [];
+          data.riwayatHargaJual = [...riwayatLama, {
+            tipe: 'Gabungan (manual)', hargaSebelum: itemLama.hargaGabungan||0, hargaBaru: hargaGabunganManualInput,
+            tanggal: new Date().toISOString(), user: currentUserData.name
+          }];
+        } else if (!gabunganManual && (itemLama.persenGabungan||0) !== persenGabunganInput) {
+          // Tetap mode %, tapi persennya diubah
+          const riwayatLama = Array.isArray(data.riwayatHargaJual || itemLama.riwayatHargaJual) ? (data.riwayatHargaJual || itemLama.riwayatHargaJual) : [];
+          data.riwayatHargaJual = [...riwayatLama, {
+            tipe: 'Gabungan (% Markup)', hargaSebelum: itemLama.persenGabungan||0, hargaBaru: persenGabunganInput,
+            tanggal: new Date().toISOString(), user: currentUserData.name
+          }];
         }
       }
       await db.collection('items').doc(id).update(data);
@@ -4756,7 +4956,8 @@ async function submitKoreksi() {
       const hargaAktifBaru = hargaAktifDariBatches(batches);
       tx.update(itemRefKor, {
         saldo: baru, batchesMasuk: batches,
-        hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN
+        hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
     });
     await db.collection('transactions').add({
@@ -5108,18 +5309,23 @@ function switchHistTab(tab) {
 function renderHistJualTable(item) {
   const tbl = document.getElementById('histModalJualTable');
   if (!tbl) return;
+  // Nyatet perubahan Harga Gabungan (baik mode % Markup maupun manual/fixed), dan perpindahan
+  // antar mode. Format satuan (% atau Rupiah) beda-beda tergantung tipe barisnya.
   const riwayat = Array.isArray(item.riwayatHargaJual) ? [...item.riwayatHargaJual].sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||'')) : [];
+  const isPersenTipe = (tipe) => tipe === 'Gabungan (% Markup)' || tipe === 'Gabungan (pindah ke % otomatis)';
   tbl.innerHTML = riwayat.length ? riwayat.map(r => {
+    const satuan = isPersenTipe(r.tipe) ? '%' : '';
+    const fmt = (v) => isPersenTipe(r.tipe) ? `${v}%` : rupiah(v);
     const selisih = r.hargaBaru - r.hargaSebelum;
     return `<tr>
       <td>${fmtDate(r.tanggal)}</td>
-      <td><span class="pill ${r.tipe==='KI'?'role-admin':(r.tipe==='Gabungan'?'ok':'role-staff')}">${r.tipe}</span></td>
-      <td>${rupiah(r.hargaSebelum)}</td>
-      <td>${rupiah(r.hargaBaru)}</td>
-      <td style="color:${selisih>0?'var(--danger)':(selisih<0?'var(--success)':'var(--ink-dim)')};font-weight:600;">${selisih>0?'+':''}${rupiah(selisih)}</td>
+      <td><span class="pill ok">${r.tipe}</span></td>
+      <td>${fmt(r.hargaSebelum)}</td>
+      <td>${fmt(r.hargaBaru)}</td>
+      <td style="color:${selisih>0?'var(--danger)':(selisih<0?'var(--success)':'var(--ink-dim)')};font-weight:600;">${selisih>0?'+':''}${isPersenTipe(r.tipe) ? selisih+'%' : rupiah(selisih)}</td>
       <td>${r.user||'-'}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty">Belum pernah ada perubahan Harga Jual buat barang ini</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">Belum pernah ada perubahan Harga Gabungan buat barang ini</td></tr>';
 }
 
 function renderHistBatchTable(item) {
@@ -5152,6 +5358,12 @@ function renderHistBatchTable(item) {
     return;
   }
 
+  // Tombol koreksi harga cuma buat Admin — ini ngubah data finansial historis, jadi dibatesin.
+  const bisaKoreksi = currentUserData && currentUserData.role === 'admin';
+  const tombolKoreksi = (trxId, jenis) => bisaKoreksi
+    ? `<button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="bukaKoreksiHargaBatch('${item.id}','${trxId}','${jenis}')">✏️ Koreksi</button>`
+    : '-';
+
   let legacyRow = '';
   if (legacyBatch) {
     const isActive = activeBatch && activeBatch.trxId === 'legacy';
@@ -5160,9 +5372,9 @@ function renderHistBatchTable(item) {
       <td>${legacyBatch.acuan || '(input langsung di Master Stok)'}</td>
       <td>-</td>
       <td>${legacyBatch.qty ?? 0}</td>
-      <td>${rupiah(legacyBatch.hargaDasar)}</td>
-      <td>${rupiah(legacyBatch.hargaPPN)}</td>
+      <td>${rupiah((legacyBatch.hargaDasar||0)+(legacyBatch.hargaPPN||0))}</td>
       <td>${isActive ? '<span class="pill ok">AKTIF (harga FIFO sekarang)</span>' : '<span class="pill">MENUNGGU GILIRAN</span>'} <span class="pill role-admin" style="margin-left:4px;">STOK AWAL</span></td>
+      <td>${tombolKoreksi('legacy', 'legacy')}</td>
     </tr>`;
   }
 
@@ -5173,9 +5385,9 @@ function renderHistBatchTable(item) {
       <td>${kb.acuan || 'Koreksi Stok'}</td>
       <td>-</td>
       <td>${kb.qty ?? 0}</td>
-      <td>${rupiah(kb.hargaDasar)}</td>
-      <td>${rupiah(kb.hargaPPN)}</td>
+      <td>${rupiah((kb.hargaDasar||0)+(kb.hargaPPN||0))}</td>
       <td>${isActive ? '<span class="pill ok">AKTIF (harga FIFO sekarang)</span>' : '<span class="pill">MENUNGGU GILIRAN</span>'} <span class="pill role-admin" style="margin-left:4px;">KOREKSI</span></td>
+      <td>${tombolKoreksi(kb.trxId, 'koreksi')}</td>
     </tr>`;
   }).join('');
 
@@ -5199,9 +5411,9 @@ function renderHistBatchTable(item) {
       <td>${t.acuan || '-'}</td>
       <td>${t.qty ?? 0}</td>
       <td>${sisa}</td>
-      <td>${rupiah(t.hargaDasar)}</td>
-      <td>${rupiah(t.hargaPPN)}</td>
+      <td>${rupiah((t.hargaDasar||0)+(t.hargaPPN||0))}</td>
       <td>${statusPill}</td>
+      <td>${isPending ? '-' : tombolKoreksi(t.id, 'transaksi')}</td>
     </tr>`;
   }).join('');
 }
@@ -5287,7 +5499,10 @@ async function kirimGambarHistoriBarang() {
 }
 
 function populateItemSelects() {
-  const opts = itemsCache.map(i => `<option value="${i.id}">${i.kode} — ${i.nama} (saldo ${i.saldo??0})</option>`).join('');
+  // Mutasi Rak = mindahin lokasi rak barang yang UDAH ADA — barang Nonaktif tetap relevan di
+  // sini (mungkin masih numpuk fisik di rak yang salah), makanya tetap ditampilin, cuma dikasih
+  // label biar jelas statusnya.
+  const opts = itemsCache.map(i => `<option value="${i.id}">${i.kode} — ${i.nama}${i.aktif === false ? ' [NONAKTIF]' : ''} (saldo ${i.saldo??0})</option>`).join('');
   ['masukItem','mutasiItem'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -5319,7 +5534,21 @@ let masukRows = [];
 function addMasukRow() {
   masukRows.push({ itemId: '', namaTampil: '', acuan: '', qty: 1, hDasar: 0, hPPN: 0, hargaKI: 0, hargaKSI: 0, hargaGabungan: 0, persenGabungan: '', serials: '', sudahPPN: false, hargaTotalPPN: 0, kondisi: 'Baik', catatanKondisi: '' });
   renderMasukRows();
-}function removeMasukRow(idx) { masukRows.splice(idx, 1); renderMasukRows(); }
+}
+// Shortcut keyboard: tekan Enter di kolom Qty baris TERAKHIR -> otomatis nambah baris baru &
+// pindahin fokus ke situ, biar staff yang input banyak barang (misal abis Import Excel, atau
+// ngetik manual satu-satu dari nota) gak perlu bolak-balik pegang mouse tiap mau nambah baris.
+function handleQtyEnterMasuk(event, idx) {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  if (idx !== masukRows.length - 1) return; // biar Enter di baris TENGAH gak ngaruh apa-apa (aman)
+  addMasukRow();
+  setTimeout(() => {
+    const inputBaru = document.getElementById(`masukItemInput_${masukRows.length - 1}`);
+    if (inputBaru) inputBaru.focus();
+  }, 50);
+}
+function removeMasukRow(idx) { masukRows.splice(idx, 1); renderMasukRows(); }
 function updateMasukRow(idx, field, val) { masukRows[idx][field] = val; renderMasukRows(); }
 // Update tanpa rebuild seluruh DOM (biar fokus input gak lompat pas ngetik)
 function updateMasukRowSilent(idx, field, val) { masukRows[idx][field] = val; }
@@ -5370,9 +5599,11 @@ function renderMasukRows() {
   if (!wrap) return;
   wrap.innerHTML = masukRows.length ? masukRows.map((r, idx) => {
     const item = itemsCache.find(i => i.id === r.itemId);
-    return `<div class="panel" style="margin-bottom:10px;padding:12px 14px;background:#FAF9F6;">
+    const belumCocok = !item && r.namaTampil; // hasil import Excel yang nama-nya gak ketemu persis di Master Barang
+    return `<div class="panel" style="margin-bottom:10px;padding:12px 14px;background:${belumCocok ? '#FFF4E8' : '#FAF9F6'};${belumCocok ? 'border:1px solid #E8622C;' : ''}">
+      ${belumCocok ? '<div style="font-size:11px;color:#E8622C;font-weight:600;margin-bottom:6px;">⚠️ Hasil import — nama ini belum ketemu persis di Master Barang, cari & pilih manual</div>' : ''}
       <div class="row">
-        <div class="field" style="min-width:220px;"><label>Barang</label>
+        <div class="field" style="min-width:220px;"><label>Barang <span style="color:var(--accent);">#${idx+1}</span></label>
           <div style="display:flex;gap:6px;">
             <div style="flex:1;position:relative;">
               <input 
@@ -5408,7 +5639,7 @@ function renderMasukRows() {
         </div>
         <div class="field"><label>Kode Barang</label><input type="text" value="${item?.kode||'-'}" readonly class="mono"></div>
         <div class="field" style="position:relative;"><label>Nama Acuan (sesuai nota kedatangan ini)</label><input type="text" id="masukAcuan_${idx}" value="${(r.acuan||'').replace(/"/g,'&quot;')}" placeholder="nama sesuai nota/supplier" autocomplete="off" oninput="updateMasukRowSilent(${idx},'acuan',this.value);initMasukAcuanDropdown(${idx})" style="width:100%;"><div id="masukAcuanDD_${idx}" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;max-height:150px;overflow-y:auto;display:none;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div></div>
-        <div class="field"><label>Qty Masuk${item ? ` (${item.satuan||'satuan kecil'})` : ''}</label><input type="number" min="0.01" step="any" value="${r.qty}" oninput="updateMasukRowSilent(${idx},'qty',Number(this.value));updateHargaDiff(${idx})">${item && item.satuanBesar && item.isiPerSatuanBesar ? `<div style="font-size:10px;color:var(--ink-dim);margin-top:2px;">1 ${item.satuanBesar} = ${item.isiPerSatuanBesar} ${item.satuan}</div>` : ''}</div>
+        <div class="field"><label>Qty Masuk${item ? ` (${item.satuan||'satuan kecil'})` : ''}</label><input type="number" min="0.01" step="any" value="${r.qty}" oninput="updateMasukRowSilent(${idx},'qty',Number(this.value));updateHargaDiff(${idx})" onkeydown="handleQtyEnterMasuk(event, ${idx})">${item && item.satuanBesar && item.isiPerSatuanBesar ? `<div style="font-size:10px;color:var(--ink-dim);margin-top:2px;">1 ${item.satuanBesar} = ${item.isiPerSatuanBesar} ${item.satuan}</div>` : ''}</div>
         <div class="field" style="max-width:150px;">
           <label>Kondisi Barang</label>
           <select onchange="updateMasukRowSilent(${idx},'kondisi',this.value);renderMasukRows()">
@@ -5420,30 +5651,11 @@ function renderMasukRows() {
         ${r.kondisi && r.kondisi !== 'Baik' ? `
         <div class="field" style="min-width:200px;"><label>Catatan Kondisi</label><input type="text" value="${(r.catatanKondisi||'').replace(/"/g,'&quot;')}" placeholder="cth: 2 dus penyok, isi masih utuh" oninput="updateMasukRowSilent(${idx},'catatanKondisi',this.value)"></div>
         ` : ''}
-        <div class="field" style="min-width:230px;">
-          <label>Status Harga</label>
-          <div style="display:flex;gap:6px;">
-            <label style="display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex:1;padding:7px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;${!r.sudahPPN?'background:rgba(232,98,44,0.12);border-color:var(--accent);font-weight:600;':''}">
-              <input type="radio" name="masukPPNMode_${idx}" ${!r.sudahPPN?'checked':''} onchange="toggleMasukPPNMode(${idx}, false)" style="width:auto;margin:0;">
-              Belum PPN
-            </label>
-            <label style="display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex:1;padding:7px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;${r.sudahPPN?'background:rgba(232,98,44,0.12);border-color:var(--accent);font-weight:600;':''}">
-              <input type="radio" name="masukPPNMode_${idx}" ${r.sudahPPN?'checked':''} onchange="toggleMasukPPNMode(${idx}, true)" style="width:auto;margin:0;">
-              Sudah PPN
-            </label>
-          </div>
-          ${r.sudahPPN ? `
-            <input type="number" id="masukHargaTotalPPN_${idx}" value="${r.hargaTotalPPN||''}" placeholder="Total per unit (sdh termasuk PPN 11%)" oninput="updateMasukHargaTotalPPN(${idx}, Number(this.value))" style="margin-top:6px;">
-            <div style="font-size:10px;color:var(--ink-dim);margin-top:2px;">DPP: ${rupiah(r.hDasar||0)} + PPN: ${rupiah(r.hPPN||0)} (otomatis, dibagi 1.11)</div>
-          ` : ''}
+        <div class="field" style="min-width:200px;">
+          <label>Harga Beli</label>
+          <input type="number" id="masukHargaTotalPPN_${idx}" value="${r.hargaTotalPPN||''}" placeholder="0" oninput="updateMasukHargaTotalPPN(${idx}, Number(this.value))">
+          <div style="font-size:10px;color:var(--ink-dim);margin-top:2px;">Harga beli barang ini (langsung angka final dari nota)</div>
         </div>
-        ${!r.sudahPPN ? `
-        <div class="field"><label>Harga Non PPN</label><input type="number" id="masukHDasarManual_${idx}" value="${r.hDasar||''}" placeholder="0" oninput="updateMasukRowSilent(${idx},'hDasar',Number(this.value));updateHargaDiff(${idx})"></div>
-        <div class="field">
-          <label>Harga PPN (11%) <button type="button" onclick="hitungPPNManual(${idx})" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;padding:0 0 0 4px;text-decoration:underline;">🧮 hitung otomatis</button></label>
-          <input type="number" value="${r.hPPN||''}" placeholder="0 (atau klik hitung otomatis)" oninput="updateMasukRowSilent(${idx},'hPPN',Number(this.value));updateHargaDiff(${idx})">
-        </div>
-        ` : ''}
         <button class="btn danger" style="align-self:end;padding:8px 12px;" onclick="removeMasukRow(${idx})">✕</button>
       </div>
       <div style="font-size:11px;color:var(--ink-dim);margin-top:4px;">ℹ️ Harga Jual (KI/KSI/Gabungan) sekarang diatur langsung di Master Barang — barang ini kalau udah ada, harga jualnya tetap ikut yang di Master Barang, gak perlu diisi ulang di sini tiap kedatangan.</div>
@@ -5523,58 +5735,187 @@ function generateSerialOtomatis(idx) {
 // Dipakai buat misahin DPP & PPN kalau nota supplier cuma kasih 1 angka total.
 const PPN_RATE = 0.11;
 
-// Dipake di mode "Belum PPN" — hitungin PPN 11% dari harga dasar yang udah diketik,
-// biar gak perlu itung manual pake kalkulator terpisah. Tetap bisa diedit manual abis ini.
-function hitungPPNManual(idx) {
-  const r = masukRows[idx];
-  if (!r) return;
-  const dasar = Number(r.hDasar) || 0;
-  if (!dasar) { showToast('Isi Harga Non PPN dulu ya', true); return; }
-  r.hPPN = Math.round(dasar * PPN_RATE);
-  renderMasukRows();
+// ===== IMPORT DARI EXCEL — Stok Masuk =====
+// Baca file Excel (baik format rekap yang dikelompokin per SUPPLIER, maupun tabel polos biasa),
+// deteksi header kolom otomatis (gak harus posisi persis), kelompokin per supplier kalau ada
+// baris pemisah "SUPPLIER: ..." — biar user tinggal pilih 1 grup buat diimport ke form yang
+// lagi kebuka (1 form Stok Masuk = 1 supplier).
+let importExcelMasukGrup = [];
+
+function handleImportExcelMasuk(inputEl) {
+  const file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
+      const grup = parseExcelMasukAOA(aoa);
+      if (!grup.length || grup.every(g => !g.items.length)) {
+        showToast('Gak nemu data barang yang bisa dibaca dari file ini — pastikan ada kolom Nama Barang, Qty, dan Harga', true);
+        inputEl.value = '';
+        return;
+      }
+      importExcelMasukGrup = grup;
+      bukaPilihSupplierImportExcel();
+    } catch(err) {
+      showToast('Gagal baca file Excel: ' + err.message, true);
+    }
+    inputEl.value = '';
+  };
+  reader.readAsArrayBuffer(file);
 }
 
-function toggleMasukPPNMode(idx, checked) {
-  const r = masukRows[idx];
-  if (!r) return;
-  r.sudahPPN = checked;
-  if (checked) {
-    // Pindah dari mode manual ke mode "sudah termasuk PPN": kalau udah ada
-    // hDasar+hPPN manual, jadiin itu total awal biar gak ilang datanya.
-    const totalSekarang = (Number(r.hDasar)||0) + (Number(r.hPPN)||0);
-    if (totalSekarang > 0 && !r.hargaTotalPPN) r.hargaTotalPPN = totalSekarang;
-    hitungSplitPPN(idx, r.hargaTotalPPN || 0);
+// Cari header row (fleksibel, gak harus posisi persis) -> tentuin index kolom Qty/Satuan/Nama/Harga/Kode/Tanggal.
+// Baris "SUPPLIER: xxx" jadi pemisah grup. Baris "Subtotal"/"TOTAL" dilewatin (bukan data barang).
+function parseExcelMasukAOA(aoa) {
+  const normalisasi = (s) => String(s||'').toLowerCase().trim();
+  let idxQty = -1, idxSatuan = -1, idxNama = -1, idxHarga = -1, idxKode = -1, idxTanggal = -1;
+  let headerRowIdx = -1;
+  for (let i = 0; i < Math.min(aoa.length, 20); i++) {
+    const row = aoa[i].map(normalisasi);
+    const namaIdx = row.findIndex(c => c.includes('nama barang') || c === 'barang' || c === 'nama');
+    if (namaIdx !== -1) {
+      headerRowIdx = i;
+      idxNama = namaIdx;
+      idxQty = row.findIndex(c => c === 'qty' || c.includes('jumlah barang') || c === 'quantity');
+      idxSatuan = row.findIndex(c => c.includes('satuan') || c === 'unit');
+      idxHarga = row.findIndex(c => c.includes('harga'));
+      idxKode = row.findIndex(c => c.includes('kode'));
+      idxTanggal = row.findIndex(c => c.includes('tanggal'));
+      break;
+    }
   }
+  if (headerRowIdx === -1) return [];
+
+  const grup = [];
+  let current = { supplier: '', items: [] };
+  let adaSupplierMarker = false;
+
+  for (let i = headerRowIdx + 1; i < aoa.length; i++) {
+    const row = aoa[i];
+    if (!row || row.every(c => String(c||'').trim() === '')) continue;
+    const gabunganTeks = row.map(c => String(c||'')).join(' ');
+    const supplierMatch = gabunganTeks.match(/SUPPLIER\s*:\s*(.+)/i);
+    if (supplierMatch) {
+      adaSupplierMarker = true;
+      if (current.items.length) grup.push(current);
+      current = { supplier: supplierMatch[1].trim(), items: [] };
+      continue;
+    }
+    if (/subtotal|total semua/i.test(gabunganTeks)) continue;
+
+    const nama = idxNama !== -1 ? String(row[idxNama]||'').trim() : '';
+    const qty = idxQty !== -1 ? Number(row[idxQty]) : NaN;
+    if (!nama || !qty || isNaN(qty) || qty <= 0) continue; // bukan baris data barang yang valid
+
+    current.items.push({
+      tanggal: idxTanggal !== -1 ? row[idxTanggal] : '',
+      qty, satuan: idxSatuan !== -1 ? String(row[idxSatuan]||'').trim() : '',
+      nama, harga: idxHarga !== -1 ? Number(row[idxHarga]) || 0 : 0,
+      kode: idxKode !== -1 ? String(row[idxKode]||'').trim() : ''
+    });
+  }
+  if (current.items.length) grup.push(current);
+  // Kalau gak ada marker SUPPLIER sama sekali, berarti 1 tabel polos -> anggap 1 grup aja
+  if (!adaSupplierMarker && grup.length === 1) grup[0].supplier = grup[0].supplier || '(isi manual)';
+  return grup;
+}
+
+function bukaPilihSupplierImportExcel() {
+  const wrap = document.getElementById('importExcelMasukSupplierList');
+  const info = document.getElementById('importExcelMasukInfo');
+  if (importExcelMasukGrup.length === 1) {
+    info.textContent = `Ketemu ${importExcelMasukGrup[0].items.length} barang. Langsung diimport ke form.`;
+    terapkanImportExcelMasuk(0);
+    return;
+  }
+  info.textContent = `Ketemu ${importExcelMasukGrup.length} grup supplier di file ini. Pilih salah satu buat diimport ke form (form Stok Masuk cuma bisa 1 supplier per submit) — sisanya bisa diimport lagi nanti buat form berikutnya.`;
+  wrap.innerHTML = importExcelMasukGrup.map((g, idx) => {
+    const total = g.items.reduce((s, it) => s + it.qty * it.harga, 0);
+    return `<div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="terapkanImportExcelMasuk(${idx})" onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
+      <div style="font-weight:600;">${g.supplier || '(tanpa nama supplier)'}</div>
+      <div style="font-size:11px;color:var(--ink-dim);">${g.items.length} barang — total ${rupiah(total)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('importExcelMasukModalBg').classList.add('show');
+}
+function closeImportExcelMasukModal() {
+  document.getElementById('importExcelMasukModalBg').classList.remove('show');
+}
+
+// Bulan Indonesia disingkat (format umum "21-Agu-26") -> dikonversi ke yyyy-mm-dd buat <input type=date>
+const BULAN_ID_SINGKAT = { jan:1, feb:2, mar:3, apr:4, mei:5, jun:6, jul:7, agu:8, sep:9, okt:10, nov:11, des:12 };
+function parseTanggalIndo(str) {
+  if (!str) return null;
+  const m = String(str).match(/(\d{1,2})[- ]([a-zA-Z]{3})[- ](\d{2,4})/);
+  if (!m) return null;
+  const bulan = BULAN_ID_SINGKAT[m[2].toLowerCase()];
+  if (!bulan) return null;
+  let tahun = Number(m[3]);
+  if (tahun < 100) tahun += 2000;
+  return `${tahun}-${String(bulan).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+}
+
+function terapkanImportExcelMasuk(idx) {
+  const g = importExcelMasukGrup[idx];
+  if (!g) return;
+  closeImportExcelMasukModal();
+
+  if (g.supplier && g.supplier !== '(isi manual)') document.getElementById('masukSupplier').value = g.supplier;
+  const tglPertama = g.items.find(it => it.tanggal)?.tanggal;
+  const tglIso = parseTanggalIndo(tglPertama);
+  if (tglIso) document.getElementById('masukTanggal').value = tglIso;
+
+  let cocokOtomatis = 0, perluManual = 0;
+  const barisBaru = g.items.map(it => {
+    // Cocokin ke Master Barang: Kode dulu (paling akurat), baru Acuan/Acuan List (karena nama
+    // di nota supplier itu BEDA dari Nama internal — nama di nota justru nama "acuan" yang
+    // dipakai suppliernya), baru Nama persis sebagai upaya terakhir.
+    const namaLower = it.nama.toLowerCase();
+    const item = (it.kode && itemsCache.find(x => (x.kode||'').toLowerCase() === it.kode.toLowerCase()))
+      || itemsCache.find(x => (x.acuan||'').toLowerCase() === namaLower)
+      || itemsCache.find(x => (x.acuanList||[]).some(a => (a||'').toLowerCase() === namaLower))
+      || itemsCache.find(x => (x.nama||'').toLowerCase() === namaLower);
+    if (item) cocokOtomatis++; else perluManual++;
+    return {
+      itemId: item ? item.id : '', namaTampil: item ? item.nama : it.nama,
+      // Acuan SELALU diisi nama asli dari nota (bukan cuma pas ketemu) — biar kalaupun user
+      // harus pilih manual buat baris yang belum ke-match, nama dari nota ini tetap kesimpen
+      // jadi acuan baru pas transaksinya di-approve nanti (bukan ketimpa acuan default punya
+      // barang, lihat selectMasukItem: dia cuma isi default kalau acuan masih kosong).
+      acuan: it.nama, qty: it.qty, hDasar: it.harga, hPPN: 0,
+      hargaKI: item?.hargaKI||0, hargaKSI: item?.hargaKSI||0, hargaGabungan: item?.hargaGabungan||0,
+      persenGabungan: '', serials: '', sudahPPN: true, hargaTotalPPN: it.harga,
+      kondisi: 'Baik', catatanKondisi: ''
+    };
+  });
+  // Kalau form masih kosong (1 baris default doang, belum diisi), timpa. Kalau udah ada isian, tambahin di belakang.
+  const formMasihKosong = masukRows.length <= 1 && !masukRows[0]?.itemId && !masukRows[0]?.namaTampil;
+  masukRows = formMasihKosong ? barisBaru : [...masukRows, ...barisBaru];
   renderMasukRows();
+  saveDraftMasuk();
+  showToast(`Import selesai: ${cocokOtomatis} barang otomatis kecocok ke Master Barang${perluManual ? `, ${perluManual} barang PERLU DIPILIH MANUAL (nama gak ketemu persis di Master Barang)` : ''}`);
 }
 
 function updateMasukHargaTotalPPN(idx, total) {
   hitungSplitPPN(idx, total);
-  // Update tampilan angka DPP/PPN tanpa render ulang semua (biar fokus input gak hilang)
-  const r = masukRows[idx];
-  const infoEls = document.querySelectorAll(`#masukHargaTotalPPN_${idx}`);
-  if (infoEls[0] && infoEls[0].parentElement) {
-    const info = infoEls[0].parentElement.querySelector('div');
-    if (info) info.textContent = `DPP: ${rupiah(r.hDasar||0)} + PPN: ${rupiah(r.hPPN||0)} (otomatis, dibagi 1.11)`;
-  }
   updateHargaDiff(idx);
   saveDraftMasuk();
 }
 
+// Harga Beli langsung dipakai APA ADANYA sebagai modal (hDasar) — TANPA dipecah/dihitung PPN
+// lagi, biar gak ada resiko salah asumsi kalau angka yang diketik ternyata bukan angka
+// gabungan dari nota.
 function hitungSplitPPN(idx, total) {
   const r = masukRows[idx];
   if (!r) return;
   total = Number(total) || 0;
   r.hargaTotalPPN = total;
-  if (total > 0) {
-    const dpp = Math.round(total / (1 + PPN_RATE));
-    const ppn = total - dpp;
-    r.hDasar = dpp;
-    r.hPPN = ppn;
-  } else {
-    r.hDasar = 0;
-    r.hPPN = 0;
-  }
+  r.hDasar = total;
+  r.hPPN = 0;
 }
 
 function updateHargaDiff(idx) {
@@ -5763,6 +6104,46 @@ async function lihatLampiranMasukById(lampiranId) {
   } catch(e) { showToast('Gagal buka lampiran: ' + e.message, true); }
 }
 
+// ===== FOTO NOTA/SURAT JALAN — STOK KELUAR (pola sama persis kayak Stok Masuk di atas) =====
+function handleKlLampiranUpload(inputEl) {
+  const file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('File harus berupa gambar', true); inputEl.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 500;
+      let w = img.width, h = img.height;
+      if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      document.getElementById('klLampiranBase64').value = dataUrl;
+      document.getElementById('klLampiranPreview').src = dataUrl;
+      document.getElementById('klLampiranPreviewWrap').style.display = 'block';
+      saveDraftKl();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function hapusLampiranKl() {
+  document.getElementById('klLampiranBase64').value = '';
+  document.getElementById('klLampiranInput').value = '';
+  document.getElementById('klLampiranPreviewWrap').style.display = 'none';
+  saveDraftKl();
+}
+async function lihatLampiranKlById(lampiranId) {
+  try {
+    const doc = await db.collection('keluarLampiran').doc(lampiranId).get();
+    if (!doc.exists) { showToast('Lampiran tidak ditemukan (mungkin sudah dihapus)', true); return; }
+    lihatLampiranMasuk(doc.data().fotoBase64); // reuse viewer yang sama, cukup buka tab baru nampilin gambar
+  } catch(e) { showToast('Gagal buka lampiran: ' + e.message, true); }
+}
+
 async function submitMasuk() {
   const tanggalInput = document.getElementById('masukTanggal').value;
   const tanggal = tanggalInput ? new Date(tanggalInput + 'T00:00:00').toISOString() : new Date().toISOString();
@@ -5913,7 +6294,7 @@ function renderMasukHist() {
       <td><input type="checkbox" class="masuk-select-cb" value="${t.id}" ${getSelectionSet('masuk').has(t.id)?'checked':''} onchange="toggleSelectOneGeneric('masuk','${t.id}',this.checked)"></td>
       <td>${idx+1}</td><td>${fmtDate(t.tanggal)}</td><td>${t.supplier||'-'}</td>
       <td class="mono" style="font-weight:600;color:var(--accent);">${t.kode||'-'}</td><td>${t.nama}${t.kondisi && t.kondisi!=='Baik' ? `<div style="font-size:10px;color:var(--danger);">⚠️ ${t.kondisi}${t.catatanKondisi?`: ${t.catatanKondisi}`:''}</div>` : ''}</td><td>${t.acuan||'-'}</td><td>${t.qty}</td><td>${t.satuan||'-'}</td>
-      <td>${rupiah(t.hargaDasar)}</td><td>${rupiah(t.hargaPPN)}</td><td>${t.keterangan||'-'}</td>
+      <td>${rupiah((t.hargaDasar||0)+(t.hargaPPN||0))}</td><td>${t.keterangan||'-'}</td>
       <td><span class="pill ${status==='selesai'?'ok':'low'}">${status==='selesai'?'Selesai':'Pending'}</span></td>
       <td>
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#3B6EA5;" onclick="cetakNotaMasuk('${t.id}')">🖨</button>
@@ -5925,7 +6306,7 @@ function renderMasukHist() {
         <button class="btn danger" style="padding:3px 7px;font-size:11px;" onclick="deleteMasukTransaksi('${t.id}')">🗑</button>
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="14" class="empty">Belum ada riwayat / tidak ditemukan</td></tr>') + loadMoreRowHtml('masukHist', 'renderMasukHist', totalFilteredMasuk, rows.length, 14);
+  }).join('') : '<tr><td colspan="13" class="empty">Belum ada riwayat / tidak ditemukan</td></tr>') + loadMoreRowHtml('masukHist', 'renderMasukHist', totalFilteredMasuk, rows.length, 13);
 }
 
 function toggleMasukSelectAll(checked) {
@@ -5955,7 +6336,8 @@ async function reverseApprovedMasukBatch(t, id) {
     const hargaAktif = hargaAktifDariBatches(batches);
     tx.update(itemRefT, {
       saldo: saldoBaru, batchesMasuk: batches,
-      hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+      hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+      ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
     });
   });
   return { itemSebelum, saldoBaru, diblokir, sisaDiBatch };
@@ -6132,7 +6514,7 @@ async function simpanEditNotaMasuk() {
           if (idxBatch < 0) return; // batch udah abis/ke-filter, gak ada yg perlu disinkronin
           batches[idxBatch].tanggal = perubahan.tanggal;
           const hargaAktif = hargaAktifDariBatches(batches);
-          tx.update(itemRefSync, { batchesMasuk: batches, hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN });
+          tx.update(itemRefSync, { batchesMasuk: batches, hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN, ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh) });
         });
       }
     }
@@ -6206,6 +6588,7 @@ function renderPesananPemesan() {
       <td>${r.keterangan||'-'}</td>
       <td>
         <button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="viewKeluarDetail('${r.id}')">👁</button>
+        ${r.lampiranId ? `<button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="lihatLampiranKlById('${r.lampiranId}')" title="Lihat foto nota/surat jalan">📎</button>` : ''}
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#3B6EA5;" onclick="cetakNota('${r.id}')">🖨</button>
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#2E7D5B;" onclick="shareWASingleKeluar('${r.id}')">💬</button>
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#8E44AD;" onclick="kirimNotaJadiSingleKeluar('${r.id}')">📤</button>
@@ -6225,6 +6608,7 @@ function renderPesananPemesan() {
       <td>${r.status==='ditolak' ? `<span class="pill low" style="background:#C4453A;color:#fff;">Ditolak</span><div style="font-size:10px;color:var(--ink-dim);margin-top:2px;">${r.alasanTolak||'-'}</div>` : `<span class="pill ${r.status==='selesai'?'ok':'low'}">${r.status==='selesai'?'Selesai':'Pending'}</span>`}</td>
       <td>
         <button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="viewKeluarDetail('${r.id}')">👁</button>
+        ${r.lampiranId ? `<button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="lihatLampiranKlById('${r.lampiranId}')" title="Lihat foto nota/surat jalan">📎</button>` : ''}
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#3B6EA5;" onclick="cetakNota('${r.id}')">🖨</button>
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#2E7D5B;" onclick="shareWASingleKeluar('${r.id}')">💬</button>
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#8E44AD;" onclick="kirimNotaJadiSingleKeluar('${r.id}')">📤</button>
@@ -6299,6 +6683,27 @@ function getBatchesMasuk(item) {
   }
   return [];
 }
+// Hitung Harga Jual otomatis dari Modal (Harga Dasar + PPN) yang lagi aktif:
+// - Harga KI & KSI = SAMA PERSIS dengan Modal (transaksi internal antar-PT sendiri, gak ambil
+//   untung dari grup sendiri) — otomatis naik-turun ngikutin batch FIFO, gak perlu diapa-apain.
+// - Harga Gabungan = Modal + markup PERSEN (buat transaksi ke pihak luar, ini yang ada untungnya)
+//   — persennya FIXED (diatur manual di Master Barang), tapi hasil akhir Rupiah-nya tetap
+//   ngikutin Modal biar proporsional (gak kayak markup nominal tetap yang bisa gak masuk akal
+//   buat barang murah/mahal).
+// itemSaatIni (opsional) dikasih kalau item ini punya `gabunganManual: true` — artinya user
+// pernah ketik LANGSUNG angka Harga Gabungan-nya (bukan lewat %), jadi harga itu FIXED, gak
+// ikut ke-itung ulang dari Modal+persen lagi sampai user ganti manual lagi atau balik ke mode %.
+function hitungHargaJualOtomatis(hargaDasar, hargaPPN, persenGabungan, itemSaatIni) {
+  const modal = (Number(hargaDasar) || 0) + (Number(hargaPPN) || 0);
+  const persen = Number(persenGabungan) || 0;
+  const isManual = itemSaatIni && itemSaatIni.gabunganManual;
+  return {
+    hargaKI: modal,
+    hargaKSI: modal,
+    hargaGabungan: isManual ? Number(itemSaatIni.hargaGabungan) || 0 : Math.round(modal * (1 + persen / 100))
+  };
+}
+
 function hargaAktifDariBatches(batches) {
   // Selalu urut per TANGGAL kedatangan dulu (bukan urutan approve/input), baru ambil
   // batch tertua yang qty-nya masih > 0 — supaya konsisten walau approve-nya belakangan/nyusul.
@@ -6406,12 +6811,12 @@ async function approveMasuk(id, isOldest) {
       const acuanListBaru = tambahAcuanKeList(item.acuanList, acuanTerbaru);
       tx.update(itemRefM, {
         saldo: newSaldo, batchesMasuk: batchesBaru,
-        // PENTING: Harga Dasar/PPN tetap ngikutin batch aktif (FIFO) — itu emang harus berubah
-        // sesuai batch mana yang lagi kepake, buat ngitung modal/HPP akurat. TAPI Harga Jual
-        // (KI/KSI/Gabungan) SENGAJA gak ikut ke-timpa di sini — itu sekarang harga TETAP milik
-        // barangnya sendiri, diatur manual di Master Barang, gak ikut naik-turun ngikutin batch
-        // mana yang lagi aktif.
+        // Harga Dasar/PPN ngikutin batch aktif (FIFO), buat ngitung modal/HPP akurat. Harga Jual
+        // (KI/KSI/Gabungan) OTOMATIS dihitung ulang dari Modal ini — KI & KSI sama persis kayak
+        // Modal (transaksi internal, gak ambil untung), Gabungan = Modal + persen markup yang
+        // udah diatur di Master Barang (persennya tetap, hasil akhirnya ngikutin Modal).
         hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item),
         acuan: hargaAktif.acuan, acuanList: acuanListBaru
       });
     });
@@ -6571,11 +6976,12 @@ async function approveKeluar(id, isOldest) {
             : kurangiBatchFIFO(item, it.qty);
           const hargaAktif = hargaAktifDariBatches(batchesSisa);
           itemUpdate.batchesMasuk = batchesSisa;
-          // Harga Dasar/PPN (modal) tetap ngikutin batch yang sisa (FIFO) — itu emang harus
-          // sinkron biar HPP akurat. Harga Jual (KI/KSI/Gabungan) SENGAJA gak disentuh di
-          // sini — itu fixed punya barangnya, gak boleh ketiban ulang tiap ada approve Keluar.
+          // Harga Dasar/PPN (modal) ngikutin batch yang sisa (FIFO). Harga Jual (KI/KSI/Gabungan)
+          // OTOMATIS dihitung ulang dari Modal terbaru ini — KI/KSI = Modal, Gabungan = Modal +
+          // persen markup yang diatur di Master Barang.
           itemUpdate.hargaDasar = hargaAktif.hargaDasar;
           itemUpdate.hargaPPN = hargaAktif.hargaPPN;
+          Object.assign(itemUpdate, hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item));
         }
         tx.update(itemRefK, itemUpdate);
       });
@@ -6666,6 +7072,7 @@ async function batalkanApproveKeluar(id) {
           itemUpdate.batchesMasuk = batchesBaru;
           itemUpdate.hargaDasar = hargaAktif.hargaDasar;
           itemUpdate.hargaPPN = hargaAktif.hargaPPN;
+          Object.assign(itemUpdate, hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item));
         }
         if (item) changes.push({ collection: 'items', id: it.itemId, before: item, after: { ...item, ...itemUpdate } });
         tx.update(itemRefK, itemUpdate);
@@ -6751,9 +7158,9 @@ function exportMasukCSV(onlySelected) {
     rows = rows.filter(t => ids.includes(t.id));
   }
   if (!rows.length) { showToast('Belum ada data masuk', true); return; }
-  const aoa = [['Tanggal','Supplier','Kode','Barang','Acuan','Jumlah','Satuan','H.Non PPN','H.PPN','Kondisi','Catatan Kondisi','Keterangan','Status']];
+  const aoa = [['Tanggal','Supplier','Kode','Barang','Acuan','Jumlah','Satuan','Harga Beli','Kondisi','Catatan Kondisi','Keterangan','Status']];
   rows.forEach(t => {
-    aoa.push([fmtDate(t.tanggal), t.supplier||'', t.kode||'', t.nama, t.acuan||'', t.qty, t.satuan||'', t.hargaDasar||0, t.hargaPPN||0, t.kondisi||'Baik', t.catatanKondisi||'', t.keterangan||'', t.status||'pending']);
+    aoa.push([fmtDate(t.tanggal), t.supplier||'', t.kode||'', t.nama, t.acuan||'', t.qty, t.satuan||'', (t.hargaDasar||0)+(t.hargaPPN||0), t.kondisi||'Baik', t.catatanKondisi||'', t.keterangan||'', t.status||'pending']);
   });
   exportAOAToExcel(`stok-masuk-${new Date().toISOString().slice(0,10)}.xlsx`, 'Stok Masuk', aoa);
 }
@@ -6805,13 +7212,13 @@ function notaBlockHTMLMasuk(group) {
         </table>
       </div>
       <table class="nota-items">
-        <thead><tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Acuan</th><th>Qty</th><th>Satuan</th><th>H. Non PPN</th><th>H. PPN</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
+        <thead><tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Acuan</th><th>Qty</th><th>Satuan</th><th>Harga Beli</th><th>Subtotal</th></tr></thead>
         <tbody>
           ${group.items.map((it, i) => `
-            <tr><td>${i+1}</td><td class="nota-mono">${it.kode||'-'}</td><td>${it.nama}${it.kondisi && it.kondisi!=='Baik' ? `<br><span style="color:#C4453A;font-size:10px;">⚠️ ${it.kondisi}${it.catatanKondisi?`: ${it.catatanKondisi}`:''}</span>` : ''}</td><td>${it.acuan||'-'}</td><td>${it.qty}</td><td>${it.satuan||'-'}</td><td>${rupiah(it.hargaDasar||0)}</td><td>${rupiah(it.hargaPPN||0)}</td><td><b>${rupiah((it.hargaDasar||0)+(it.hargaPPN||0))}</b></td><td>${rupiah(((it.hargaDasar||0)+(it.hargaPPN||0))*it.qty)}</td></tr>
+            <tr><td>${i+1}</td><td class="nota-mono">${it.kode||'-'}</td><td>${it.nama}${it.kondisi && it.kondisi!=='Baik' ? `<br><span style="color:#C4453A;font-size:10px;">⚠️ ${it.kondisi}${it.catatanKondisi?`: ${it.catatanKondisi}`:''}</span>` : ''}</td><td>${it.acuan||'-'}</td><td>${it.qty}</td><td>${it.satuan||'-'}</td><td><b>${rupiah((it.hargaDasar||0)+(it.hargaPPN||0))}</b></td><td>${rupiah(((it.hargaDasar||0)+(it.hargaPPN||0))*it.qty)}</td></tr>
           `).join('')}
         </tbody>
-        <tfoot><tr><td colspan="9" style="text-align:right;"><b>TOTAL</b></td><td><b>${rupiah(total)}</b></td></tr></tfoot>
+        <tfoot><tr><td colspan="7" style="text-align:right;"><b>TOTAL</b></td><td><b>${rupiah(total)}</b></td></tr></tfoot>
       </table>
       <div class="nota-signatures">
         <div class="nota-sign">
@@ -7091,16 +7498,19 @@ function initOrderItemSearch() {
 function renderOrderItemDropdown(rowIdx, query) {
   const dropdownEl = document.getElementById(`orderItemDropdown_${rowIdx}`);
   if (!dropdownEl) return;
-  let filtered = itemsCache;
+  // Order Barang = beli stok BARU dari supplier — barang yang udah Nonaktif (discontinue) gak
+  // masuk akal dibeli lagi, jadi disembunyiin total dari sini (beda kasus sama menu yang buat
+  // ngurangin/pakein habis stok LAMA, kayak Stok Keluar — di situ Nonaktif tetap muncul).
+  let filtered = itemsCache.filter(item => item.aktif !== false);
   if (query) {
-    filtered = itemsCache.filter(item =>
+    filtered = filtered.filter(item =>
       item.nama.toLowerCase().includes(query) ||
       (item.kode || '').toLowerCase().includes(query) ||
       (item.acuan || '').toLowerCase().includes(query) ||
       (item.acuanList || []).some(a => a.toLowerCase().includes(query))
     );
-  } else if (itemsCache.length > 30) {
-    dropdownEl.innerHTML = `<div style="padding:12px;color:var(--ink-dim);font-size:12px;text-align:center;">Ketik nama/kode barang untuk mencari (${itemsCache.length} barang total)</div>`;
+  } else if (filtered.length > 30) {
+    dropdownEl.innerHTML = `<div style="padding:12px;color:var(--ink-dim);font-size:12px;text-align:center;">Ketik nama/kode barang untuk mencari (${filtered.length} barang total)</div>`;
     dropdownEl.style.display = 'block';
     return;
   }
@@ -7554,6 +7964,17 @@ function addKlRow() {
   klRows.push({ itemId: '', namaTampil: '', qty: 1, statusBekas: 'Tidak Ada', qtyBekas: 1, kondisiBekas: 'Belum Dicek', catatan: '', selectedBatchIdx: null, serialDipilih: [] });
   renderKlRows();
 }
+// Shortcut keyboard sama kayak Stok Masuk — Enter di Jumlah baris TERAKHIR nambah baris baru otomatis.
+function handleQtyEnterKl(event, idx) {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  if (idx !== klRows.length - 1) return;
+  addKlRow();
+  setTimeout(() => {
+    const inputBaru = document.getElementById(`klItemInput_${klRows.length - 1}`);
+    if (inputBaru) inputBaru.focus();
+  }, 50);
+}
 let _klKodeUnitDebounce = null;
 function debounceRenderKlRows() {
   clearTimeout(_klKodeUnitDebounce);
@@ -7618,7 +8039,8 @@ function saveDraftKl() {
     mekanik: document.getElementById('klMekanik')?.value || '',
     keterangan: document.getElementById('klKeterangan')?.value || '',
     noPlat: document.getElementById('klPlat')?.value || '',
-    namaSopir: document.getElementById('klSopir')?.value || ''
+    namaSopir: document.getElementById('klSopir')?.value || '',
+    lampiranBase64: document.getElementById('klLampiranBase64')?.value || ''
   };
   if (isDraftKosong(header, klRows)) { clearDraft('keluar'); return; }
   saveDraft('keluar', { header, rows: klRows });
@@ -7635,6 +8057,11 @@ function restoreDraftKl() {
   if (document.getElementById('klKeterangan')) document.getElementById('klKeterangan').value = d.header.keterangan || '';
   if (document.getElementById('klPlat')) document.getElementById('klPlat').value = d.header.noPlat || '';
   if (document.getElementById('klSopir')) document.getElementById('klSopir').value = d.header.namaSopir || '';
+  if (d.header.lampiranBase64 && document.getElementById('klLampiranBase64')) {
+    document.getElementById('klLampiranBase64').value = d.header.lampiranBase64;
+    document.getElementById('klLampiranPreview').src = d.header.lampiranBase64;
+    document.getElementById('klLampiranPreviewWrap').style.display = 'block';
+  }
   klRows = d.rows || [];
   renderKlRows();
   applyKuncianTipePemesan();
@@ -7682,7 +8109,7 @@ function renderKlRows() {
       </div>` : (item && kodeUnitSaatIni.trim() ? `
       <div style="font-size:11px;color:var(--ink-dim);margin-bottom:8px;">🆕 Unit <b>${kodeUnitSaatIni.trim()}</b> belum pernah ambil "${item.nama}" sebelumnya</div>` : '')}
       <div class="row">
-        <div class="field" style="min-width:220px;"><label>Nama Barang</label>
+        <div class="field" style="min-width:220px;"><label>Nama Barang <span style="color:var(--accent);">#${idx+1}</span></label>
           <div style="display:flex;gap:6px;">
             <div style="flex:1;position:relative;">
               <input 
@@ -7717,7 +8144,7 @@ function renderKlRows() {
           </div>
         </div>
         <div class="field"><label>Kode Barang</label><input type="text" value="${item?.kode||'-'}" readonly class="mono"></div>
-        <div class="field"><label>Jumlah</label><input type="number" min="0.01" step="any" value="${r.qty}" oninput="updateKlRowQty(${idx},this.value,'klSubtotal_${idx}')"></div>
+        <div class="field"><label>Jumlah</label><input type="number" min="0.01" step="any" value="${r.qty}" oninput="updateKlRowQty(${idx},this.value,'klSubtotal_${idx}')" onkeydown="handleQtyEnterKl(event, ${idx})"></div>
         <div class="field"><label>Satuan</label><input type="text" value="${item?.satuan||'-'}" readonly></div>
         <div class="field"><label>Pilih Batch</label>
           <select onchange="updateKlRow(${idx},'selectedBatchIdx',Number(this.value))">
@@ -7791,6 +8218,7 @@ function resetKlForm() {
   document.getElementById('klPlat').value = '';
   document.getElementById('klSopir').value = '';
   document.getElementById('klTanggal').value = new Date().toISOString().slice(0,10);
+  hapusLampiranKl();
   renderKlRows();
 }
 
@@ -7878,12 +8306,24 @@ async function submitKeluarTransaksi() {
   }
 
   try {
+    // Kalau ada lampiran foto nota/surat jalan, simpen di koleksi terpisah dulu (pola sama
+    // kayak Stok Masuk) — biar 1 foto gak keduplikasi walau transaksinya kepecah beberapa doc.
+    let lampiranId = null;
+    const lampiranBase64 = document.getElementById('klLampiranBase64')?.value;
+    if (lampiranBase64) {
+      const lampiranRef = await db.collection('keluarLampiran').add({
+        cabangId: currentCabangId, fotoBase64: lampiranBase64, kodeUnit, tanggal,
+        createdAt: new Date().toISOString(), createdBy: currentUserData.name
+      });
+      lampiranId = lampiranRef.id;
+    }
     // Stok, log transaksi, dan barang bekas TIDAK langsung diproses di sini.
     // Transaksi masuk ke Antrian Approval (status 'pending') dulu, urut tanggal.
     await db.collection('keluarTransaksi').add({
       cabangId: currentCabangId,
       tanggal, tipe, kodeUnit, mekanik, keterangan, noPlat, namaSopir, items, totalItem, totalHarga,
       status: 'pending', user: currentUserData.name, createdAt: new Date().toISOString(),
+      lampiranId,
       // MULTI-CABANG: tandai kalau ini pesanan dari akun Pemesan (KI/KSI/Gabungan), bukan input staff/admin biasa —
       // dipakai buat pisahin tampilan di menu "Pesanan Pemesan"
       dariPemesan: isPemesanRequest, tipePemesanUser: isPemesanRequest ? (currentUserData.tipePemesan || tipe) : null
@@ -7969,6 +8409,7 @@ function renderKeluarHist(sourceOverride) {
       <td>
         ${r.status==='selesai' ? (r.tandaTangan ? `<button class="btn" style="padding:3px 8px;font-size:11px;background:#2E7D5B;" onclick="lihatTtdKeluar('${r.id}')" title="Sudah ditandatangani ${r.tandaTangan.namaPenerima}">✅ TTD</button>` : `<button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="openTtdModal('${r.id}')">✍️ TTD</button>`) : ''}
         <button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="viewKeluarDetail('${r.id}')">👁</button>
+        ${r.lampiranId ? `<button class="btn ghost" style="padding:3px 8px;font-size:11px;" onclick="lihatLampiranKlById('${r.lampiranId}')" title="Lihat foto nota/surat jalan">📎</button>` : ''}
         ${currentUserData.role !== 'pemesan' ? `
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#3B6EA5;" onclick="cetakNota('${r.id}')">🖨</button>
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#2E7D5B;" onclick="shareWASingleKeluar('${r.id}')">💬</button>
@@ -8044,7 +8485,8 @@ async function reverseApprovedKeluarItems(items) {
       const hargaAktif = hargaAktifDariBatches(batchesBaru);
       tx.update(itemRefK, {
         saldo: saldoBaru, batchesMasuk: batchesBaru,
-        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
     });
     if (itemSebelum) changes.push({ collection: 'items', id: it.itemId, before: itemSebelum, after: { ...itemSebelum, saldo: saldoBaru } });
@@ -9090,7 +9532,8 @@ async function masukkanBekasKeStok(id) {
       const hargaAktif = hargaAktifDariBatches(batches);
       tx.update(itemRefBekas, {
         saldo: (itemFresh.saldo||0) + b.qty, batchesMasuk: batches,
-        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
     });
     await db.collection('transactions').add({
@@ -10748,7 +11191,7 @@ async function saveNewUser() {
 const BACKUP_COLLECTIONS = [
   'items', 'keluarTransaksi', 'transactions', 'mutations', 'barangBekas', 'units', 'users', 'activityLog',
   'cabang', 'orderBarang', 'orderCabang', 'returMasuk', 'returKeluar', 'koreksiStok',
-  'stokOpname', 'stokOpnameDetail', 'unitsAlatBerat', 'bukuServis', 'closingBulanan', 'masukLampiran'
+  'stokOpname', 'stokOpnameDetail', 'unitsAlatBerat', 'bukuServis', 'closingBulanan', 'masukLampiran', 'keluarLampiran'
 ];
 const BACKUP_COLLECTION_LABEL = {
   items: 'Master Barang', keluarTransaksi: 'Barang Keluar', transactions: 'Stok Masuk',
@@ -10756,7 +11199,7 @@ const BACKUP_COLLECTION_LABEL = {
   cabang: 'Kelola Cabang', orderBarang: 'Order Barang (Supplier)', orderCabang: 'Order ke Gudang Utama',
   returMasuk: 'Retur Masuk', returKeluar: 'Retur Keluar', koreksiStok: 'Koreksi Stok',
   stokOpname: 'Stok Opname (Session)', stokOpnameDetail: 'Stok Opname (Detail)',
-  closingBulanan: 'Klosingan Bulanan', masukLampiran: 'Lampiran Foto Nota Masuk',
+  closingBulanan: 'Klosingan Bulanan', masukLampiran: 'Lampiran Foto Nota Masuk', keluarLampiran: 'Lampiran Foto Nota Keluar',
   unitsAlatBerat: 'Unit Alat Berat/Mobil', bukuServis: 'Buku Servis'
 };
 
@@ -10968,16 +11411,18 @@ function renderMasukItemDropdown(rowIdx, query) {
   const dropdownEl = document.getElementById(`masukItemDropdown_${rowIdx}`);
   if (!dropdownEl) return;
 
-  let filtered = itemsCache;
+  // Stok Masuk = terima stok BARU — barang Nonaktif (discontinue) gak masuk akal diterima lagi,
+  // disembunyiin total dari sini. Beda sama Stok Keluar/Koreksi (buat NGURANGIN stok lama).
+  let filtered = itemsCache.filter(item => item.aktif !== false);
   if (query) {
-    filtered = itemsCache.filter(item => 
+    filtered = filtered.filter(item => 
       item.nama.toLowerCase().includes(query) || 
       (item.kode || '').toLowerCase().includes(query) ||
       (item.acuan || '').toLowerCase().includes(query) ||
       (item.acuanList || []).some(a => a.toLowerCase().includes(query))
     );
-  } else if (itemsCache.length > 30) {
-    dropdownEl.innerHTML = `<div style="padding:12px;color:var(--ink-dim);font-size:12px;text-align:center;">Ketik nama/kode barang untuk mencari (${itemsCache.length} barang total)</div>`;
+  } else if (filtered.length > 30) {
+    dropdownEl.innerHTML = `<div style="padding:12px;color:var(--ink-dim);font-size:12px;text-align:center;">Ketik nama/kode barang untuk mencari (${filtered.length} barang total)</div>`;
     dropdownEl.style.display = 'block';
     return;
   }
@@ -11183,7 +11628,7 @@ function renderKlItemDropdown(rowIdx, query) {
       ${blokirPemesan ? '' : `onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'"`}
     >
       <div style="flex:1;">
-        <div style="font-weight:600;font-size:13px;">${item.nama}</div>
+        <div style="font-weight:600;font-size:13px;">${item.nama}${item.aktif === false ? ' <span class="pill low" style="font-size:9px;">NONAKTIF</span>' : ''}</div>
         <div style="font-size:11px;color:var(--ink-dim);">
           Kode: <span class="mono">${item.kode||'-'}</span> | Acuan: ${item.acuan||'-'} | Stok: ${item.saldo??0}${blokirPemesan ? ' <span class="pill low">❌ Habis, gak bisa dipesan</span>' : ''}
         </div>
@@ -11252,6 +11697,16 @@ document.addEventListener('DOMContentLoaded', () => {
     attachKlTipeChangeListener();
     initCalcFabDrag();
   }, 100);
+
+  // Shortcut keyboard: Esc nutup dropdown pencarian barang yang lagi kebuka (biar gak perlu
+  // klik di luar kotaknya cuma buat nutup) — cek semua elemen yang polanya "...Dropdown_N" atau
+  // "...Dropdown" yang lagi ditampilin (display != none).
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('[id*="Dropdown"]').forEach(el => {
+      if (el.style.display && el.style.display !== 'none') el.style.display = 'none';
+    });
+  });
   
   // ========= PROTEKSI DOBEL-KLIK (GLOBAL) =========
   // Semua tombol yang onclick-nya manggil aksi nulis-ke-database (simpan/approve/hapus/kirim/
@@ -11556,7 +12011,8 @@ async function approveReturMasuk(id) {
       const hargaAktif = hargaAktifDariBatches(batches);
       tx.update(itemRefRM, {
         saldo: (itemFresh.saldo||0) - retur.qty, batchesMasuk: batches,
-        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+        hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
     });
     const item = itemFresh;
@@ -11617,7 +12073,8 @@ async function deleteReturMasuk(id) {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefRMDel, {
           saldo: (itemFresh.saldo||0) + retur.qty, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
       // Hapus entry barang bekas
@@ -11906,7 +12363,8 @@ async function approveReturKeluar(id) {
       const hargaAktifBaru = hargaAktifDariBatches(batches);
       tx.update(itemRefRK, {
         saldo: (itemFresh.saldo||0) + retur.qty, batchesMasuk: batches,
-        hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN
+        hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
     });
 
@@ -11973,7 +12431,8 @@ async function deleteReturKeluar(id) {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefRKDel, {
           saldo: (itemFresh.saldo||0) - retur.qty, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
       if (diblokir) {
@@ -12032,7 +12491,7 @@ function filterKoreksiBarang() {
       onmouseover="this.style.background='var(--accent-dim)'"
       onmouseout="this.style.background='transparent'"
     >
-      <div style="font-weight:600;">${item.kode} — ${item.nama}</div>
+      <div style="font-weight:600;">${item.kode} — ${item.nama}${item.aktif === false ? ' <span class="pill low" style="font-size:9px;">NONAKTIF</span>' : ''}</div>
       <div style="color:var(--ink-dim);font-size:11px;">Stok: ${item.saldo || 0} ${item.satuan || '-'} | Acuan: ${item.acuan || '-'}</div>
     </div>
   `).join('');
@@ -12272,7 +12731,8 @@ async function approveKoreksiStok(id) {
       const hargaAktifBaru = hargaAktifDariBatches(batches);
       tx.update(itemRefKoreksi, {
         saldo: koreksi.stokActual, batchesMasuk: batches,
-        hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN
+        hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
+        ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
     });
     
@@ -12367,7 +12827,8 @@ async function deleteKoreksiStok(id) {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefKoreksiDel, {
           saldo: koreksi.barangData?.stokSistem || 0, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
       if (diblokir) {
@@ -12553,7 +13014,7 @@ function filterOpnameBarang() {
       onmouseover="this.style.background='var(--accent-dim)'"
       onmouseout="this.style.background='transparent'"
     >
-      <div style="font-weight:600;">${item.kode} — ${item.nama}</div>
+      <div style="font-weight:600;">${item.kode} — ${item.nama}${item.aktif === false ? ' <span class="pill low" style="font-size:9px;">NONAKTIF</span>' : ''}</div>
       <div style="color:var(--ink-dim);font-size:11px;">Stok Sistem: ${item.saldo || 0} ${item.satuan || ''}</div>
     </div>
   `).join('');
@@ -12750,7 +13211,8 @@ async function finalizeOpname() {
         const hargaAktifBaru = hargaAktifDariBatches(batches);
         tx.update(itemRefOpname, {
           saldo: d.stokActual, batchesMasuk: batches,
-          hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN
+          hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
       // Catat di riwayat Koreksi Stok juga, biar keliatan di sana (status langsung selesai)
@@ -13324,7 +13786,7 @@ function filterSvRowItem(idx, query) {
   listEl.innerHTML = filtered.slice(0, 15).map(item => `
     <div onclick="selectSvRowItem(${idx},'${item.id}')" style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;"
       onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'">
-      <div style="font-weight:600;">${item.kode} — ${item.nama}</div>
+      <div style="font-weight:600;">${item.kode} — ${item.nama}${item.aktif === false ? ' <span class="pill low" style="font-size:9px;">NONAKTIF</span>' : ''}</div>
       <div style="color:var(--ink-dim);font-size:11px;">Stok: ${item.saldo || 0} ${item.satuan || '-'}</div>
     </div>
   `).join('');
@@ -13984,7 +14446,10 @@ function renderOcItemDropdown(idx, query) {
   const wrap = document.getElementById('ocDropdown-' + idx);
   if (!wrap) return;
   const q = (query||'').toLowerCase().trim();
-  const hasil = !q ? guItemsCache.slice(0, 8) : guItemsCache.filter(i =>
+  // Order ke GU = minta stok BARU dari Gudang Utama — barang Nonaktif (discontinue) gak masuk
+  // akal diminta lagi, jadi disembunyiin dari pencarian ini.
+  const guAktif = guItemsCache.filter(i => i.aktif !== false);
+  const hasil = !q ? guAktif.slice(0, 8) : guAktif.filter(i =>
     (i.kode||'').toLowerCase().includes(q) || (i.nama||'').toLowerCase().includes(q)
   ).slice(0, 8);
   wrap.innerHTML = `<div style="position:absolute;top:2px;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);max-height:220px;overflow-y:auto;z-index:50;box-shadow:var(--shadow-md);">
@@ -14030,12 +14495,16 @@ async function submitOrderCabang() {
   const validRows = ocRows.filter(r => r.itemId && Number(r.qty) > 0);
   if (!validRows.length) { showToast('Tambahkan minimal 1 barang dengan qty valid', true); return; }
 
-  const items = validRows.map(r => {
-    const item = itemsCache.find(i => i.id === r.itemId);
-    return { kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() };
-  });
-
   try {
+    // Jaga-jaga kalau barangnya kehapus PAS di antara milih barang & klik submit (jarang kejadian,
+    // tapi kalau kejadian, mending pesan errornya jelas daripada crash kriptik "cannot read
+    // properties of undefined") — dipindah ke dalam try biar ketangkep sama catch di bawah.
+    const items = validRows.map(r => {
+      const item = itemsCache.find(i => i.id === r.itemId);
+      if (!item) throw new Error(`Barang yang dipilih (${r.namaTampil||r.itemId}) sudah tidak ada di Master Barang — coba refresh halaman dan pilih ulang.`);
+      return { kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() };
+    });
+
     await db.collection('orderCabang').add({
       tanggal, keterangan: ket, items, totalItem: items.length,
       cabangAsalId: currentCabangId, cabangAsalNama: cabangNama(currentCabangId),
@@ -14147,7 +14616,8 @@ async function saveOcDiterimaSebagian() {
           const hargaAktif = hargaAktifDariBatches(batches);
           tx.update(itemRefTerima, {
             saldo: (itemFresh.saldo||0) + it.diterimaSekarang, batchesMasuk: batches,
-            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+            ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
           });
         });
       } else {
@@ -14156,7 +14626,8 @@ async function saveOcDiterimaSebagian() {
           kode: it.kode, nama: it.nama, satuan: it.satuan||'', saldo: it.diterimaSekarang,
           cabangId: currentCabangId, stokMinimum: 0, kategori: itemSumber?.kategori || '', lokasiRak: '',
           hargaDasar: infoBatchBaru.hargaDasar, hargaPPN: infoBatchBaru.hargaPPN,
-          hargaGabungan: infoBatchBaru.hargaGabungan, hargaKSI: infoBatchBaru.hargaKSI, hargaKI: infoBatchBaru.hargaKI,
+          persenGabungan: itemSumber?.persenGabungan || 0,
+          ...hitungHargaJualOtomatis(infoBatchBaru.hargaDasar, infoBatchBaru.hargaPPN, itemSumber?.persenGabungan, itemSumber),
           batchesMasuk: [{ qty: it.diterimaSekarang, ...infoBatchBaru }],
           keterangan: `Dibuat otomatis dari kiriman ${o.cabangTujuanNama}`, createdAt: new Date().toISOString()
         });
@@ -14205,7 +14676,8 @@ async function batalkanOcDikirim(orderId) {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefBatal, {
           saldo: (itemFresh.saldo||0) + it.qty, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
     }
@@ -14289,7 +14761,8 @@ async function approveKirimOc(orderId) {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefApprove, {
           saldo: (itemFresh.saldo||0) - it.qty, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
     }
@@ -14337,7 +14810,8 @@ async function konfirmasiTerimaOc(orderId) {
           const hargaAktif = hargaAktifDariBatches(batches);
           tx.update(itemRefTerima, {
             saldo: (itemFresh.saldo||0) + it.qty, batchesMasuk: batches,
-            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+            ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
           });
         });
       } else {
@@ -14346,7 +14820,8 @@ async function konfirmasiTerimaOc(orderId) {
           kode: it.kode, nama: it.nama, satuan: it.satuan||'', saldo: it.qty,
           cabangId: currentCabangId, stokMinimum: 0, kategori: itemSumber?.kategori || '', lokasiRak: '',
           hargaDasar: infoBatchBaru.hargaDasar, hargaPPN: infoBatchBaru.hargaPPN,
-          hargaGabungan: infoBatchBaru.hargaGabungan, hargaKSI: infoBatchBaru.hargaKSI, hargaKI: infoBatchBaru.hargaKI,
+          persenGabungan: itemSumber?.persenGabungan || 0,
+          ...hitungHargaJualOtomatis(infoBatchBaru.hargaDasar, infoBatchBaru.hargaPPN, itemSumber?.persenGabungan, itemSumber),
           batchesMasuk: [{ qty: it.qty, ...infoBatchBaru }],
           keterangan: `Dibuat otomatis dari kiriman ${o.cabangTujuanNama}${itemSumber ? ' (harga ikut Gudang Utama)' : ''}`, createdAt: new Date().toISOString()
         });
@@ -14417,8 +14892,9 @@ function renderPushItemDropdown(idx, query) {
   wrap.innerHTML = `<div style="position:absolute;top:2px;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);max-height:220px;overflow-y:auto;z-index:50;box-shadow:var(--shadow-md);">
     ${hasil.map(i => {
       const badge = (i.saldo||0) > 0 ? `<span class="pill ok">✅ ${i.saldo}</span>` : `<span class="pill low">❌ Habis</span>`;
+      const nonaktifBadge = i.aktif === false ? ' <span class="pill low" style="font-size:9px;">NONAKTIF</span>' : '';
       return `<div style="padding:8px 10px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;" onmousedown="selectPushItem(${idx}, '${i.id}')">
-        <span>${i.kode} — ${i.nama}</span>${badge}
+        <span>${i.kode} — ${i.nama}${nonaktifBadge}</span>${badge}
       </div>`;
     }).join('') || '<div style="padding:7px 10px;color:var(--ink-dim);">Tidak ditemukan</div>'}
   </div>`;
@@ -14468,6 +14944,7 @@ async function submitKirimLangsung() {
     const items = [];
     for (const r of validRows) {
       const item = itemsCache.find(i => i.id === r.itemId);
+      if (!item) throw new Error(`Barang "${r.namaTampil||r.itemId}" sudah tidak ada di Master Barang — coba refresh halaman dan pilih ulang.`);
       items.push({ kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() });
       // PENTING: potong stok pakai FIFO batch (bukan cuma kurangin saldo doang) — kalau enggak,
       // saldo & total qty di batchesMasuk jadi gak sinkron, sama kasusnya kayak bug yang udah
@@ -14483,7 +14960,8 @@ async function submitKirimLangsung() {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefPush, {
           saldo: (itemFresh.saldo||0) - Number(r.qty), batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
     }
@@ -14554,8 +15032,9 @@ function renderReturOcItemDropdown(idx, query) {
   wrap.innerHTML = `<div style="position:absolute;top:2px;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);max-height:220px;overflow-y:auto;z-index:50;box-shadow:var(--shadow-md);">
     ${hasil.map(i => {
       const badge = (i.saldo||0) > 0 ? `<span class="pill ok">✅ ${i.saldo}</span>` : `<span class="pill low">❌ Habis</span>`;
+      const nonaktifBadge = i.aktif === false ? ' <span class="pill low" style="font-size:9px;">NONAKTIF</span>' : '';
       return `<div style="padding:8px 10px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;" onmousedown="selectReturOcItem(${idx}, '${i.id}')">
-        <span>${i.kode} — ${i.nama}</span>${badge}
+        <span>${i.kode} — ${i.nama}${nonaktifBadge}</span>${badge}
       </div>`;
     }).join('') || '<div style="padding:7px 10px;color:var(--ink-dim);">Tidak ditemukan</div>'}
   </div>`;
@@ -14600,6 +15079,7 @@ async function submitReturKeGudangUtama() {
     const items = [];
     for (const r of validRows) {
       const item = itemsCache.find(i => i.id === r.itemId);
+      if (!item) throw new Error(`Barang "${r.namaTampil||r.itemId}" sudah tidak ada di Master Barang — coba refresh halaman dan pilih ulang.`);
       items.push({ kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() });
       // Sama kayak Kirim Langsung — potong stok pakai FIFO batch, transaction per barang biar
       // saldo & batchesMasuk tetap sinkron.
@@ -14612,7 +15092,8 @@ async function submitReturKeGudangUtama() {
         const hargaAktif = hargaAktifDariBatches(batches);
         tx.update(itemRefRetur, {
           saldo: (itemFresh.saldo||0) - Number(r.qty), batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
       });
     }
