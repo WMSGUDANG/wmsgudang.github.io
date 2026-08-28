@@ -299,6 +299,7 @@
   <div class="mobile-topbar">
     <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
     <div class="mt-title"><span class="tag">WMS</span>GUDANG</div>
+    <div id="syncStatusBadge" style="display:none;margin-left:auto;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap;"></div>
   </div>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <div class="sidebar" id="sidebarEl">
@@ -2744,11 +2745,91 @@ if (firebaseConfig.apiKey === "GANTI_INI") {
   firebase.initializeApp(firebaseConfig, "secondary");
   db = firebase.firestore();
   db.settings({ ignoreUndefinedProperties: true, merge: true }); // FIX: cegah error "Unsupported field value: undefined" di semua form (Barang Keluar, Servis, dll) — Firestore akan otomatis abaikan field yg kebetulan undefined, bukan gagal total. merge:true biar gak nimpa setting host bawaan Firestore (nyebabin warning "overriding original host" di console — gak bahaya, tapi ganggu keliatannya).
+  // OFFLINE PERSISTENCE: kalau internet mendadak putus pas lagi kerja, transaksi yang disimpan
+  // (Stok Masuk/Keluar/dll) TETAP kesimpen di HP/laptop dulu, otomatis terkirim ke server begitu
+  // internet nyala lagi — gak perlu input ulang manual. synchronizeTabs:true biar tetap jalan
+  // walau app-nya kebuka di beberapa tab sekaligus di browser yang sama.
+  db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('Offline persistence gak bisa aktif — kemungkinan ada tab lain yang lagi buka app ini juga.');
+    } else if (err.code === 'unimplemented') {
+      console.warn('Browser ini gak dukung offline persistence.');
+    }
+  });
   auth = firebase.auth();
+
+  // ===== INDIKATOR STATUS SINKRON (online/offline + pending sync + koneksi goyang) =====
+  // Patokan utama: `waktuTerakhirSinkron` — kapan terakhir kali onSnapshotsInSync nembak (tanda
+  // Firestore beneran "ngobrol lancar" sama server, bukan cuma browser bilang "online" doang).
+  // Ini lebih akurat dibanding cuma ngandelin event online/offline browser — soalnya internet
+  // yang "goyang" (lemot/putus-nyambung tapi gak pernah bener-bener dianggap offline sama
+  // browser) tetap kedeteksi lewat cara ini, karena Firestore-nya sendiri yang berhenti bisa
+  // sinkron, walau browser masih ngotot bilang online.
+  let sedangMenyinkronkan = false;
+  let sedangIstirahatKoneksi = false;
+  let waktuTerakhirSinkron = Date.now();
+  function updateSyncBadge() {
+    const badge = document.getElementById('syncStatusBadge');
+    if (!badge) return;
+    if (!navigator.onLine) {
+      badge.style.display = 'block';
+      badge.style.background = '#C4453A';
+      badge.textContent = '🔴 Offline — tersimpan lokal';
+    } else if (sedangIstirahatKoneksi) {
+      badge.style.display = 'block';
+      badge.style.background = '#8A6A3C';
+      badge.textContent = '🟠 Koneksi goyang — istirahat sebentar';
+    } else if (sedangMenyinkronkan) {
+      badge.style.display = 'block';
+      badge.style.background = '#D4A017';
+      badge.textContent = '🟡 Menyinkronkan...';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  window.addEventListener('online', () => { sedangMenyinkronkan = true; updateSyncBadge(); });
+  window.addEventListener('offline', () => { sedangMenyinkronkan = false; sedangIstirahatKoneksi = false; updateSyncBadge(); });
+  // onSnapshotsInSync nembak tiap kali SEMUA data lokal udah cocok sama server — jadi bukti
+  // paling akurat kalau koneksi lagi beneran sehat. Dicatet waktunya tiap kali nembak, dipakai
+  // juga sama watchdog di bawah buat ngecek "udah berapa lama gak sinkron sama sekali".
+  db.onSnapshotsInSync(() => {
+    waktuTerakhirSinkron = Date.now();
+    if (sedangMenyinkronkan || sedangIstirahatKoneksi) {
+      sedangMenyinkronkan = false;
+      sedangIstirahatKoneksi = false;
+      updateSyncBadge();
+      showToast('✅ Semua data tersinkron ke server');
+    }
+  });
+  updateSyncBadge();
+
+  // ===== PENYESUAIAN EKSTRA: deteksi koneksi GOYANG (lemot/putus-nyambung, bukan mati total) =====
+  // Dicek berkala: browser bilang "online" TAPI udah lama banget gak ada tanda sinkron beneran
+  // jalan (onSnapshotsInSync gak nembak-nembak) -> ini pola khas internet lagi gak stabil, yang
+  // biasanya bikin Firebase maksa terus nyoba konek ulang berkali-kali sampai browser keteteran.
+  // Solusinya: paksa Firestore "istirahat" dulu (disableNetwork — kerja dari cache lokal doang,
+  // berhenti nyoba nyambung), tunggu 15 detik, baru coba nyambung lagi (enableNetwork). Diulang
+  // terus tiap kondisi ini kejadian lagi, sampai internetnya beneran stabil.
+  setInterval(() => {
+    if (!navigator.onLine || sedangIstirahatKoneksi || !currentUser) return;
+    const lamaGakSinkron = Date.now() - waktuTerakhirSinkron;
+    if (lamaGakSinkron > 12000) { // 12 detik gak ada tanda sinkron sama sekali -> anggap goyang
+      sedangIstirahatKoneksi = true;
+      updateSyncBadge();
+      db.disableNetwork().then(() => {
+        setTimeout(() => {
+          sedangIstirahatKoneksi = false;
+          waktuTerakhirSinkron = Date.now(); // reset penghitung, kasih kesempatan lagi
+          db.enableNetwork().then(updateSyncBadge).catch(() => {});
+        }, 15000);
+      }).catch(() => { sedangIstirahatKoneksi = false; });
+    }
+  }, 3000);
 
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       currentUser = user;
+      waktuTerakhirSinkron = Date.now(); // reset watchdog koneksi, kasih waktu listener nyala dulu abis login
       const doc = await db.collection('users').doc(user.uid).get();
       if (!doc.exists) {
         showToast('Akun ini belum terdaftar di koleksi users. Hubungi admin.', true);
@@ -5774,6 +5855,15 @@ function parseExcelMasukAOA(aoa) {
   const normalisasi = (s) => String(s||'').toLowerCase().trim();
   let idxQty = -1, idxSatuan = -1, idxNama = -1, idxHarga = -1, idxKode = -1, idxTanggal = -1;
   let headerRowIdx = -1;
+  // Cek dulu baris-baris SEBELUM header, siapa tau judulnya format "BARANG MASUK — [Supplier]"
+  // (dari file per-supplier yang di-generate otomatis) — biar Supplier ke-detect dari situ juga,
+  // bukan cuma dari marker "SUPPLIER: xxx" (format rekap gabungan).
+  let supplierDariJudul = '';
+  for (let i = 0; i < Math.min(aoa.length, 10); i++) {
+    const teksBaris = (aoa[i]||[]).map(c => String(c||'')).join(' ');
+    const m = teksBaris.match(/BARANG MASUK\s*[—-]\s*(.+)/i);
+    if (m) { supplierDariJudul = m[1].trim(); break; }
+  }
   for (let i = 0; i < Math.min(aoa.length, 20); i++) {
     const row = aoa[i].map(normalisasi);
     const namaIdx = row.findIndex(c => c.includes('nama barang') || c === 'barang' || c === 'nama');
@@ -5791,8 +5881,8 @@ function parseExcelMasukAOA(aoa) {
   if (headerRowIdx === -1) return [];
 
   const grup = [];
-  let current = { supplier: '', items: [] };
-  let adaSupplierMarker = false;
+  let current = { supplier: supplierDariJudul, items: [] };
+  let adaSupplierMarker = !!supplierDariJudul;
 
   for (let i = headerRowIdx + 1; i < aoa.length; i++) {
     const row = aoa[i];
@@ -5819,7 +5909,7 @@ function parseExcelMasukAOA(aoa) {
     });
   }
   if (current.items.length) grup.push(current);
-  // Kalau gak ada marker SUPPLIER sama sekali, berarti 1 tabel polos -> anggap 1 grup aja
+  // Kalau gak ada marker SUPPLIER (atau judul) sama sekali, berarti 1 tabel polos -> anggap 1 grup aja
   if (!adaSupplierMarker && grup.length === 1) grup[0].supplier = grup[0].supplier || '(isi manual)';
   return grup;
 }
@@ -5870,12 +5960,19 @@ function terapkanImportExcelMasuk(idx) {
   if (tglIso) document.getElementById('masukTanggal').value = tglIso;
 
   let cocokOtomatis = 0, perluManual = 0;
+  const supplierGrupIni = (g.supplier && g.supplier !== '(isi manual)') ? g.supplier.toLowerCase() : '';
   const barisBaru = g.items.map(it => {
-    // Cocokin ke Master Barang: Kode dulu (paling akurat), baru Acuan/Acuan List (karena nama
-    // di nota supplier itu BEDA dari Nama internal — nama di nota justru nama "acuan" yang
-    // dipakai suppliernya), baru Nama persis sebagai upaya terakhir.
+    // Cocokin ke Master Barang, urutannya:
+    // 1. Kode (paling akurat, gak peduli supplier)
+    // 2. Acuan PER-SUPPLIER (acuanBySupplier) — paling presisi buat nama dari nota, karena
+    //    cuma nyocokin ke acuan yang PERNAH dicatet dari supplier YANG SAMA. Ini nyegah salah
+    //    nyambung kalau kebetulan 2 supplier beda nulis nama sama persis buat barang beda.
+    // 3. Acuan/Acuan List GLOBAL (lama, semua supplier campur) — fallback kalau belum ada
+    //    histori khusus supplier ini (misal baru pertama kali beli dari supplier ini).
+    // 4. Nama persis — upaya terakhir.
     const namaLower = it.nama.toLowerCase();
     const item = (it.kode && itemsCache.find(x => (x.kode||'').toLowerCase() === it.kode.toLowerCase()))
+      || (supplierGrupIni && itemsCache.find(x => (x.acuanBySupplier?.[g.supplier]||[]).some(a => (a||'').toLowerCase() === namaLower)))
       || itemsCache.find(x => (x.acuan||'').toLowerCase() === namaLower)
       || itemsCache.find(x => (x.acuanList||[]).some(a => (a||'').toLowerCase() === namaLower))
       || itemsCache.find(x => (x.nama||'').toLowerCase() === namaLower);
@@ -6731,6 +6828,20 @@ function tambahAcuanKeList(list, acuan) {
   if (a && !arr.some(x => x.toLowerCase() === a.toLowerCase())) arr.push(a);
   return arr;
 }
+// BARU: pencatatan acuan PER-SUPPLIER — beda dari acuanList (yang global, dari semua supplier
+// dicampur). Ini biar Import Excel bisa cocokin nama barang dari nota SPESIFIK ke supplier yang
+// nulisnya, gak ketuker walau kebetulan ada 2 supplier beda nulis nama yang sama persis buat
+// barang yang beda. acuanList lama TETAP jalan apa adanya (gak disentuh), ini cuma tambahan.
+function tambahAcuanBySupplier(acuanBySupplier, supplier, acuan) {
+  const obj = (acuanBySupplier && typeof acuanBySupplier === 'object') ? { ...acuanBySupplier } : {};
+  const sup = (supplier || '').trim();
+  const a = (acuan || '').trim();
+  if (!sup || !a) return obj;
+  const arr = Array.isArray(obj[sup]) ? obj[sup].slice() : [];
+  if (!arr.some(x => x.toLowerCase() === a.toLowerCase())) arr.push(a);
+  obj[sup] = arr;
+  return obj;
+}
 function tambahBatchMasuk(item, qty, hargaDasar, hargaPPN, tanggal, trxId, acuan, hargaKI, hargaKSI, hargaGabungan) {
   const batches = getBatchesMasuk(item);
   batches.push({ qty, hargaDasar: hargaDasar || 0, hargaPPN: hargaPPN || 0, hargaKI: hargaKI || 0, hargaKSI: hargaKSI || 0, hargaGabungan: hargaGabungan || 0, acuan: acuan || '', tanggal, trxId });
@@ -6809,6 +6920,7 @@ async function approveMasuk(id, isOldest) {
       const batchesBaru = tambahBatchMasuk(item, t.qty, hDasarTrx, hPPNTrx, t.tanggal, id, acuanTerbaru, t.hargaKI, t.hargaKSI, t.hargaGabungan);
       const hargaAktif = hargaAktifDariBatches(batchesBaru);
       const acuanListBaru = tambahAcuanKeList(item.acuanList, acuanTerbaru);
+      const acuanBySupplierBaru = tambahAcuanBySupplier(item.acuanBySupplier, t.supplier, acuanTerbaru);
       tx.update(itemRefM, {
         saldo: newSaldo, batchesMasuk: batchesBaru,
         // Harga Dasar/PPN ngikutin batch aktif (FIFO), buat ngitung modal/HPP akurat. Harga Jual
@@ -6817,7 +6929,7 @@ async function approveMasuk(id, isOldest) {
         // udah diatur di Master Barang (persennya tetap, hasil akhirnya ngikutin Modal).
         hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
         ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item),
-        acuan: hargaAktif.acuan, acuanList: acuanListBaru
+        acuan: hargaAktif.acuan, acuanList: acuanListBaru, acuanBySupplier: acuanBySupplierBaru
       });
     });
     for (const sn of (t.serials || [])) {
