@@ -2830,6 +2830,7 @@ if (firebaseConfig.apiKey === "GANTI_INI") {
 
   auth.onAuthStateChanged(async (user) => {
     if (user) {
+      try {
       currentUser = user;
       waktuTerakhirSinkron = Date.now(); // reset watchdog koneksi, kasih waktu listener nyala dulu abis login
       const doc = await db.collection('users').doc(user.uid).get();
@@ -2909,6 +2910,13 @@ if (firebaseConfig.apiKey === "GANTI_INI") {
       logActivity('auth', 'Login', `${currentUserData.name} masuk ke sistem (cabang: ${cabangNama(currentCabangId)})`);
       initListeners();
       if (isPemesan) document.querySelector('#navList > button[data-view="keluar"]')?.click(); // Pemesan (KI/KSI/Gabungan) minta barang dari cabang sendiri, bukan ke Gudang Utama
+      } catch(e) {
+        // Kalau ada apapun yang gagal di proses login ini (paling sering: koneksi goyang pas
+        // ambil data user/cabang) — dulu ini bikin user stuck di layar blank tanpa penjelasan
+        // sama sekali. Sekarang kasih pesan jelas + arahin buat coba lagi, bukan diem doang.
+        console.error('Gagal proses login:', e);
+        showToast('Gagal memuat data setelah login (' + e.message + '). Coba refresh halaman atau cek koneksi internet.', true);
+      }
     } else {
       currentUser = null;
       document.getElementById('app').classList.remove('show');
@@ -2986,6 +2994,8 @@ function openAccountModal() {
 function closeAccountModal() { document.getElementById('accountModalBg').classList.remove('show'); }
 
 async function saveAccountName() {
+  if (_cekLagiDiproses('saveAccountName')) return;
+  try {
   const nama = document.getElementById('accNama').value.trim();
   if (!nama) { showToast('Nama tidak boleh kosong', true); return; }
   try {
@@ -2995,6 +3005,7 @@ async function saveAccountName() {
     logActivity('auth', 'Ganti Nama', `Nama diubah menjadi "${nama}"`);
     showToast('Nama berhasil diperbarui');
   } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } finally { _selesaiDiproses('saveAccountName'); }
 }
 
 async function changeAccountPassword() {
@@ -3854,6 +3865,9 @@ function closeKoreksiHargaBatchModal() {
 
 async function simpanKoreksiHargaBatch() {
   if (!koreksiHargaBatchTarget) return;
+  const _key = `simpanKoreksiHargaBatch_${koreksiHargaBatchTarget.itemId}_${koreksiHargaBatchTarget.trxId}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const { itemId, trxId, jenis } = koreksiHargaBatchTarget;
   const hargaDasarBaru = Number(document.getElementById('koreksiHBDasar').value) || 0;
   const hargaPPNBaru = Number(document.getElementById('koreksiHBPPN').value) || 0;
@@ -3912,6 +3926,7 @@ async function simpanKoreksiHargaBatch() {
   } catch(e) {
     showToast('Gagal koreksi: ' + e.message, true);
   }
+  } finally { _selesaiDiproses(_key); }
 }
 
 function exportRiwayatHargaCSV() {
@@ -4767,9 +4782,16 @@ async function mergeItemsIntoPrimary(primary, others) {
   });
   batches.sort((a,b) => (a.tanggal||'').localeCompare(b.tanggal||''));
   const hargaAktif = hargaAktifDariBatches(batches);
+  // FIX BUG: sebelumnya cuma hargaDasar/hargaPPN (Modal) yang diupdate di sini, Harga Jual
+  // (KI/KSI/Gabungan) di level Master Barang gak ikut di-refresh — padahal batch yang jadi FIFO
+  // aktif abis digabung bisa aja datang dari salah satu barang "others" (bukan dari primary),
+  // jadi Modal bisa berubah tapi Harga Jual-nya nyangkut di nilai lama. Sekarang disamakan
+  // pola-nya kayak approveMasuk/approveKeluar/dll: Harga Jual SELALU dihitung ulang dari Modal
+  // terbaru + aturan persenGabungan/gabunganManual milik PRIMARY (bukan ambil polos dari batch).
   await db.collection('items').doc(primary.id).update({
     saldo: totalSaldo, batchesMasuk: batches,
     hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+    ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, primary.persenGabungan, primary),
     acuan: hargaAktif.acuan, acuanList: acuanListGabungan
   });
 
@@ -4805,6 +4827,8 @@ async function mergeItemsIntoPrimary(primary, others) {
   return ops.length;
 }
 async function gabungkanBarangTerpilih() {
+  if (_cekLagiDiproses('gabungkanBarangTerpilih')) return;
+  try {
   const selectedIds = [...dupSelectedIds];
   if (selectedIds.length < 2) { showToast('Pilih minimal 2 barang', true); return; }
   const primaryRadio = document.querySelector('input[name="dupPrimaryPick"]:checked');
@@ -4826,6 +4850,7 @@ async function gabungkanBarangTerpilih() {
   } catch(e) {
     showToast('Gagal menggabungkan: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('gabungkanBarangTerpilih'); }
 }
 
 // Foto barang disimpan langsung di Firestore (base64), BUKAN Firebase Storage — app ini
@@ -5026,6 +5051,9 @@ function samakanHargaGudangUtama() {
 
 async function saveItem() {
   const id = document.getElementById('itemId').value;
+  const _key = `saveItem_${id || 'new'}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const hargaDasarInput = Number(document.getElementById('itemHDasar').value || 0);
   const hargaPPNInput = Number(document.getElementById('itemHPPN').value || 0);
   const persenGabunganInput = Number(document.getElementById('itemPersenGabungan').value || 0);
@@ -5154,6 +5182,7 @@ async function saveItem() {
     showToast(linked ? 'Barang baru dibuat & langsung dipilih di baris' : 'Barang tersimpan');
     closeItemModal();
   } catch(e) { showToast('Gagal simpan: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 /* ---------- KOREKSI STOK ---------- */
@@ -5182,6 +5211,9 @@ function closeKoreksiModal() { document.getElementById('koreksiModalBg').classLi
 async function submitKoreksi() {
   const i = itemsCache.find(x => x.id === koreksiItemId);
   if (!i) return;
+  const _key = `submitKoreksi_${i.id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   if (await isPeriodeTerkunci(new Date().toISOString())) { showToast('Periode bulan ini udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau koreksi stok.', true); return; }
   const baru = Number(document.getElementById('koreksiSaldoBaru').value);
   const alasan = document.getElementById('koreksiModalAlasan').value.trim();
@@ -5230,6 +5262,7 @@ async function submitKoreksi() {
     showToast('Stok berhasil dikoreksi');
     closeKoreksiModal();
   } catch(e) { showToast('Gagal koreksi: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function toggleItemAktif(id) {
@@ -5860,8 +5893,12 @@ function renderMasukRows() {
   wrap.innerHTML = masukRows.length ? masukRows.map((r, idx) => {
     const item = itemsCache.find(i => i.id === r.itemId);
     const belumCocok = !item && r.namaTampil; // hasil import Excel yang nama-nya gak ketemu persis di Master Barang
-    return `<div class="panel" style="margin-bottom:10px;padding:12px 14px;background:${belumCocok ? '#FFF4E8' : '#FAF9F6'};${belumCocok ? 'border:1px solid #E8622C;' : ''}">
+    const cekMirip = item && r.perluDicekMirip; // hasil import Excel yang cocoknya lewat nama MIRIP, bukan persis — perlu diverifikasi user
+    const warnaBg = belumCocok ? '#FFF4E8' : (cekMirip ? '#FFFBE0' : '#FAF9F6');
+    const warnaBorder = belumCocok ? 'border:1px solid #E8622C;' : (cekMirip ? 'border:1px solid #D6A400;' : '');
+    return `<div class="panel" style="margin-bottom:10px;padding:12px 14px;background:${warnaBg};${warnaBorder}">
       ${belumCocok ? '<div style="font-size:11px;color:#E8622C;font-weight:600;margin-bottom:6px;">⚠️ Hasil import — nama ini belum ketemu persis di Master Barang, cari & pilih manual</div>' : ''}
+      ${cekMirip ? `<div style="font-size:11px;color:#8A6D00;font-weight:600;margin-bottom:6px;">🔍 Hasil import — dicocokkan otomatis dari NAMA MIRIP ke "${(item.nama||'').replace(/"/g,'&quot;')}", cek lagi apa ini barang yang bener sebelum disimpan</div>` : ''}
       <div class="row">
         <div class="field" style="min-width:220px;"><label>Barang <span style="color:var(--accent);">#${idx+1}</span></label>
           <div style="display:flex;gap:6px;">
@@ -6063,7 +6100,8 @@ function parseExcelMasukAOA(aoa) {
   let current = { supplier: supplierDariJudul, items: [] };
   let adaSupplierMarker = !!supplierDariJudul;
 
-  for (let i = headerRowIdx + 1; i < aoa.length; i++) {
+  for (let i = 0; i < aoa.length; i++) {
+    if (i === headerRowIdx) continue; // baris header sendiri dilewatin, bukan data/marker
     const row = aoa[i];
     if (!row || row.every(c => String(c||'').trim() === '')) continue;
     const gabunganTeks = row.map(c => String(c||'')).join(' ');
@@ -6091,6 +6129,48 @@ function parseExcelMasukAOA(aoa) {
   // Kalau gak ada marker SUPPLIER (atau judul) sama sekali, berarti 1 tabel polos -> anggap 1 grup aja
   if (!adaSupplierMarker && grup.length === 1) grup[0].supplier = grup[0].supplier || '(isi manual)';
   return grup;
+}
+
+// --- Fuzzy matching nama barang (fallback terakhir, "nama mendekati") ---
+// Dipakai kalau exact match (kode/acuanBySupplier/acuan/acuanList/nama) gak ketemu sama sekali.
+// Threshold dibikin cukup ketat (0.82) biar gak asal comot barang yang beda tapi kebetulan mirip.
+function normalisasiNamaBarangFuzzy(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+}
+function levenshteinDistance(a, b) {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = new Array(n + 1);
+  let curr = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+}
+function skorKemiripanNama(a, b) {
+  const na = normalisasiNamaBarangFuzzy(a), nb = normalisasiNamaBarangFuzzy(b);
+  if (!na || !nb) return 0;
+  const maxLen = Math.max(na.length, nb.length);
+  if (maxLen === 0) return 1;
+  return 1 - (levenshteinDistance(na, nb) / maxLen);
+}
+function cariBarangMirip(namaDariNota, itemsCache, minSkor = 0.82) {
+  let best = null, bestSkor = 0;
+  for (const x of itemsCache) {
+    const kandidat = [x.acuan, x.nama, ...(x.acuanList || [])].filter(Boolean);
+    for (const k of kandidat) {
+      const skor = skorKemiripanNama(namaDariNota, k);
+      if (skor > bestSkor) { bestSkor = skor; best = x; }
+    }
+  }
+  return bestSkor >= minSkor ? best : null;
 }
 
 function bukaPilihSupplierImportExcel() {
@@ -6138,7 +6218,7 @@ function terapkanImportExcelMasuk(idx) {
   const tglIso = parseTanggalIndo(tglPertama);
   if (tglIso) document.getElementById('masukTanggal').value = tglIso;
 
-  let cocokOtomatis = 0, perluManual = 0;
+  let cocokOtomatis = 0, cocokMirip = 0, perluManual = 0;
   const supplierGrupIni = (g.supplier && g.supplier !== '(isi manual)') ? g.supplier.toLowerCase() : '';
   const barisBaru = g.items.map(it => {
     // Cocokin ke Master Barang, urutannya:
@@ -6150,14 +6230,18 @@ function terapkanImportExcelMasuk(idx) {
     //    histori khusus supplier ini (misal baru pertama kali beli dari supplier ini).
     // 4. Nama persis — upaya terakhir.
     const namaLower = it.nama.toLowerCase();
-    const item = (it.kode && itemsCache.find(x => (x.kode||'').toLowerCase() === it.kode.toLowerCase()))
+    const itemExact = (it.kode && itemsCache.find(x => (x.kode||'').toLowerCase() === it.kode.toLowerCase()))
       || (supplierGrupIni && itemsCache.find(x => (x.acuanBySupplier?.[g.supplier]||[]).some(a => (a||'').toLowerCase() === namaLower)))
       || itemsCache.find(x => (x.acuan||'').toLowerCase() === namaLower)
       || itemsCache.find(x => (x.acuanList||[]).some(a => (a||'').toLowerCase() === namaLower))
       || itemsCache.find(x => (x.nama||'').toLowerCase() === namaLower);
-    if (item) cocokOtomatis++; else perluManual++;
+    // Fallback terakhir: nama MIRIP (bukan persis) — dipakai cuma kalau exact match gak ketemu sama sekali.
+    const itemMirip = !itemExact ? cariBarangMirip(it.nama, itemsCache) : null;
+    const item = itemExact || itemMirip;
+    if (itemExact) cocokOtomatis++; else if (itemMirip) cocokMirip++; else perluManual++;
     return {
       itemId: item ? item.id : '', namaTampil: item ? item.nama : it.nama,
+      perluDicekMirip: !!itemMirip,
       // Acuan SELALU diisi nama asli dari nota (bukan cuma pas ketemu) — biar kalaupun user
       // harus pilih manual buat baris yang belum ke-match, nama dari nota ini tetap kesimpen
       // jadi acuan baru pas transaksinya di-approve nanti (bukan ketimpa acuan default punya
@@ -6173,7 +6257,7 @@ function terapkanImportExcelMasuk(idx) {
   masukRows = formMasihKosong ? barisBaru : [...masukRows, ...barisBaru];
   renderMasukRows();
   saveDraftMasuk();
-  showToast(`Import selesai: ${cocokOtomatis} barang otomatis kecocok ke Master Barang${perluManual ? `, ${perluManual} barang PERLU DIPILIH MANUAL (nama gak ketemu persis di Master Barang)` : ''}`);
+  showToast(`Import selesai: ${cocokOtomatis} barang kecocok persis ke Master Barang${cocokMirip ? `, ${cocokMirip} barang kecocok dari NAMA MIRIP (tolong cek ulang satu-satu, bisa aja salah)` : ''}${perluManual ? `, ${perluManual} barang PERLU DIPILIH MANUAL (nama gak ketemu sama sekali di Master Barang)` : ''}`);
 }
 
 function updateMasukHargaTotalPPN(idx, total) {
@@ -6421,6 +6505,8 @@ async function lihatLampiranKlById(lampiranId) {
 }
 
 async function submitMasuk() {
+  if (_cekLagiDiproses('submitMasuk')) return;
+  try {
   const tanggalInput = document.getElementById('masukTanggal').value;
   const tanggal = tanggalInput ? new Date(tanggalInput + 'T00:00:00').toISOString() : new Date().toISOString();
   const supplier = document.getElementById('masukSupplier').value.trim();
@@ -6515,6 +6601,7 @@ async function submitMasuk() {
     showToast(`${payloads.length} transaksi masuk disimpan, menunggu approve di Antrian Approval`);
     resetMasukForm();
   } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitMasuk'); }
 }
 
 let masukHistFilteredIds = [];
@@ -6761,6 +6848,8 @@ async function openEditNotaMasukModal() {
 }
 
 async function simpanEditNotaMasuk() {
+  if (_cekLagiDiproses('simpanEditNotaMasuk')) return;
+  try {
   const ids = getSelectedIdsGeneric('masuk');
   if (!ids.length) { showToast('Centang minimal 1 barang dulu', true); return; }
   const tanggal = document.getElementById('editNotaMasukTanggal').value;
@@ -6804,6 +6893,7 @@ async function simpanEditNotaMasuk() {
     showToast(`${ids.length} barang berhasil diupdate`);
     document.getElementById('editNotaMasukModalBg').classList.remove('show');
   } catch(e) { showToast('Gagal update: ' + e.message, true); }
+  } finally { _selesaiDiproses('simpanEditNotaMasuk'); }
 }
 
 function deleteMasukTerpilih() {
@@ -6836,10 +6926,14 @@ function getPendingQueue() {
 async function tolakPesananPemesan(id) {
   const trx = keluarCache.find(x => x.id === id);
   if (!trx) return;
+  if ((trx.status||'pending') !== 'pending') { showToast('Pesanan ini udah gak berstatus pending (mungkin udah diproses).', true); return; }
   const alasan = await customPrompt('Alasan Tolak', 'Kenapa pesanan ini ditolak? (wajib diisi, biar Pemesan tau alasannya)', 'cth: stok gak ada, gak sesuai prosedur, dll');
   if (alasan === null) return; // user cancel
   if (!alasan.trim()) { showToast('Alasan tolak wajib diisi', true); return; }
   try {
+    const cekSnap = await db.collection('keluarTransaksi').doc(id).get();
+    if (!cekSnap.exists) throw new Error('Transaksi tidak ditemukan');
+    if ((cekSnap.data().status||'pending') !== 'pending') throw new Error('Pesanan ini udah gak berstatus pending (kemungkinan diklik dobel atau udah diproses duluan).');
     await db.collection('keluarTransaksi').doc(id).update({
       status: 'ditolak', alasanTolak: alasan.trim(),
       ditolakBy: currentUserData.name, ditolakAt: new Date().toISOString()
@@ -7071,9 +7165,31 @@ function kurangiBatchSpesifik(item, trxId, qty) {
   return batches;
 }
 
+// Guard klik ganda: cegah approveMasuk kepanggil bertumpuk buat id yang sama
+// (penyebab kasus stok kedobel/ketriple pas tombol Approve diklik berkali-kali
+// sebelum proses pertama selesai / sebelum status berubah jadi 'selesai').
+// Guard universal (dipakai di semua fungsi approve/submit/simpan yang nulis ke database) —
+// cegah 1 aksi yang sama kepanggil bertumpuk sebelum proses sebelumnya kelar (penyebab kasus
+// data kedobel/ketriple kalau tombol diklik berkali-kali atau koneksi lambat). "key" harus unik
+// per-aksi (biasanya nama fungsi + id transaksi, atau nama fungsi doang buat form yang cuma bisa
+// dibuka 1 di layar dalam waktu bersamaan).
+const _sedangDiproses = new Set();
+function _cekLagiDiproses(key) {
+  if (_sedangDiproses.has(key)) { showToast('Masih diproses, tunggu sebentar — jangan diklik berkali-kali.', true); return true; }
+  _sedangDiproses.add(key);
+  return false;
+}
+function _selesaiDiproses(key) { _sedangDiproses.delete(key); }
+
+const _approveMasukSedangDiproses = new Set();
+
 async function approveMasuk(id, isOldest) {
+  if (_approveMasukSedangDiproses.has(id)) { showToast('Transaksi ini lagi diproses, tunggu sebentar — jangan diklik berkali-kali.', true); return; }
   const t = txCache.find(x => x.id === id);
   if (!t) return;
+  if (t.status === 'selesai') { showToast('Transaksi ini udah pernah di-approve sebelumnya.', true); return; }
+  _approveMasukSedangDiproses.add(id);
+  try {
   if (await isPeriodeTerkunci(t.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
   if (!isOldest) {
     const queue = getPendingQueue();
@@ -7082,6 +7198,7 @@ async function approveMasuk(id, isOldest) {
   }
   try {
     const itemRefM = db.collection('items').doc(t.itemId);
+    const trxRefM = db.collection('transactions').doc(id);
     let namaTerbaru, kodeTerbaru, acuanTerbaru, satuanTerbaru, newSaldo;
     const hDasarTrx = t.hargaDasar || 0;
     const hPPNTrx = t.hargaPPN || 0;
@@ -7089,6 +7206,13 @@ async function approveMasuk(id, isOldest) {
     // Transaction Firestore: baca & tulis saldo/batch item secara atomik,
     // supaya aman kalau ada beberapa orang approve barang yang sama bersamaan.
     await db.runTransaction(async (tx) => {
+      // Baca ulang status transaksi INI JUGA di dalam transaction (bukan cuma dari txCache lokal) —
+      // supaya kalau ada approve lain yang barusan selesai duluan (dari tab/device lain, atau race
+      // condition), proses ini berhenti total, gak dobel nambah stok. Ini pengaman terakhir kalau
+      // guard di sisi klik tombol somehow kelewat.
+      const trxSnap = await tx.get(trxRefM);
+      if (!trxSnap.exists) throw new Error('Transaksi tidak ditemukan');
+      if ((trxSnap.data().status || 'pending') === 'selesai') throw new Error('Transaksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak ketambah 2x.');
       const snap = await tx.get(itemRefM);
       if (!snap.exists) throw new Error('Barang tidak ditemukan di master');
       const item = { id: snap.id, ...snap.data() };
@@ -7156,6 +7280,7 @@ async function approveMasuk(id, isOldest) {
     }
     showToast('Stok masuk di-approve. Batch harga baru ditambahkan, harga aktif Master Stok mengikuti FIFO');
   } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } finally { _approveMasukSedangDiproses.delete(id); }
 }
 
 async function batalkanApproveMasuk(id) {
@@ -7228,8 +7353,12 @@ function batalkanBatchMasuk(item, trxId, qtyTerbatalkan) {
 }
 
 async function approveKeluar(id, isOldest) {
+  const _key = `approveKeluar_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const r = keluarCache.find(x => x.id === id);
   if (!r) return;
+  if ((r.status||'pending') === 'selesai') { showToast('Transaksi ini udah pernah di-approve sebelumnya.', true); return; }
   if (await isPeriodeTerkunci(r.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
   if (!isOldest) {
     const queue = getPendingQueue();
@@ -7245,6 +7374,11 @@ async function approveKeluar(id, isOldest) {
     if (!await customConfirm(`⚠️ Stok tidak cukup untuk:\n\n${kurangStok.join('\n')}\n\nTetap approve? Stok akan jadi minus/negatif.`)) return;
   }
   try {
+    // Cek ulang status LANGSUNG DARI DATABASE (bukan cuma cache lokal) sebelum mulai potong
+    // stok — biar approve dobel dari tab/device lain juga ke-block, gak cuma dari tombol ini.
+    const cekStatusSnap = await db.collection('keluarTransaksi').doc(id).get();
+    if (!cekStatusSnap.exists) throw new Error('Transaksi tidak ditemukan');
+    if ((cekStatusSnap.data().status || 'pending') === 'selesai') throw new Error('Transaksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
     const updatedItems = [];
     let totalHargaBaru = 0;
     for (const it of (r.items || [])) {
@@ -7342,6 +7476,7 @@ async function approveKeluar(id, isOldest) {
     logActivity('keluar', 'Approve Barang Keluar', `Unit ${r.kodeUnit||'-'} (${r.tipe}) - ${r.totalItem} item`);
     showToast('Barang keluar di-approve, semua data (nama/kode/satuan/harga) mengikuti master stok terbaru');
   } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function batalkanApproveKeluar(id) {
@@ -7862,6 +7997,8 @@ function selectOrderItem(rowIdx, itemId) {
 }
 
 async function submitOrder() {
+  if (_cekLagiDiproses('submitOrder')) return;
+  try {
   const tanggalInput = document.getElementById('orderTanggal').value;
   const tanggal = tanggalInput ? new Date(tanggalInput + 'T00:00:00').toISOString() : new Date().toISOString();
   const supplier = document.getElementById('orderSupplier').value.trim();
@@ -7895,6 +8032,7 @@ async function submitOrder() {
     showToast('Order barang tersimpan');
     resetOrderForm();
   } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitOrder'); }
 }
 
 function orderProgress(o) {
@@ -7997,6 +8135,9 @@ function closeOrderDetailModal() { document.getElementById('orderDetailModalBg')
 async function saveOrderDiterima() {
   const o = orderCache.find(x => x.id === orderDetailId);
   if (!o) return;
+  const _key = `saveOrderDiterima_${o.id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const items = (o.items||[]).map((it, idx) => {
     const el = document.getElementById(`orderDetDiterima_${idx}`);
     const diterima = el ? Math.max(0, Math.min(Number(el.value)||0, Number(it.qty)||0)) : (it.diterima||0);
@@ -8009,6 +8150,7 @@ async function saveOrderDiterima() {
     showToast('Status barang tersimpan');
     closeOrderDetailModal();
   } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 let orderHistFilteredIds = [];
@@ -8027,15 +8169,22 @@ async function updateOrderStatus(id, status) {
 // ada PO yang langsung dikirim ke supplier tanpa sepengetahuan atasan. Setelah di-approve,
 // baru bisa ditandai "Sudah Dikirim" dan dipakai buat "Isi dari Order Barang" di Stok Masuk.
 async function approveOrderPO(id) {
+  const _key = `approveOrderPO_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   if (currentUserData.role !== 'admin') { showToast('Cuma admin yang bisa approve PO', true); return; }
   const o = orderCache.find(x => x.id === id);
   if (!o) return;
+  if (o.disetujui) { showToast('PO ini udah pernah di-approve sebelumnya.', true); return; }
   if (!await customConfirm(`Approve PO ke supplier "${o.supplier}"${o.totalEstimasi ? ` (estimasi ${rupiah(o.totalEstimasi)})` : ''}? PO ini bisa langsung dikirim ke supplier setelah di-approve.`)) return;
   try {
+    const cekSnap = await db.collection('orderBarang').doc(id).get();
+    if (cekSnap.exists && cekSnap.data().disetujui) throw new Error('PO ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel).');
     await db.collection('orderBarang').doc(id).update({ disetujui: true, approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
     logActivity('order', 'Approve PO', `Supplier ${o.supplier||'-'}${o.totalEstimasi ? ` - estimasi ${rupiah(o.totalEstimasi)}` : ''}`);
     showToast('PO di-approve, siap dikirim ke supplier');
   } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function deleteOrder(id) {
@@ -8568,6 +8717,8 @@ function resetKlForm() {
 }
 
 async function submitKeluarTransaksi() {
+  if (_cekLagiDiproses('submitKeluarTransaksi')) return;
+  try {
   const tanggalInput = document.getElementById('klTanggal').value;
   const tanggal = tanggalInput ? new Date(tanggalInput + 'T00:00:00').toISOString() : new Date().toISOString();
   const tipe = document.getElementById('klTipe').value;
@@ -8679,6 +8830,7 @@ async function submitKeluarTransaksi() {
     showToast('Transaksi barang keluar disimpan, menunggu approve di Antrian Approval');
     resetKlForm();
   } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitKeluarTransaksi'); }
 }
 
 let klModeCariSemua = false;
@@ -8999,6 +9151,8 @@ function bersihkanTtdCanvas() {
   _ttdHasStroke = false;
 }
 async function simpanTtdKeluar() {
+  if (_cekLagiDiproses('simpanTtdKeluar')) return;
+  try {
   if (!_ttdHasStroke) { showToast('Gambar tanda tangan dulu di kotaknya', true); return; }
   const namaPenerima = document.getElementById('ttdNamaPenerima').value.trim();
   if (!namaPenerima) { showToast('Isi nama penerima dulu', true); return; }
@@ -9012,6 +9166,7 @@ async function simpanTtdKeluar() {
     showToast('Tanda tangan tersimpan');
     closeTtdModal();
   } catch(e) { showToast('Gagal simpan tanda tangan: ' + e.message, true); }
+  } finally { _selesaiDiproses('simpanTtdKeluar'); }
 }
 function lihatTtdKeluar(id) {
   const trx = keluarCache.find(x => x.id === id);
@@ -9612,20 +9767,24 @@ function closeRiwayatUnitModal() { document.getElementById('riwayatUnitModalBg')
 async function markRusak(id) {
   if (!await customConfirm('Tandai unit ini sebagai rusak?')) return;
   const u = unitsCache.find(x => x.id === id);
-  await db.collection('units').doc(id).update({ status: 'rusak' });
-  await tambahRiwayatUnit(id, 'Rusak', 'Ditandai rusak manual dari menu Unit/Serial');
-  logActivity('barang', 'Unit Rusak', `Serial ${u?.serialNumber||id} ditandai rusak`);
-  showToast('Unit ditandai rusak');
+  try {
+    await db.collection('units').doc(id).update({ status: 'rusak' });
+    await tambahRiwayatUnit(id, 'Rusak', 'Ditandai rusak manual dari menu Unit/Serial');
+    logActivity('barang', 'Unit Rusak', `Serial ${u?.serialNumber||id} ditandai rusak`);
+    showToast('Unit ditandai rusak');
+  } catch(e) { showToast('Gagal menandai rusak: ' + e.message, true); }
 }
 // Kebalikan dari markRusak — buat kasus salah tandai, atau unit yang tadinya rusak udah
 // diperbaiki dan siap dipakai lagi.
 async function kembalikanUnitTersedia(id) {
   const u = unitsCache.find(x => x.id === id);
   if (!await customConfirm(`Kembalikan unit "${u?.serialNumber||id}" ke status Tersedia?`)) return;
-  await db.collection('units').doc(id).update({ status: 'tersedia' });
-  await tambahRiwayatUnit(id, 'Kembali Tersedia', 'Dikembalikan manual dari menu Unit/Serial (misal: sudah diperbaiki, atau salah tandai)');
-  logActivity('barang', 'Unit Dikembalikan Tersedia', `Serial ${u?.serialNumber||id} dikembalikan ke Tersedia`);
-  showToast('Unit dikembalikan ke status Tersedia');
+  try {
+    await db.collection('units').doc(id).update({ status: 'tersedia' });
+    await tambahRiwayatUnit(id, 'Kembali Tersedia', 'Dikembalikan manual dari menu Unit/Serial (misal: sudah diperbaiki, atau salah tandai)');
+    logActivity('barang', 'Unit Dikembalikan Tersedia', `Serial ${u?.serialNumber||id} dikembalikan ke Tersedia`);
+    showToast('Unit dikembalikan ke status Tersedia');
+  } catch(e) { showToast('Gagal mengembalikan unit: ' + e.message, true); }
 }
 
 /* ---------- MUTASI RAK ---------- */
@@ -9636,6 +9795,8 @@ document.getElementById('mutasiItem')?.addEventListener?.('change', () => {
 });
 
 async function submitMutasi() {
+  if (_cekLagiDiproses('submitMutasi')) return;
+  try {
   const itemId = document.getElementById('mutasiItem').value;
   const qty = Number(document.getElementById('mutasiQty').value);
   const keRak = document.getElementById('mutasiKe').value.trim();
@@ -9667,6 +9828,7 @@ async function submitMutasi() {
     logActivity('mutasi', 'Mutasi Rak', `${item.kode} - ${item.nama}: ${dariRak} → ${keRak} (qty ${qty})`);
     showToast('Mutasi tercatat, lokasi barang diperbarui');
   } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitMutasi'); }
 }
 
 function renderMutasiHist() {
@@ -9713,9 +9875,11 @@ function exportMutasiCSV(onlySelected) {
 }
 async function hapusMutasiSatu(id) {
   if (!await customConfirm('Hapus catatan mutasi ini? (ini cuma hapus catatannya, TIDAK memindahkan balik lokasi rak barang)')) return;
-  await db.collection('mutations').doc(id).delete();
-  logActivity('mutasi', 'Hapus Catatan Mutasi', id);
-  showToast('Catatan mutasi dihapus');
+  try {
+    await db.collection('mutations').doc(id).delete();
+    logActivity('mutasi', 'Hapus Catatan Mutasi', id);
+    showToast('Catatan mutasi dihapus');
+  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
 }
 async function hapusMutasiTerpilih() {
   const rows = gatherMutasiTerpilih();
@@ -9822,9 +9986,11 @@ function renderBekas() {
 
 async function updateBekasKondisi(id, kondisi) {
   const b = bekasCache.find(x => x.id === id);
-  await db.collection('barangBekas').doc(id).update({ kondisi });
-  logActivity('bekas', 'Ubah Kondisi Bekas', `${b?.nama||id} → ${kondisi}`);
-  showToast('Kondisi diperbarui');
+  try {
+    await db.collection('barangBekas').doc(id).update({ kondisi });
+    logActivity('bekas', 'Ubah Kondisi Bekas', `${b?.nama||id} → ${kondisi}`);
+    showToast('Kondisi diperbarui');
+  } catch(e) { showToast('Gagal ubah kondisi: ' + e.message, true); }
 }
 async function updateBekasStatus(id, statusGudang) {
   const b = bekasCache.find(x => x.id === id);
@@ -9836,9 +10002,11 @@ async function updateBekasStatus(id, statusGudang) {
     await masukkanBekasKeStok(id);
     return;
   }
-  await db.collection('barangBekas').doc(id).update({ statusGudang });
-  logActivity('bekas', 'Ubah Status Bekas', `${b?.nama||id} → ${statusGudang}`);
-  showToast('Status diperbarui');
+  try {
+    await db.collection('barangBekas').doc(id).update({ statusGudang });
+    logActivity('bekas', 'Ubah Status Bekas', `${b?.nama||id} → ${statusGudang}`);
+    showToast('Status diperbarui');
+  } catch(e) { showToast('Gagal ubah status: ' + e.message, true); }
 }
 
 // Barang bekas kondisi "Bisa Diperbaiki" yang udah SELESAI diperbaiki dimasukin balik jadi
@@ -9846,8 +10014,12 @@ async function updateBekasStatus(id, statusGudang) {
 // (opsional) dipakai sebagai harga dasar batch barunya, biar nilai stoknya gak keitung Rp 0
 // padahal ada biaya yang dikeluarin buat perbaikannya.
 async function masukkanBekasKeStok(id) {
+  const _key = `masukkanBekasKeStok_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const b = bekasCache.find(x => x.id === id);
   if (!b) { renderBekas(); return; }
+  if (b.statusGudang === 'Dipakai Ulang') { showToast('Barang bekas ini udah pernah dimasukkan ke stok sebelumnya.', true); renderBekas(); return; }
   // Field referensi ke Master Stok beda-beda namanya tergantung asal barang bekasnya —
   // dari Barang Keluar/Servis pakai 'refItemId', dari Retur/Koreksi/Opname pakai 'itemId'.
   // Sama kayak fallback yang udah dipakai di fitur Gabungkan Barang.
@@ -9859,6 +10031,9 @@ async function masukkanBekasKeStok(id) {
   const biayaPerbaikan = Number(biayaInput) || 0;
   if (!await customConfirm(`Masukkan ${b.qty} unit "${b.nama}" ke stok Master (setelah diperbaiki)?\n\nHarga dasar batch baru: ${rupiah(biayaPerbaikan)}/unit\n\nStatus barang bekas ini akan berubah jadi "Dipakai Ulang" dan gak bisa diproses lagi setelah ini.`)) { renderBekas(); return; }
   try {
+    const cekSnap = await db.collection('barangBekas').doc(id).get();
+    if (!cekSnap.exists) throw new Error('Barang bekas tidak ditemukan');
+    if (cekSnap.data().statusGudang === 'Dipakai Ulang') throw new Error('Barang bekas ini udah pernah dimasukkan ke stok sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
     const itemRefBekas = db.collection('items').doc(itemIdBekas);
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(itemRefBekas);
@@ -9893,6 +10068,7 @@ async function masukkanBekasKeStok(id) {
     logActivity('bekas', 'Barang Bekas Masuk ke Stok', `${b.nama} +${b.qty} (biaya perbaikan: ${rupiah(biayaPerbaikan)}/unit)`);
     showToast(`${b.qty} unit "${b.nama}" berhasil masuk ke stok`);
   } catch(e) { showToast('Gagal masukkan ke stok: ' + e.message, true); renderBekas(); }
+  } finally { _selesaiDiproses(_key); }
 }
 // Foto Barang Bekas — beda dari pola upload di menu lain (yang formnya masih "in-progress"
 // sebelum disimpan) karena record Barang Bekas di sini UDAH ada duluan (dibikin otomatis dari
@@ -9937,9 +10113,11 @@ function lihatFotoBekas(id) {
 async function deleteBekas(id) {
   if (!await customConfirm('Hapus catatan barang bekas ini?')) return;
   const b = bekasCache.find(x => x.id === id);
-  await db.collection('barangBekas').doc(id).delete();
-  logActivity('bekas', 'Hapus Catatan Bekas', `${b?.nama||id}`);
-  showToast('Catatan dihapus');
+  try {
+    await db.collection('barangBekas').doc(id).delete();
+    logActivity('bekas', 'Hapus Catatan Bekas', `${b?.nama||id}`);
+    showToast('Catatan dihapus');
+  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
 }
 
 /* =========================================================================
@@ -10010,11 +10188,18 @@ function renderBekasMasukGU() {
 }
 
 async function konfirmasiTerimaBekasGU(id) {
+  const _key = `konfirmasiTerimaBekasGU_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const gu = gudangUtamaObj();
   const r = bekasMasukGUCache.find(x => x.id === id);
   if (!r || !gu) return;
+  if (r.statusGudang === 'Diterima GU') { showToast('Kiriman ini udah pernah dikonfirmasi terima sebelumnya.', true); return; }
   if (!await customConfirm(`Konfirmasi barang bekas "${r.nama}" (${r.qty}) dari ${r.kirimGuCabangAsalNama || '-'} sudah diterima fisik di Gudang Utama?`)) return;
   try {
+    const cekSnap = await db.collection('barangBekas').doc(id).get();
+    if (!cekSnap.exists) throw new Error('Data barang bekas tidak ditemukan');
+    if (cekSnap.data().statusGudang === 'Diterima GU') throw new Error('Kiriman ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel).');
     // PENTING: itemId/refItemId di record ASLI itu nunjuk ke dokumen item milik CABANG
     // PENGIRIM — gak valid dipakai langsung di konteks Gudang Utama (tiap cabang punya
     // dokumen item terpisah walau kodenya sama). Jadi dicari ulang item yang KODE-nya sama
@@ -10038,6 +10223,7 @@ async function konfirmasiTerimaBekasGU(id) {
     logActivity('bekas', 'Konfirmasi Terima Barang Bekas dari Cabang', `${r.nama} (${r.qty}) dari ${r.kirimGuCabangAsalNama || '-'}`);
     showToast('Barang bekas diterima, sudah masuk daftar Barang Bekas Gudang Utama');
   } catch(e) { showToast('Gagal konfirmasi: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 function exportBekasCSV(onlySelected) {
@@ -11347,9 +11533,11 @@ async function toggleRole(uid, currentRole) {
     if (!adminAktifLain.length) { showToast('Gak bisa turunin admin aktif terakhir jadi staff — sistem butuh minimal 1 admin yang aktif.', true); return; }
   }
   if (!await customConfirm(`Ubah role user ini jadi "${newRole}"?`)) return;
-  await db.collection('users').doc(uid).update({ role: newRole });
-  logActivity('user', 'Ubah Role', `UID ${uid} → ${newRole}`);
-  showToast('Role diperbarui');
+  try {
+    await db.collection('users').doc(uid).update({ role: newRole });
+    logActivity('user', 'Ubah Role', `UID ${uid} → ${newRole}`);
+    showToast('Role diperbarui');
+  } catch(e) { showToast('Gagal ubah role: ' + e.message, true); }
 }
 
 async function resetUserPassword(email) {
@@ -11373,9 +11561,11 @@ async function toggleUserActive(uid, currentlyActive) {
     if (!adminAktifLain.length) { showToast('Gak bisa nonaktifin admin aktif terakhir — sistem butuh minimal 1 admin yang aktif.', true); return; }
   }
   if (!await customConfirm(newActive ? 'Aktifkan kembali user ini?' : 'Nonaktifkan user ini? User tidak akan bisa login sampai diaktifkan lagi.')) return;
-  await db.collection('users').doc(uid).update({ active: newActive });
-  logActivity('user', newActive ? 'Aktifkan User' : 'Nonaktifkan User', `UID ${uid}`);
-  showToast(newActive ? 'User diaktifkan' : 'User dinonaktifkan');
+  try {
+    await db.collection('users').doc(uid).update({ active: newActive });
+    logActivity('user', newActive ? 'Aktifkan User' : 'Nonaktifkan User', `UID ${uid}`);
+    showToast(newActive ? 'User diaktifkan' : 'User dinonaktifkan');
+  } catch(e) { showToast('Gagal ubah status user: ' + e.message, true); }
 }
 
 async function deleteUserDoc(uid) {
@@ -11387,9 +11577,11 @@ async function deleteUserDoc(uid) {
     if (!adminAktifLain.length) { showToast('Gak bisa hapus admin aktif terakhir — sistem butuh minimal 1 admin yang aktif.', true); return; }
   }
   if (!await customConfirm('Hapus akses user ini dari sistem? Akun login Firebase-nya tetap ada, tapi tidak akan bisa lagi masuk ke aplikasi.')) return;
-  await db.collection('users').doc(uid).delete();
-  logActivity('user', 'Hapus Akses User', `UID ${uid}`);
-  showToast('Akses user dihapus dari sistem');
+  try {
+    await db.collection('users').doc(uid).delete();
+    logActivity('user', 'Hapus Akses User', `UID ${uid}`);
+    showToast('Akses user dihapus dari sistem');
+  } catch(e) { showToast('Gagal hapus akses user: ' + e.message, true); }
 }
 
 function openUserModal() {
@@ -11484,6 +11676,8 @@ function applyKuncianTipePemesan() {
 }
 
 async function saveNewUser() {
+  if (_cekLagiDiproses('saveNewUser')) return;
+  try {
   if (!currentUserData || currentUserData.role !== 'admin') { showToast('Cuma admin yang bisa menambah user', true); return; }
   const name = document.getElementById('newUserName').value.trim();
   const email = document.getElementById('newUserEmail').value.trim();
@@ -11532,6 +11726,7 @@ async function saveNewUser() {
     document.getElementById('newUserEmail').value = '';
     document.getElementById('newUserPass').value = '';
   } catch(e) { showToast('Gagal buat user: ' + e.message, true); }
+  } finally { _selesaiDiproses('saveNewUser'); }
 }
 
 /* ---------- BACKUP & RESTORE ---------- */
@@ -11635,6 +11830,8 @@ async function backupAllDataExcel() {
 }
 
 async function backupAllData() {
+  if (_cekLagiDiproses('backupAllData')) return;
+  try {
   const statusEl = document.getElementById('backupStatus');
   if (!isSuperAdmin(currentUserData)) { showToast('Backup & Restore cuma bisa diakses Super Admin (Gudang Utama)', true); return; }
   statusEl.textContent = 'Mengambil data dari semua koleksi, mohon tunggu...';
@@ -11666,9 +11863,12 @@ async function backupAllData() {
     statusEl.textContent = `❌ Gagal backup: ${e.message}`;
     showToast('Gagal backup: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('backupAllData'); }
 }
 
 async function restoreAllData() {
+  if (_cekLagiDiproses('restoreAllData')) return;
+  try {
   const fileInput = document.getElementById('restoreFileInput');
   const statusEl = document.getElementById('restoreStatus');
   if (!isSuperAdmin(currentUserData)) { showToast('Backup & Restore cuma bisa diakses Super Admin (Gudang Utama)', true); return; }
@@ -11711,6 +11911,7 @@ async function restoreAllData() {
     statusEl.textContent = `❌ Gagal restore: ${e.message}`;
     showToast('Gagal restore: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('restoreAllData'); }
 }
 
 /* ============= SEARCHABLE ITEM INPUT MASUK ============= */
@@ -12236,6 +12437,8 @@ function clearReturMasukSelected() {
 }
 
 async function submitReturMasuk() {
+  if (_cekLagiDiproses('submitReturMasuk')) return;
+  try {
   if (!selectedReturMasukTx) { showToast('Pilih transaksi masuk dulu', true); return; }
   
   const qty = Number(document.getElementById('returMasukQty').value);
@@ -12272,6 +12475,7 @@ async function submitReturMasuk() {
   } catch(e) {
     showToast('Gagal ajukan retur: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('submitReturMasuk'); }
 }
 
 function renderReturMasukHist() {
@@ -12348,12 +12552,19 @@ async function hapusReturMasukSemua() {
 }
 
 async function approveReturMasuk(id) {
+  const _key = `approveReturMasuk_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const retur = returMasukCache.find(r => r.id === id);
   if (!retur) return;
+  if ((retur.status||'pending') === 'selesai') { showToast('Retur ini udah pernah di-approve sebelumnya.', true); return; }
   if (await isPeriodeTerkunci(retur.tanggal)) { showToast('Retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
   if (!await customConfirm(`Approve retur masuk "${retur.refTransaksiData?.nama}" -${retur.qty}?\n\nStok barang akan berkurang dan masuk ke BARANG BEKAS untuk pengembalian ke supplier.`)) return;
   
   try {
+    const cekSnap = await db.collection('returMasuk').doc(id).get();
+    if (!cekSnap.exists) throw new Error('Retur tidak ditemukan');
+    if ((cekSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
     // PENTING: potong stok pakai FIFO batch (bukan cuma kurangin saldo doang) — sama pola
     // kayak Barang Keluar, biar saldo & batchesMasuk tetap sinkron.
     const itemRefRM = db.collection('items').doc(retur.itemId);
@@ -12400,6 +12611,7 @@ async function approveReturMasuk(id) {
   } catch(e) {
     showToast('Gagal approve retur: ' + e.message, true);
   }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function deleteReturMasuk(id) {
@@ -12565,6 +12777,8 @@ function clearReturKeluarSelected() {
 }
 
 async function submitReturKeluar() {
+  if (_cekLagiDiproses('submitReturKeluar')) return;
+  try {
   if (!currentUserData || currentUserData.role !== 'admin') { showToast('Cuma admin yang bisa mengajukan Retur Barang', true); return; }
   if (!selectedReturKeluarTx) { showToast('Pilih transaksi keluar dulu', true); return; }
   if (selectedReturKeluarItemIdx === null) { showToast('Pilih barang yang mau diretur dari daftar dulu', true); return; }
@@ -12604,6 +12818,7 @@ async function submitReturKeluar() {
   } catch(e) {
     showToast('Gagal ajukan retur: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('submitReturKeluar'); }
 }
 
 function renderReturKeluarHist() {
@@ -12683,15 +12898,22 @@ async function hapusReturKeluarSemua() {
 }
 
 async function approveReturKeluar(id) {
+  const _key = `approveReturKeluar_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   if (!currentUserData || currentUserData.role !== 'admin') { showToast('Cuma admin yang bisa approve Retur Barang', true); return; }
   const retur = returKeluarCache.find(r => r.id === id);
   if (!retur) return;
+  if ((retur.status||'pending') === 'selesai') { showToast('Retur ini udah pernah di-approve sebelumnya.', true); return; }
   if (!retur.itemId) { showToast('Data retur ini tidak lengkap (barang tidak diketahui), tidak bisa diapprove. Hapus & ajukan ulang.', true); return; }
   if (await isPeriodeTerkunci(retur.tanggal)) { showToast('Retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
 
   if (!await customConfirm(`Approve retur keluar: ${retur.refTransaksiData?.itemNama || '-'} x${retur.qty} dari unit ${retur.refTransaksiData?.kodeUnit || '-'} (${retur.refTransaksiData?.mekanik || '-'})?\n\nKondisi: ${retur.kondisi}`)) return;
 
   try {
+    const cekSnap = await db.collection('returKeluar').doc(id).get();
+    if (!cekSnap.exists) throw new Error('Retur tidak ditemukan');
+    if ((cekSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
     const itemAwal = itemsCache.find(i => i.id === retur.itemId);
     if (!itemAwal) throw new Error('Barang tidak ditemukan di master stok');
 
@@ -12752,6 +12974,7 @@ async function approveReturKeluar(id) {
   } catch(e) {
     showToast('Gagal approve retur: ' + e.message, true);
   }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function deleteReturKeluar(id) {
@@ -12905,6 +13128,8 @@ function toggleKoreksiAlasnLain() {
 }
 
 async function submitKoreksiStok() {
+  if (_cekLagiDiproses('submitKoreksiStok')) return;
+  try {
   if (!selectedKoreksiBarang) { showToast('Pilih barang dulu', true); return; }
   if (await isPeriodeTerkunci(new Date().toISOString())) { showToast('Periode bulan ini udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau koreksi stok.', true); return; }
   
@@ -12949,6 +13174,7 @@ async function submitKoreksiStok() {
   } catch(e) {
     showToast('Gagal ajukan koreksi: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('submitKoreksiStok'); }
 }
 
 function resetKoreksiForm() {
@@ -13053,13 +13279,20 @@ async function hapusKoreksiSemua() {
 }
 
 async function approveKoreksiStok(id) {
+  const _key = `approveKoreksiStok_${id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const koreksi = koreksiStokCache.find(k => k.id === id);
   if (!koreksi) return;
+  if ((koreksi.status||'pending') === 'selesai') { showToast('Koreksi ini udah pernah di-approve sebelumnya.', true); return; }
   if (await isPeriodeTerkunci(koreksi.tanggal)) { showToast('Koreksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
   
   if (!await customConfirm(`Approve koreksi stok "${koreksi.barangData?.nama}"?\n\nDari: ${koreksi.barangData?.stokSistem} → Ke: ${koreksi.stokActual}\nSelisih: ${koreksi.selisih > 0 ? '+' : ''}${koreksi.selisih}\nAlasan: ${koreksi.alasan}`)) return;
   
   try {
+    const cekSnap = await db.collection('koreksiStok').doc(id).get();
+    if (!cekSnap.exists) throw new Error('Koreksi tidak ditemukan');
+    if ((cekSnap.data().status||'pending') === 'selesai') throw new Error('Koreksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar gak keterapkan 2x.');
     // Sama persis pola kayak quick-koreksi di Master Barang: selisih POSITIF (stok fisik lebih
     // banyak dari sistem) dibikinin batch baru pakai harga aktif saat ini. Selisih NEGATIF
     // (fisik lebih sedikit/hilang/rusak) dipotong dari batch pakai FIFO. Biar saldo & total qty
@@ -13121,6 +13354,7 @@ async function approveKoreksiStok(id) {
   } catch(e) {
     showToast('Gagal approve koreksi: ' + e.message, true);
   }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function rejectKoreksiStok(id) {
@@ -13432,6 +13666,8 @@ function calcOpnameSelisih() {
 }
 
 async function submitOpnameBarang() {
+  if (_cekLagiDiproses('submitOpnameBarang')) return;
+  try {
   if (!selectedOpnameBarang || !currentOpnameSession) { showToast('Pilih barang dulu', true); return; }
   if (currentOpnameSession.status === 'completed') { showToast('Session ini udah di-Finalize, gak bisa nambah data lagi', true); return; }
   
@@ -13464,6 +13700,7 @@ async function submitOpnameBarang() {
   } catch(e) {
     showToast('Gagal input barang: ' + e.message, true);
   }
+  } finally { _selesaiDiproses('submitOpnameBarang'); }
 }
 
 function renderOpnameDetail() {
@@ -13519,6 +13756,10 @@ async function deleteOpnameDetail(detailId) {
 
 async function finalizeOpname() {
   if (!currentOpnameSession) return;
+  const _key = `finalizeOpname_${currentOpnameSession.id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
+  if (currentOpnameSession.stokSudahDiterapkan) { showToast('Opname ini udah pernah di-finalize sebelumnya.', true); return; }
   if (await isPeriodeTerkunci(currentOpnameSession.tanggal)) { showToast('Periode session opname ini udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau finalize.', true); return; }
   
   const total = currentOpnameSession.totalBarang || 0;
@@ -13541,6 +13782,9 @@ async function finalizeOpname() {
   }
   
   try {
+    const cekSnap = await db.collection('stokOpname').doc(currentOpnameSession.id).get();
+    if (!cekSnap.exists) throw new Error('Session opname tidak ditemukan');
+    if (cekSnap.data().stokSudahDiterapkan) throw new Error('Opname ini udah pernah di-finalize sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak keterapkan 2x.');
     // Terapin semua selisih ke stok beneran — pakai pola batch-safe yang sama kayak Koreksi
     // Stok (bukan cuma nge-set saldo doang). Sekaligus bikin record di koleksi koreksiStok
     // (status langsung 'selesai', ditandain dari opname) biar tetap ada jejaknya di riwayat
@@ -13615,6 +13859,7 @@ async function finalizeOpname() {
   } catch(e) {
     showToast('Gagal finalize: ' + e.message, true);
   }
+  } finally { _selesaiDiproses(_key); }
 }
 
 function renderOpnameReport() {
@@ -13756,6 +14001,8 @@ function toggleUnitAlatForm() {
 }
 
 async function submitUnitAlat() {
+  if (_cekLagiDiproses('submitUnitAlat')) return;
+  try {
   const kode = document.getElementById('uaKode').value.trim();
   const nama = document.getElementById('uaNama').value.trim();
   const jenis = document.getElementById('uaJenis').value;
@@ -13782,6 +14029,7 @@ async function submitUnitAlat() {
     logActivity('unit', 'Tambah Unit Alat Berat', `${kode} - ${nama}`);
     showToast('Unit berhasil ditambahkan');
   } catch(e) { showToast('Gagal simpan unit: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitUnitAlat'); }
 }
 
 async function updateHmKmUnit(id) {
@@ -14170,6 +14418,8 @@ function resetSvForm() {
 }
 
 async function submitServis() {
+  if (_cekLagiDiproses('submitServis')) return;
+  try {
   const unitId = document.getElementById('svUnitId').value;
   const unit = unitAlatCache.find(u => u.id === unitId);
   if (!unit) { showToast('Pilih unit dulu', true); return; }
@@ -14255,6 +14505,7 @@ async function submitServis() {
     showToast('Servis dicatat. Pemakaian barang menunggu approve di Antrian Approval.');
     resetSvForm();
   } catch(e) { showToast('Gagal simpan servis: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitServis'); }
 }
 
 let svModeCariSemua = false;
@@ -14536,6 +14787,9 @@ function resetCabangForm() {
 async function saveCabang() {
   if (!isSuperAdmin(currentUserData)) { showToast('Kelola Cabang cuma bisa diakses Super Admin (Gudang Utama)', true); return; }
   const id = document.getElementById('cabangId').value;
+  const _key = `saveCabang_${id || 'new'}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const nama = document.getElementById('cabangNamaInput').value.trim();
   const role = document.getElementById('cabangRoleInput').value;
   const alamat = document.getElementById('cabangAlamatInput').value.trim();
@@ -14565,6 +14819,7 @@ async function saveCabang() {
     subscribeStokGudangUtama(); // MULTI-CABANG: refresh in case Gudang Utama baru ditambah/diubah
     if (!currentCabangId) { currentCabangId = cabangCache[0]?.id || null; subscribeItemsForCabang(); renderCabangSwitcher(); }
   } catch(e) { showToast('Gagal simpan cabang: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 // PENTING: alamat di kop nota/cetak sekarang ikut alamat cabang yang bersangkutan (bukan alamat
@@ -14841,6 +15096,8 @@ function resetOcForm() {
 }
 
 async function submitOrderCabang() {
+  if (_cekLagiDiproses('submitOrderCabang')) return;
+  try {
   const gu = gudangUtamaObj();
   if (!gu) { showToast('Belum ada Gudang Utama terdaftar. Tambahkan dulu di menu Kelola Cabang.', true); return; }
   if (currentCabangId === gu.id) { showToast('Gudang Utama tidak perlu order ke dirinya sendiri.', true); return; }
@@ -14871,6 +15128,7 @@ async function submitOrderCabang() {
     showToast('Permintaan terkirim ke Gudang Utama, menunggu approve');
     resetOcForm();
   } catch(e) { showToast('Gagal kirim order: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitOrderCabang'); }
 }
 
 function subscribeOrderCabang() {
@@ -14938,6 +15196,9 @@ function closeOcDetailModal() {
 async function saveOcDiterimaSebagian() {
   const o = orderCabangCache.find(x => x.id === _ocDetailOrderId);
   if (!o) return;
+  const _key = `saveOcDiterimaSebagian_${o.id}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const items = o.items || [];
   const inputan = items.map((it, idx) => {
     const el = document.getElementById(`ocDetIn_${idx}`);
@@ -14998,6 +15259,7 @@ async function saveOcDiterimaSebagian() {
     showToast(semuaSelesai ? 'Semua barang sudah diterima lengkap' : 'Penerimaan sebagian dicatat, stok sudah ditambahkan');
     closeOcDetailModal();
   } catch(e) { showToast('Gagal simpan penerimaan: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 // Batalkan pengiriman yang masih berstatus "dikirim" (belum ada barang yang keterima sama
@@ -15008,10 +15270,17 @@ async function saveOcDiterimaSebagian() {
 // bisa direkonstruksi persis. Ini keterbatasan yang sama kayak transaksi lama yang gak punya
 // info batch, bukan bug baru.
 async function batalkanOcDikirim(orderId) {
+  const _key = `batalkanOcDikirim_${orderId}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const o = orderCabangCache.find(x => x.id === orderId);
   if (!o) return;
+  if (o.status !== 'dikirim') { showToast('Pengiriman ini udah gak berstatus "dikirim" (mungkin udah dibatalkan/diproses sebelumnya).', true); return; }
   if (!await customConfirm(`Batalkan pengiriman ini? Stok yang udah kepotong bakal dikembalikan (qty-nya akurat, tapi info harga batch asalnya gak bisa direkonstruksi persis — dianggap harga Rp 0 di batch baru).`)) return;
   try {
+    const cekSnap = await db.collection('orderCabang').doc(orderId).get();
+    if (!cekSnap.exists) throw new Error('Order tidak ditemukan');
+    if (cekSnap.data().status !== 'dikirim') throw new Error('Pengiriman ini udah gak berstatus "dikirim" (kemungkinan diklik dobel) — dibatalkan biar stok gak balik 2x.');
     // PENTING: yang stoknya kepotong itu BUKAN selalu currentCabangId (siapa yang lagi
     // login/klik tombol Batal) — bisa aja GU yang batalin punya sendiri (approve/push) atau
     // GU yang batalin punya cabang lain (retur). Field cabangTujuanId di dokumen ini KONSISTEN
@@ -15040,6 +15309,7 @@ async function batalkanOcDikirim(orderId) {
     logActivity('ordercabang', 'Batalkan Pengiriman Order Cabang', `${o.items.length} item, stok dikembalikan ke ${cabangNama(cabangPengirimId)}`);
     showToast('Pengiriman dibatalkan, stok sudah dikembalikan');
   } catch(e) { showToast('Gagal batalkan: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 function renderOrderCabangHist() {
@@ -15092,8 +15362,12 @@ function renderOcApprovalTable() {
 
 // Gudang Utama approve: stok Gudang Utama berkurang, status -> dikirim
 async function approveKirimOc(orderId) {
+  const _key = `approveKirimOc_${orderId}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const o = orderCabangCache.find(x => x.id === orderId);
   if (!o) return;
+  if (o.status && o.status !== 'menunggu' && o.status !== 'pending') { showToast('Order ini udah pernah diproses sebelumnya (status: ' + o.status + ').', true); return; }
   // cek stok cukup di Gudang Utama (item di-scope cabangId = Gudang Utama)
   for (const it of (o.items||[])) {
     const itemGU = itemsCache.find(i => i.kode === it.kode && i.cabangId === currentCabangId);
@@ -15102,6 +15376,10 @@ async function approveKirimOc(orderId) {
     }
   }
   try {
+    const cekSnap = await db.collection('orderCabang').doc(orderId).get();
+    if (!cekSnap.exists) throw new Error('Order tidak ditemukan');
+    const statusSkrg = cekSnap.data().status;
+    if (statusSkrg && statusSkrg !== 'menunggu' && statusSkrg !== 'pending') throw new Error('Order ini udah pernah diproses sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
     // PENTING: potong stok GU pakai FIFO batch (bukan cuma kurangin saldo), transaction per
     // barang biar saldo & batchesMasuk tetap sinkron — sama pola kayak Kirim Langsung/Retur GU.
     for (const it of (o.items||[])) {
@@ -15125,6 +15403,7 @@ async function approveKirimOc(orderId) {
     logActivity('ordercabang', 'Approve & Kirim Order Cabang', `Ke ${o.cabangAsalNama} - ${o.items.length} item`);
     showToast('Order di-approve, stok Gudang Utama dipotong. Menunggu konfirmasi terima dari ' + o.cabangAsalNama);
   } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function tolakOc(orderId) {
@@ -15138,10 +15417,17 @@ async function tolakOc(orderId) {
 
 // Cabang konfirmasi barang sampai: stok cabang bertambah (barang dibuat otomatis kalau belum ada di cabang ini)
 async function konfirmasiTerimaOc(orderId) {
+  const _key = `konfirmasiTerimaOc_${orderId}`;
+  if (_cekLagiDiproses(_key)) return;
+  try {
   const o = orderCabangCache.find(x => x.id === orderId);
   if (!o) return;
+  if (o.status === 'diterima') { showToast('Order ini udah pernah dikonfirmasi terima sebelumnya.', true); return; }
   if (!await customConfirm('Konfirmasi barang sudah diterima fisik di cabang ini? Stok cabang akan bertambah otomatis.')) return;
   try {
+    const cekSnap = await db.collection('orderCabang').doc(orderId).get();
+    if (!cekSnap.exists) throw new Error('Order tidak ditemukan');
+    if (cekSnap.data().status === 'diterima') throw new Error('Order ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
     const items = o.items || [];
     for (const it of items) {
       let itemCabang = itemsCache.find(x => x.kode === it.kode && x.cabangId === currentCabangId);
@@ -15186,6 +15472,7 @@ async function konfirmasiTerimaOc(orderId) {
     logActivity('ordercabang', 'Konfirmasi Terima Order Cabang', `Dari ${o.cabangTujuanNama} - ${o.items.length} item`);
     showToast('Barang diterima, stok cabang sudah bertambah');
   } catch(e) { showToast('Gagal konfirmasi terima: ' + e.message, true); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 /* =========================================================================
@@ -15276,6 +15563,8 @@ function resetPushForm() {
 }
 
 async function submitKirimLangsung() {
+  if (_cekLagiDiproses('submitKirimLangsung')) return;
+  try {
   const gu = gudangUtamaObj();
   if (!gu || currentCabangId !== gu.id) { showToast('Fitur Kirim Langsung cuma bisa dipakai dari Gudang Utama', true); return; }
   const cabangTujuanId = document.getElementById('pushCabangTujuan').value;
@@ -15334,6 +15623,7 @@ async function submitKirimLangsung() {
     showToast('Barang dikirim ke ' + cabangTujuanObj.nama + ', menunggu konfirmasi terima');
     resetPushForm();
   } catch(e) { showToast('Gagal kirim: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitKirimLangsung'); }
 }
 
 /* =========================================================================
@@ -15413,6 +15703,8 @@ function resetReturOcForm() {
 }
 
 async function submitReturKeGudangUtama() {
+  if (_cekLagiDiproses('submitReturKeGudangUtama')) return;
+  try {
   const gu = gudangUtamaObj();
   if (!gu) { showToast('Belum ada Gudang Utama terdaftar.', true); return; }
   if (currentCabangId === gu.id) { showToast('Gudang Utama tidak perlu retur ke dirinya sendiri.', true); return; }
@@ -15466,6 +15758,7 @@ async function submitReturKeGudangUtama() {
     showToast('Retur dikirim ke Gudang Utama, menunggu konfirmasi terima');
     resetReturOcForm();
   } catch(e) { showToast('Gagal kirim retur: ' + e.message, true); }
+  } finally { _selesaiDiproses('submitReturKeGudangUtama'); }
 }
 
 function renderReturOcHist() {
