@@ -3556,6 +3556,35 @@ function resetPeriodeDashboard() {
   renderDashboardImpl();
 }
 
+// Render tabel "Barang Stok Menipis" dengan paginasi — dipanggil ulang tiap kali user klik
+// "Tampilkan Lebih Banyak", cukup nambah window._lowStockShown lalu render ulang dari data yang
+// udah tersimpan (window._lowStockSorted), gak perlu query ulang ke Firestore.
+function renderLowStockTable() {
+  const lowTbl = document.getElementById('lowStockTable');
+  const semua = window._lowStockSorted || [];
+  const ditampilkan = Math.min(window._lowStockShown || 50, semua.length);
+  if (!semua.length) {
+    lowTbl.innerHTML = '<tr><td colspan="5" class="empty">Semua stok aman 👍</td></tr>';
+    return;
+  }
+  const baris = semua.slice(0, ditampilkan).map(i => `
+    <tr><td class="mono">${i.kode}</td><td>${i.nama}</td><td>${i.saldo ?? 0}</td><td>${i.stokMinimum ?? 0}</td><td>${i.lokasiRak || '-'}</td></tr>
+  `).join('');
+  const sisaBelumTampil = semua.length - ditampilkan;
+  const tombolLagi = sisaBelumTampil > 0
+    ? `<tr><td colspan="5" style="text-align:center;padding:12px;">
+         <button class="btn ghost" onclick="tampilkanLebihBanyakStokMenipis()">
+           Tampilkan Lebih Banyak (${sisaBelumTampil} barang lagi)
+         </button>
+       </td></tr>`
+    : '';
+  lowTbl.innerHTML = baris + tombolLagi;
+}
+function tampilkanLebihBanyakStokMenipis() {
+  window._lowStockShown = (window._lowStockShown || 50) + 50;
+  renderLowStockTable();
+}
+
 function renderDashboardImpl() {
   document.getElementById('statSku').textContent = itemsCache.length;
   const dashLabel = document.getElementById('dashCabangLabel');
@@ -3594,9 +3623,12 @@ function renderDashboardImpl() {
   renderTrendBadge('statOutTodayBadge', outToday, outYesterday);
 
   const lowTbl = document.getElementById('lowStockTable');
-  lowTbl.innerHTML = low.length ? low.slice().sort((a,b) => ((a.saldo??0)-(a.stokMinimum??0)) - ((b.saldo??0)-(b.stokMinimum??0))).map(i => `
-    <tr><td class="mono">${i.kode}</td><td>${i.nama}</td><td>${i.saldo ?? 0}</td><td>${i.stokMinimum ?? 0}</td><td>${i.lokasiRak || '-'}</td></tr>
-  `).join('') : '<tr><td colspan="5" class="empty">Semua stok aman 👍</td></tr>';
+  // PAGINASI: dulu nampilin SEMUA barang stok menipis sekaligus (bisa ratusan baris kalau lagi
+  // migrasi data & banyak barang belum keisi stok) — sekarang dibatasi 50 baris dulu, ada tombol
+  // "Tampilkan Lebih Banyak" buat buka baris berikutnya, gak bikin Dashboard kepanjangan.
+  window._lowStockSorted = low.slice().sort((a,b) => ((a.saldo??0)-(a.stokMinimum??0)) - ((b.saldo??0)-(b.stokMinimum??0)));
+  window._lowStockShown = 50;
+  renderLowStockTable();
 
   const recent = txCache.slice(0, 8);
   const recTbl = document.getElementById('recentTxTable');
@@ -3751,7 +3783,22 @@ function lihatGrafikHarga(itemId, kode, nama) {
       const canvas = document.getElementById('grafikHargaCanvas');
       if (!canvas) return;
       if (typeof Chart === 'undefined') {
-        canvasWrap.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--danger);font-size:13px;">⚠️ Gagal memuat komponen grafik (Chart.js). Cek koneksi internet HP kamu, lalu coba lagi.</div>';
+        // Chart.js gagal ke-load pas halaman pertama dibuka (biasanya internet lagi goyang
+        // di momen itu doang) — daripada maksa user refresh HALAMAN PENUH, coba muat ulang
+        // SCRIPT Chart.js doang secara diam-diam, terus otomatis gambar ulang grafiknya
+        // kalau berhasil. `_chartJsSedangDimuatUlang` mencegah dobel-klik numpuk request.
+        if (!window._chartJsSedangDimuatUlang) {
+          window._chartJsSedangDimuatUlang = true;
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js';
+          s.onload = () => { window._chartJsSedangDimuatUlang = false; };
+          s.onerror = () => { window._chartJsSedangDimuatUlang = false; };
+          document.head.appendChild(s);
+        }
+        canvasWrap.innerHTML = `<div style="text-align:center;padding:30px 10px;color:var(--danger);font-size:13px;">
+          ⚠️ Gagal memuat komponen grafik (Chart.js). Cek koneksi internet HP kamu.<br><br>
+          <button class="btn" onclick="lihatGrafikHarga('${itemId}','${(kode||'').replace(/'/g,"\\'")}','${(nama||'').replace(/'/g,"\\'")}')">🔄 Coba Lagi</button>
+        </div>`;
         return;
       }
       if (grafikHargaInstance) { grafikHargaInstance.destroy(); grafikHargaInstance = null; }
@@ -4081,6 +4128,12 @@ document.addEventListener('input', function(e) {
   if (!isTextInput) return;
   if (el.readOnly || el.disabled) return;
   if (el.id.toLowerCase().includes('search')) return;
+  // FIX BUG: kolom PASSWORD yang punya tombol "lihat/sembunyikan" (mata 👁) itu type-nya
+  // sempat berubah jadi 'text' pas lagi ditampilin — nah, di momen itu kolom ini ketangkep
+  // aturan "paksa huruf besar" di atas (yang sebenernya buat kolom lain kayak No. Plat),
+  // padahal password itu HARUS peka huruf besar/kecil. Makanya semua kolom password wajib
+  // dikecualikan dari aturan ini, gak peduli lagi type apa dia sekarang.
+  if (/^(loginPass|newUserPass|accOldPass|accNewPass|accNewPass2)$/i.test(el.id)) return;
   const upper = el.value.toUpperCase();
   if (upper !== el.value) {
     const start = el.selectionStart, end = el.selectionEnd;
