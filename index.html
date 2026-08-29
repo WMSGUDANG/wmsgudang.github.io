@@ -515,6 +515,7 @@
           <button class="btn" onclick="exportItemsCSV()">📊 Export Excel</button>
           <button class="btn" style="background:#B8860B;" onclick="cekDuplikatBarang()">🔗 Gabungkan Barang</button>
           <button class="btn" style="background:#5b3ea6;" onclick="sinkronkanUlangHargaJualSemua()">🔄 Sinkronkan Ulang Harga Jual</button>
+          <button class="btn" style="background:#C4453A;" onclick="pulihkanHargaGabunganDariBatch()">🩹 Pulihkan Harga Gabungan (dari Riwayat Batch)</button>
         </div>
         <div class="row" style="margin-bottom:14px;">
           <button class="btn ghost" onclick="openStokManualModal()">✍️ Pilih Manual (barang belum ada di master)</button>
@@ -4593,7 +4594,20 @@ async function sinkronkanUlangHargaJualSemua() {
 
   for (const item of itemsCache) {
     dicek++;
-    const seharusnya = hitungHargaJualOtomatis(item.hargaDasar, item.hargaPPN, item.persenGabungan, item);
+    // FIX BUG PENTING: sebelumnya kalau kolom % Markup (persenGabungan) barang itu KOSONG/gak
+    // pernah diisi (BUKAN sengaja 0%), sistem salah nganggep itu 0% dan MAKSA Harga Gabungan
+    // turun jadi sama persis kayak Modal — ngilangin markup yang sebelumnya udah ada. Sekarang:
+    // KI & KSI tetap SELALU dibenerin (itu aturannya emang harus = Modal, gak ada ambiguitas).
+    // TAPI Harga Gabungan CUMA ikut dibenerin kalau % Markup-nya BENERAN keisi eksplisit (angka
+    // asli, bukan default kosong) ATAU barangnya mode Manual — kalau kolomnya kosong, Harga
+    // Gabungan yang ADA SEKARANG dibiarin apa adanya, gak dipaksa berubah (lebih aman, gak
+    // nebak-nebak ganti nilai yang mungkin sebenarnya udah benar).
+    const persenBenerAdaIsinya = item.persenGabungan !== undefined && item.persenGabungan !== null && item.persenGabungan !== '';
+    const modeAman = item.gabunganManual || persenBenerAdaIsinya;
+    const seharusnyaPenuh = hitungHargaJualOtomatis(item.hargaDasar, item.hargaPPN, item.persenGabungan, item);
+    const seharusnya = modeAman
+      ? seharusnyaPenuh
+      : { hargaKI: seharusnyaPenuh.hargaKI, hargaKSI: seharusnyaPenuh.hargaKSI, hargaGabungan: item.hargaGabungan ?? 0 };
     const beda = (item.hargaKI||0) !== seharusnya.hargaKI
       || (item.hargaKSI||0) !== seharusnya.hargaKSI
       || (item.hargaGabungan||0) !== seharusnya.hargaGabungan;
@@ -4620,6 +4634,68 @@ async function sinkronkanUlangHargaJualSemua() {
   showToast(diperbarui > 0
     ? `✅ Selesai — ${diperbarui} dari ${dicek} barang diperbarui`
     : `✅ Selesai — semua ${dicek} barang sudah sinkron, gak ada yang perlu diubah`);
+}
+
+// PEMULIHAN DARURAT: fitur "Sinkronkan Ulang Harga Jual" versi sebelumnya sempat ada bug yang
+// salah nimpa Harga Gabungan barang yang % Markup-nya kosong (dipaksa jadi sama kayak Modal,
+// ngilangin markup yang sebenarnya). Untungnya bug itu CUMA nyentuh field di level barang
+// (items/{id}.hargaGabungan), TAPI GAK nyentuh riwayat batch (items/{id}.batchesMasuk[].hargaGabungan)
+// — jadi nilai yang BENAR (dari sebelum bug) kemungkinan BESAR masih utuh tersimpan di situ.
+// Fungsi ini nyoba pulihkan: ambil hargaGabungan dari batch yang lagi AKTIF (FIFO), pasang balik
+// ke level barang, SEKALIAN hitung ulang % Markup yang sesuai (biar sinkronisasi berikutnya gak
+// balik ngerusak lagi). Barang yang gak punya riwayat batch (misal barang lama banget/legacy)
+// gak bisa dipulihkan cara ini — dilaporkan terpisah biar kamu tau mana yang perlu dibenerin manual.
+async function pulihkanHargaGabunganDariBatch() {
+  if (!currentUserData || currentUserData.role !== 'admin') {
+    showToast('Cuma Admin yang bisa pakai fitur ini', true);
+    return;
+  }
+  if (!await customConfirm(`Ini bakal nyoba PULIHKAN Harga Gabungan yang mungkin ke-reset gara-gara bug sinkronisasi kemarin, dengan ngambil dari riwayat batch yang masih utuh.\n\nCuma barang yang datanya beda dari batch aktifnya yang bakal diupdate. Lanjut?`)) return;
+
+  showToast('Memulai pemulihan, mohon tunggu...');
+  let dicek = 0, dipulihkan = 0, gakBisaDipulihkan = [];
+  const perubahan = [];
+  let batch = db.batch();
+  let opsDalamBatch = 0;
+
+  for (const item of itemsCache) {
+    dicek++;
+    const batches = getBatchesMasuk(item);
+    const hargaAktif = hargaAktifDariBatches(batches);
+    const modal = (item.hargaDasar||0) + (item.hargaPPN||0);
+
+    // Gak ada riwayat batch, atau batch aktifnya gak punya data Gabungan yang valid -> gak bisa dipulihkan cara ini
+    if (!batches.length || !hargaAktif.hargaGabungan || hargaAktif.hargaGabungan <= 0) {
+      if ((item.hargaGabungan||0) === modal && modal > 0) gakBisaDipulihkan.push(item.kode || item.nama);
+      continue;
+    }
+    // Kalau Harga Gabungan sekarang UDAH SAMA kayak yang di batch, gak ada yang perlu dipulihkan
+    if ((item.hargaGabungan||0) === hargaAktif.hargaGabungan) continue;
+
+    const persenTerhitung = modal > 0 ? Math.round((hargaAktif.hargaGabungan / modal - 1) * 100) : 0;
+    batch.update(db.collection('items').doc(item.id), {
+      hargaGabungan: hargaAktif.hargaGabungan,
+      persenGabungan: item.gabunganManual ? (item.persenGabungan||0) : persenTerhitung
+    });
+    opsDalamBatch++;
+    dipulihkan++;
+    if (perubahan.length < 5) perubahan.push(`${item.kode||item.nama}: ${rupiah(item.hargaGabungan||0)}→${rupiah(hargaAktif.hargaGabungan)}`);
+
+    if (opsDalamBatch >= 450) {
+      await batch.commit();
+      batch = db.batch();
+      opsDalamBatch = 0;
+    }
+  }
+  if (opsDalamBatch > 0) await batch.commit();
+
+  if (dipulihkan > 0) {
+    logActivity('barang', 'Pemulihan Harga Gabungan dari Riwayat Batch',
+      `${dipulihkan} dari ${dicek} barang dipulihkan. Contoh: ${perubahan.join(' | ')}${dipulihkan > 5 ? ` (+${dipulihkan-5} lainnya)` : ''}${gakBisaDipulihkan.length ? `. ${gakBisaDipulihkan.length} barang GAK BISA dipulihkan (gak ada riwayat batch): ${gakBisaDipulihkan.slice(0,10).join(', ')}${gakBisaDipulihkan.length>10?', ...':''}` : ''}`);
+  }
+  showToast(dipulihkan > 0
+    ? `✅ ${dipulihkan} dari ${dicek} barang berhasil dipulihkan.${gakBisaDipulihkan.length ? ` ⚠️ ${gakBisaDipulihkan.length} barang gak ada riwayat batch, perlu dibenerin manual.` : ''}`
+    : `Gak ada yang perlu dipulihkan (atau ${gakBisaDipulihkan.length} barang emang gak punya riwayat buat dipulihkan).`);
 }
 
 function cekDuplikatBarang() {
