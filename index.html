@@ -8190,7 +8190,7 @@ function getLastAmbilUnit(itemId, kodeUnit) {
 }
 
 function addKlRow() {
-  klRows.push({ itemId: '', namaTampil: '', qty: 1, statusBekas: 'Tidak Ada', qtyBekas: 1, kondisiBekas: 'Belum Dicek', catatan: '', selectedBatchIdx: null, serialDipilih: [] });
+  klRows.push({ itemId: '', namaTampil: '', qty: 1, statusBekas: 'Tidak Ada', qtyBekas: 1, kondisiBekas: 'Belum Dicek', catatan: '', selectedBatchIdx: null, serialDipilih: [], hargaManual: null });
   renderKlRows();
 }
 // Shortcut keyboard sama kayak Stok Masuk — Enter di Jumlah baris TERAKHIR nambah baris baru otomatis.
@@ -8224,19 +8224,49 @@ function toggleKlSerialPilih(idx, serialNumber, checked) {
 // Update tanpa rebuild seluruh DOM (biar fokus input gak lompat pas ngetik)
 function updateKlRowSilent(idx, field, val) { klRows[idx][field] = val; }
 
+// Helper terpusat: hitung harga EFEKTIF 1 baris Barang Keluar (manual kalau diisi, otomatis dari
+// Master Barang kalau enggak) — dipakai bareng di renderKlRows, updateKlRowQty, dan
+// updateKlRowHargaManual, biar 3 tempat itu SELALU konsisten (gak ada yang kelewat masih baca
+// harga otomatis doang padahal user udah nimpa manual).
+function hargaEfektifKlRow(r, item, priceField) {
+  const otomatis = item ? (item[priceField] || 0) : 0;
+  return (r.hargaManual !== null && r.hargaManual !== undefined) ? Number(r.hargaManual) : otomatis;
+}
 function updateKlRowQty(idx, val, subtotalElId) {
   klRows[idx].qty = Number(val);
   const priceField = priceFieldForTipe();
   const r = klRows[idx];
   const item = itemsCache.find(i => i.id === r.itemId);
-  const harga = item ? (item[priceField] || 0) : 0;
+  const harga = hargaEfektifKlRow(r, item, priceField);
   const subtotal = harga * (Number(r.qty) || 0);
   const subtotalEl = document.getElementById(subtotalElId);
   if (subtotalEl) subtotalEl.value = rupiah(subtotal);
   let total = 0;
   klRows.forEach(rr => {
     const it = itemsCache.find(i => i.id === rr.itemId);
-    const h = it ? (it[priceField] || 0) : 0;
+    const h = hargaEfektifKlRow(rr, it, priceField);
+    total += h * (Number(rr.qty) || 0);
+  });
+  const totalEl = document.getElementById('klTotalDisplay');
+  if (totalEl) totalEl.textContent = rupiah(total);
+}
+// Update Harga Manual TANPA render ulang seluruh tabel (biar fokus/kursor gak kabur pas lagi
+// ngetik angka) — cuma update subtotal baris ini + total keseluruhan secara langsung di DOM.
+// Label "✏️ manual" & tombol ↺ baru kebawa update-nya pas blur (ganti fokus baris lain/submit),
+// via renderKlRows biasa dipanggil dari tempat lain — cukup buat kebutuhan real-time hitungan.
+function updateKlRowHargaManual(idx, val, subtotalElId) {
+  klRows[idx].hargaManual = (val === '' || val === null) ? null : Number(val);
+  const priceField = priceFieldForTipe();
+  const r = klRows[idx];
+  const item = itemsCache.find(i => i.id === r.itemId);
+  const harga = hargaEfektifKlRow(r, item, priceField);
+  const subtotal = harga * (Number(r.qty) || 0);
+  const subtotalEl = document.getElementById(subtotalElId);
+  if (subtotalEl) subtotalEl.value = rupiah(subtotal);
+  let total = 0;
+  klRows.forEach(rr => {
+    const it = itemsCache.find(i => i.id === rr.itemId);
+    const h = hargaEfektifKlRow(rr, it, priceField);
     total += h * (Number(rr.qty) || 0);
   });
   const totalEl = document.getElementById('klTotalDisplay');
@@ -8318,7 +8348,12 @@ function renderKlRows() {
     if (selectedBatchIdx >= activeBatches.length) selectedBatchIdx = 0;
     
     const selectedBatch = activeBatches[selectedBatchIdx];
-    const harga = item ? (item[priceField] || 0) : 0;
+    // Harga default OTOMATIS dari Master Barang (ngikutin FIFO, kayak biasa) — TAPI staff bisa
+    // TIMPA manual per-baris kalau situasinya butuh (misal jasa servis yang harganya beda-beda
+    // tiap kejadian, gak selalu ngikut batch tertua). r.hargaManual !== null artinya user udah
+    // sengaja isi manual, jadi itu yang dipakai, bukan harga otomatis dari Master lagi.
+    const hargaManualAktif = r.hargaManual !== null && r.hargaManual !== undefined;
+    const harga = hargaEfektifKlRow(r, item, priceField);
     const subtotal = harga * (Number(r.qty) || 0);
     total += subtotal;
     
@@ -8380,7 +8415,12 @@ function renderKlRows() {
             ${batchOpts || '<option disabled>Barang belum dipilih</option>'}
           </select>
         </div>
-        <div class="field"><label>Harga (${tipe})</label><input type="text" value="${rupiah(harga)}" readonly></div>
+        <div class="field"><label>Harga (${tipe})${hargaManualAktif ? ' <span style="color:#8A6A3C;">✏️ manual</span>' : ''}</label>
+          <div style="display:flex;gap:4px;">
+            <input type="number" min="0" step="any" value="${harga}" style="flex:1;" oninput="updateKlRowHargaManual(${idx},this.value,'klSubtotal_${idx}')" onblur="renderKlRows()" title="Otomatis ngikut Master Barang — ketik angka lain kalau mau timpa manual (misal buat jasa servis yang harganya beda tiap kejadian)">
+            ${hargaManualAktif ? `<button type="button" class="btn ghost" style="padding:0 8px;font-size:11px;" title="Balikin ke harga otomatis Master Barang" onclick="updateKlRow(${idx},'hargaManual',null)">↺</button>` : ''}
+          </div>
+        </div>
         <div class="field"><label>Subtotal</label><input id="klSubtotal_${idx}" type="text" value="${rupiah(subtotal)}" readonly style="color:var(--success);font-weight:700;"></div>
         <div class="field" style="max-width:150px;"><label>Status Bekas</label>
           <select onchange="updateKlRow(${idx},'statusBekas',this.value)">
@@ -8492,16 +8532,18 @@ async function submitKeluarTransaksi() {
     // Barang keluar butuh 2 hal yang SUMBERNYA BEDA sekarang:
     // 1. Batch yang dipakai buat modal/HPP (Harga Dasar+PPN) -- tetap ngikutin FIFO, batch mana
     //    yang lagi kepake buat itung untung/rugi akurat.
-    // 2. Harga JUAL (KI/KSI/Gabungan) -- SEKARANG diambil dari barangnya langsung (fixed),
-    //    BUKAN dari batch lagi, karena itu udah gak nyimpen harga jual sejak Stok Masuk
-    //    disederhanain (harga jual diatur manual di Master Barang, gak ikut naik-turun batch).
+    // 2. Harga JUAL (KI/KSI/Gabungan) -- default diambil dari barangnya langsung (Master
+    //    Barang, ngikutin FIFO), BUKAN dari batch. TAPI staff bisa TIMPA manual per-baris
+    //    (r.hargaManual) buat kasus yang butuh kendali khusus (misal jasa servis dengan harga
+    //    beda-beda tiap kejadian, gak selalu ngikut urutan batch tertua) — kalau itu diisi,
+    //    itu yang dipakai, bukan harga otomatis Master lagi.
     const batches = getBatchesMasuk(item).sort((a,b) => (a.tanggal||'').localeCompare(b.tanggal||''));
     const activeBatches = batches.filter(b => (b.qty || 0) > 0);
     let selectedBatchIdx = r.selectedBatchIdx !== null ? r.selectedBatchIdx : 0;
     if (selectedBatchIdx >= activeBatches.length) selectedBatchIdx = 0;
     const selectedBatch = activeBatches[selectedBatchIdx];
     
-    const harga = item[priceField] || 0;
+    const harga = hargaEfektifKlRow(r, item, priceField);
     if (harga <= 0) hargaKosong.push(`${item.nama} (Harga ${document.getElementById('klTipe').value} belum diisi di Master Barang — buka Master Barang, edit barang ini, isi Harga ${document.getElementById('klTipe').value})`);
     const subtotal = harga * qty;
     totalItem += qty; totalHarga += subtotal;
