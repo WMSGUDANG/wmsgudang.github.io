@@ -514,6 +514,7 @@
           </div>
           <button class="btn" onclick="exportItemsCSV()">📊 Export Excel</button>
           <button class="btn" style="background:#B8860B;" onclick="cekDuplikatBarang()">🔗 Gabungkan Barang</button>
+          <button class="btn" style="background:#5b3ea6;" onclick="sinkronkanUlangHargaJualSemua()">🔄 Sinkronkan Ulang Harga Jual</button>
         </div>
         <div class="row" style="margin-bottom:14px;">
           <button class="btn ghost" onclick="openStokManualModal()">✍️ Pilih Manual (barang belum ada di master)</button>
@@ -4572,6 +4573,55 @@ function cetakNotaStokTerpilih() {
 
 let dupSelectedIds = new Set();
 
+// Sinkronkan ulang Harga Jual (KI/KSI/Gabungan) SEMUA barang sekaligus — buat benerin barang
+// yang Modal-nya udah bener tapi Harga Jualnya ketinggalan gak ke-update (biasanya karena batch
+// aktifnya di-approve dari versi lama sebelum fitur auto-sync ini ada, atau sebab lain), tanpa
+// perlu nunggu ada Stok Masuk baru buat tiap barang satu-satu. Cuma nulis ke barang yang BENERAN
+// beda (hemat write, gak nyentuh yang udah benar).
+async function sinkronkanUlangHargaJualSemua() {
+  if (!currentUserData || currentUserData.role !== 'admin') {
+    showToast('Cuma Admin yang bisa pakai fitur ini', true);
+    return;
+  }
+  if (!await customConfirm(`Ini bakal ngecek SEMUA ${itemsCache.length} barang di Master Barang, dan benerin Harga KI/KSI/Gabungan yang ketinggalan (gak sesuai Modal-nya) sekaligus.\n\nProses ini AMAN — cuma barang yang beneran beda yang bakal diupdate. Lanjut?`)) return;
+
+  showToast('Memulai sinkronisasi, mohon tunggu...');
+  let dicek = 0, diperbarui = 0;
+  const perubahan = []; // buat log ringkas
+  let batch = db.batch();
+  let opsDalamBatch = 0;
+
+  for (const item of itemsCache) {
+    dicek++;
+    const seharusnya = hitungHargaJualOtomatis(item.hargaDasar, item.hargaPPN, item.persenGabungan, item);
+    const beda = (item.hargaKI||0) !== seharusnya.hargaKI
+      || (item.hargaKSI||0) !== seharusnya.hargaKSI
+      || (item.hargaGabungan||0) !== seharusnya.hargaGabungan;
+    if (!beda) continue;
+
+    batch.update(db.collection('items').doc(item.id), seharusnya);
+    opsDalamBatch++;
+    diperbarui++;
+    if (perubahan.length < 5) perubahan.push(`${item.kode||item.nama}: KSI ${rupiah(item.hargaKSI||0)}→${rupiah(seharusnya.hargaKSI)}`);
+
+    // Firestore batas 500 operasi per batch — commit tiap mendekati batas, lanjut batch baru
+    if (opsDalamBatch >= 450) {
+      await batch.commit();
+      batch = db.batch();
+      opsDalamBatch = 0;
+    }
+  }
+  if (opsDalamBatch > 0) await batch.commit();
+
+  if (diperbarui > 0) {
+    logActivity('barang', 'Sinkronkan Ulang Harga Jual (Massal)',
+      `${diperbarui} dari ${dicek} barang diperbarui. Contoh: ${perubahan.join(' | ')}${diperbarui > 5 ? ` (+${diperbarui-5} lainnya)` : ''}`);
+  }
+  showToast(diperbarui > 0
+    ? `✅ Selesai — ${diperbarui} dari ${dicek} barang diperbarui`
+    : `✅ Selesai — semua ${dicek} barang sudah sinkron, gak ada yang perlu diubah`);
+}
+
 function cekDuplikatBarang() {
   dupSelectedIds = new Set();
   document.getElementById('dupSearchInput').value = '';
@@ -6302,6 +6352,12 @@ async function submitMasuk() {
   const noPlat = document.getElementById('masukPlat').value.trim().toUpperCase();
   const namaSopir = document.getElementById('masukSopir').value.trim();
   if (!masukRows.length) { showToast('Tambahkan minimal 1 barang', true); return; }
+  // ID unik buat SATU nota ini — semua baris yang disimpan bareng-bareng lewat 1x klik "Simpan
+  // Transaksi" ini bakal share notaId yang SAMA. Ini yang dipakai buat ngelompokin ulang pas
+  // cetak/kirim nota (siblingMasukSatuNota), GANTIKAN cara lama yang cuma nebak dari kecocokan
+  // Tanggal+Supplier+Keterangan — soalnya cara lama itu bisa salah gabung kalau kebetulan ada
+  // 2 nota BEDA dari supplier yang sama, tanggal yang sama, keterangan yang mirip/sama juga.
+  const notaId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   const payloads = [];
   for (let i = 0; i < masukRows.length; i++) {
@@ -6341,7 +6397,7 @@ async function submitMasuk() {
       cabangId: currentCabangId,
       itemId: item.id, kode: item.kode, nama: item.nama, acuan: (r.acuan||'').trim(), satuan: item.satuan||'', type: 'masuk', qty,
       supplier, hargaDasar: hDasar, hargaPPN: hPPN, hargaKI, hargaKSI, hargaGabungan, nilai: (hDasar + hPPN) * qty, status: 'pending', serials,
-      keterangan: ket, tanggal, noPlat, namaSopir,
+      keterangan: ket, tanggal, noPlat, namaSopir, notaId,
       // Nomor urut input dalam batch simpan ini — dipakai buat tie-breaker urutan tampil di
       // Riwayat Masuk kalau beberapa barang diinput bareng dengan tanggal yang PERSIS sama,
       // biar urutannya tetap sesuai urutan input (A, B, C, D...), bukan acak.
@@ -7400,16 +7456,24 @@ function notaBlockHTMLMasuk(group) {
     </div>`;
 }
 
-// Cari semua transaksi masuk lain yang satu "nota kedatangan" sama t
-// (tanggal + supplier + keterangan sama), biar cetak/share dari baris manapun
-// tetap menampilkan SEMUA barang dalam nota itu, bukan cuma barang itu sendiri.
+// Cari semua transaksi masuk lain yang satu "nota kedatangan" sama t.
+// PRIORITAS 1: kalau t punya notaId (data baru, mulai dari fitur ini dibuat), cocokin PERSIS
+// pakai notaId itu — ini akurat 100%, gak mungkin salah gabung nota lain walau kebetulan
+// tanggal/supplier/keterangannya sama.
+// FALLBACK: data LAMA (sebelum notaId ada) belum punya field ini, jadi terpaksa masih nebak
+// dari tanggal+supplier+keterangan — bisa salah gabung kalau kebetulan sama persis kayak nota
+// lain, tapi ini cuma kejadian buat data lama, data baru udah aman pakai notaId.
 function siblingMasukSatuNota(t) {
+  const pool = (masukModeCariSemua && masukCariSemuaHasil.length) ? masukCariSemuaHasil : txCache;
+  if (t.notaId) {
+    const found = pool.filter(x => x.type === 'masuk' && x.notaId === t.notaId);
+    return found.length ? found : [t];
+  }
   const tglKey = (t.tanggal || '').slice(0, 10);
   const supKey = (t.supplier || '').trim().toLowerCase();
   const ketKey = (t.keterangan || '').trim().toLowerCase();
-  const pool = (masukModeCariSemua && masukCariSemuaHasil.length) ? masukCariSemuaHasil : txCache;
   const found = pool.filter(x =>
-    x.type === 'masuk' &&
+    x.type === 'masuk' && !x.notaId &&
     (x.tanggal || '').slice(0, 10) === tglKey &&
     (x.supplier || '').trim().toLowerCase() === supKey &&
     (x.keterangan || '').trim().toLowerCase() === ketKey
