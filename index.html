@@ -3029,11 +3029,16 @@ async function changeAccountPassword() {
   }
 }
 
+let _toastHideTimer = null;
 function showToast(msg, isErr) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show' + (isErr ? ' err' : '');
-  setTimeout(() => t.classList.remove('show'), 3200);
+  // Reset timer tiap kali toast baru muncul — kalau gak gini, toast "lagi diproses" yang
+  // ditampilkan duluan bisa nge-hide toast "selesai" yang muncul belakangan sebelum waktunya,
+  // gara-gara timer punya toast pertama masih jalan dan nembak clear duluan.
+  if (_toastHideTimer) clearTimeout(_toastHideTimer);
+  _toastHideTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
 // Pakai sebagai error-callback kedua di tiap onSnapshot() — biar kalau ada listener yang
@@ -7165,30 +7170,60 @@ function kurangiBatchSpesifik(item, trxId, qty) {
   return batches;
 }
 
-// Guard klik ganda: cegah approveMasuk kepanggil bertumpuk buat id yang sama
-// (penyebab kasus stok kedobel/ketriple pas tombol Approve diklik berkali-kali
-// sebelum proses pertama selesai / sebelum status berubah jadi 'selesai').
 // Guard universal (dipakai di semua fungsi approve/submit/simpan yang nulis ke database) —
 // cegah 1 aksi yang sama kepanggil bertumpuk sebelum proses sebelumnya kelar (penyebab kasus
 // data kedobel/ketriple kalau tombol diklik berkali-kali atau koneksi lambat). "key" harus unik
 // per-aksi (biasanya nama fungsi + id transaksi, atau nama fungsi doang buat form yang cuma bisa
 // dibuka 1 di layar dalam waktu bersamaan).
-const _sedangDiproses = new Set();
+//
+// Begitu kunci berhasil didapat, langsung nongolin toast "lagi diproses" — biar user LANGSUNG
+// dapet kepastian klik-nya kerekam, gak perlu nebak-nebak sambil mikir "kepencet apa enggak ya"
+// terus refleks mengklik lagi (ini salah satu akar masalah kasus stok kedobel-tiga kemarin).
+// Toast ini sengaja gak auto-hilang dalam 3.2 detik biasa — dibiarkan nempel sampai fungsinya
+// selesai dan manggil showToast() sendiri buat hasil akhir (berhasil/gagal), jadi user gak
+// pernah lihat layar "kosong tanpa status" di tengah-tengah proses walau koneksi lagi lambat.
+//
+// Pakai Map (bukan Set) biar bisa nyimpen id timer jaring-pengaman per key: kalau karena
+// SESUATU proses ini gak pernah manggil _selesaiDiproses lagi (koneksi bener-bener hang, bukan
+// error bukan sukses, cuma nge-gantung tanpa akhir), kunci otomatis dilepas sendiri setelah 30
+// detik — biar user gak kejebak permanen harus refresh halaman buat bisa coba lagi. Approve/
+// submit yang beneran tetap aman dari dobel walau lewat 30 detik, karena masih dilindungi
+// pengecekan status di database (lapis 2) yang udah dipasang di tiap fungsi approve.
+const _sedangDiproses = new Map();
 function _cekLagiDiproses(key) {
   if (_sedangDiproses.has(key)) { showToast('Masih diproses, tunggu sebentar — jangan diklik berkali-kali.', true); return true; }
-  _sedangDiproses.add(key);
+  const timeoutId = setTimeout(() => {
+    if (_sedangDiproses.has(key)) {
+      _sedangDiproses.delete(key);
+      showToast('Proses sebelumnya kelamaan responnya (kemungkinan koneksi bermasalah). Sudah bisa dicoba lagi — cek dulu riwayatnya, siapa tau ternyata sudah tersimpan.', true);
+    }
+  }, 30000);
+  _sedangDiproses.set(key, timeoutId);
+  showToastProcessing('⏳ Memproses...');
   return false;
 }
-function _selesaiDiproses(key) { _sedangDiproses.delete(key); }
+function _selesaiDiproses(key) {
+  const timeoutId = _sedangDiproses.get(key);
+  if (timeoutId) clearTimeout(timeoutId);
+  _sedangDiproses.delete(key);
+}
 
-const _approveMasukSedangDiproses = new Set();
+function showToastProcessing(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  // Sengaja TIDAK dikasih timer auto-hide di sini — toast ini nandain proses yang lagi
+  // JALAN, jadi dibiarkan nempel di layar sampai ditimpa toast hasil akhir lewat showToast()
+  // biasa (yang otomatis kasih & ngatur timer-nya sendiri begitu proses selesai).
+  if (_toastHideTimer) { clearTimeout(_toastHideTimer); _toastHideTimer = null; }
+}
 
 async function approveMasuk(id, isOldest) {
-  if (_approveMasukSedangDiproses.has(id)) { showToast('Transaksi ini lagi diproses, tunggu sebentar — jangan diklik berkali-kali.', true); return; }
+  const _key = `approveMasuk_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const t = txCache.find(x => x.id === id);
-  if (!t) return;
-  if (t.status === 'selesai') { showToast('Transaksi ini udah pernah di-approve sebelumnya.', true); return; }
-  _approveMasukSedangDiproses.add(id);
+  if (!t) { _selesaiDiproses(_key); return; }
+  if (t.status === 'selesai') { showToast('Transaksi ini udah pernah di-approve sebelumnya.', true); _selesaiDiproses(_key); return; }
   try {
   if (await isPeriodeTerkunci(t.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
   if (!isOldest) {
@@ -7280,7 +7315,7 @@ async function approveMasuk(id, isOldest) {
     }
     showToast('Stok masuk di-approve. Batch harga baru ditambahkan, harga aktif Master Stok mengikuti FIFO');
   } catch(e) { showToast('Gagal approve: ' + e.message, true); }
-  } finally { _approveMasukSedangDiproses.delete(id); }
+  } finally { _selesaiDiproses(_key); }
 }
 
 async function batalkanApproveMasuk(id) {
