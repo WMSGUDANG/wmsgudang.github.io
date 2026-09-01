@@ -498,6 +498,9 @@
               <option value="">Semua Status</option>
               <option value="kritis">Kritis</option>
               <option value="aman">Aman</option>
+              <option value="harga-kosong">⚠️ Harga Kosong (Rp 0)</option>
+              <option value="gabungan-kosong">⚠️ Gabungan Kosong (Beli Sudah Ada)</option>
+              <option value="beli-kosong">⚠️ Beli Kosong (Gabungan Sudah Ada)</option>
             </select>
           </div>
           <div class="field"><label>Aktif/Nonaktif</label>
@@ -510,6 +513,18 @@
           <div class="field"><label>Kategori</label>
             <select id="itemFilterKategori" onchange="resetItemsRenderLimit();renderItems()">
               <option value="">Semua Kategori</option>
+            </select>
+          </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="itemSortOrder" onchange="resetItemsRenderLimit();renderItems()">
+              <option value="nama-az">Nama: A-Z</option>
+              <option value="nama-za">Nama: Z-A</option>
+              <option value="terbaru">Ditambahkan: Terbaru</option>
+              <option value="terlama">Ditambahkan: Terlama</option>
+              <option value="stok-tertinggi">Stok: Tertinggi</option>
+              <option value="stok-terendah">Stok: Terendah</option>
+              <option value="harga-tertinggi">Harga Modal: Tertinggi</option>
+              <option value="harga-terendah">Harga Modal: Terendah</option>
             </select>
           </div>
           <button class="btn" onclick="exportItemsCSV()">📊 Export Excel</button>
@@ -576,6 +591,12 @@
               <option value="dikirim">Sudah Dikirim (Ditunggu)</option>
               <option value="sebagian">Sebagian Datang</option>
               <option value="selesai">Selesai (Semua Datang)</option>
+            </select>
+          </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="orderSortOrder" onchange="renderOrderHist()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
             </select>
           </div>
         </div>
@@ -683,6 +704,14 @@
         </div>
         <div style="margin-top:20px;">
           <h3>Riwayat Retur Saya (cabang aktif)</h3>
+          <div class="row" style="margin-bottom:14px;">
+            <div class="field"><label>Urutkan</label>
+              <select id="returOcSortOrder" onchange="renderReturOcHist()">
+                <option value="terbaru">Tanggal: Terbaru</option>
+                <option value="terlama">Tanggal: Terlama</option>
+              </select>
+            </div>
+          </div>
           <div style="overflow-x:auto;">
           <table><thead><tr><th>#</th><th>Tanggal</th><th>Barang</th><th>Keterangan</th><th>Status</th><th>Perkiraan vs Aktual</th></tr></thead>
           <tbody id="returOcHistTable"><tr><td colspan="6" class="empty">Memuat...</td></tr></tbody></table>
@@ -719,6 +748,14 @@
 
       <div class="panel">
         <h3 id="ocHistTitle">Riwayat Order Saya (cabang aktif)</h3>
+        <div class="row" style="margin-bottom:14px;">
+          <div class="field"><label>Urutkan</label>
+            <select id="ocSortOrder" onchange="renderOrderCabangHist()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
+            </select>
+          </div>
+        </div>
         <div style="overflow-x:auto;">
         <table><thead><tr><th>#</th><th>Tanggal</th><th>Tujuan</th><th>Barang</th><th>Status</th><th>Perkiraan vs Aktual</th><th>Opsi</th></tr></thead>
         <tbody id="ocHistTable"><tr><td colspan="7" class="empty">Memuat...</td></tr></tbody></table>
@@ -825,6 +862,12 @@
               <option value="selesai">Selesai</option>
             </select>
           </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="masukSortOrder" onchange="resetRenderLimit('masukHist');renderMasukHist()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
+            </select>
+          </div>
         </div>
         <div class="row" style="margin-bottom:14px;">
           <button class="btn" onclick="exportMasukCSV(false)">📊 Export Semua</button>
@@ -908,6 +951,12 @@
           <div class="field"><label>Status</label>
             <select id="klFilterStatus" onchange="resetRenderLimit('klHist');renderKeluarHist()">
               <option value="">Semua Status</option><option value="pending">Pending</option><option value="selesai">Selesai</option>
+            </select>
+          </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="klSortOrder" onchange="resetRenderLimit('klHist');renderKeluarHist()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
             </select>
           </div>
         </div>
@@ -1043,6 +1092,12 @@
                 <option value="selesai">Selesai</option>
               </select>
             </div>
+            <div class="field"><label>Urutkan</label>
+              <select id="returMasukSortOrder" onchange="renderReturMasukHist()">
+                <option value="terbaru">Tanggal: Terbaru</option>
+                <option value="terlama">Tanggal: Terlama</option>
+              </select>
+            </div>
           </div>
           <div class="row" style="margin-bottom:14px;">
             <button class="btn" onclick="exportReturMasukCSV(false)">📊 Export Semua</button>
@@ -1123,6 +1178,12 @@
                 <option value="">Semua</option>
                 <option value="pending">Pending</option>
                 <option value="selesai">Selesai</option>
+              </select>
+            </div>
+            <div class="field"><label>Urutkan</label>
+              <select id="returKeluarSortOrder" onchange="renderReturKeluarHist()">
+                <option value="terbaru">Tanggal: Terbaru</option>
+                <option value="terlama">Tanggal: Terlama</option>
               </select>
             </div>
           </div>
@@ -1238,6 +1299,12 @@
               <option value="pending">Pending</option>
               <option value="selesai">Selesai</option>
               <option value="ditolak">Ditolak</option>
+            </select>
+          </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="koreksiSortOrder" onchange="renderKoreksiHist()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
             </select>
           </div>
         </div>
@@ -1371,6 +1438,12 @@
           <div class="field"><label>Jenis</label>
             <select id="svHistJenis" onchange="resetRenderLimit('svHist');renderRiwayatServis()"><option value="">Semua</option><option value="Kecil">Kecil</option><option value="Besar">Besar</option></select>
           </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="svSortOrder" onchange="resetRenderLimit('svHist');renderRiwayatServis()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
+            </select>
+          </div>
         </div>
         <div class="row" style="margin-bottom:14px;">
           <button class="btn" onclick="exportServisCSV(false)">📊 Export Semua</button>
@@ -1413,6 +1486,12 @@
               <option value="tersedia">Tersedia</option>
               <option value="keluar">Keluar</option>
               <option value="rusak">Rusak</option>
+            </select>
+          </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="unitSortOrder">
+              <option value="terbaru">Tgl Masuk: Terbaru</option>
+              <option value="terlama">Tgl Masuk: Terlama</option>
             </select>
           </div>
           <button class="btn" onclick="exportUnitsCSV()">📊 Export Excel</button>
@@ -1474,6 +1553,12 @@
                 <option value="">Semua</option>
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div class="field"><label>Urutkan</label>
+              <select id="opnameSortOrder" onchange="renderOpnameList()">
+                <option value="terbaru">Tanggal: Terbaru</option>
+                <option value="terlama">Tanggal: Terlama</option>
               </select>
             </div>
           </div>
@@ -1656,6 +1741,12 @@
               <option value="Dibuang">Dibuang</option>
             </select>
           </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="bekasSortOrder" onchange="renderBekas()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
+            </select>
+          </div>
           <button class="btn" onclick="exportBekasCSV(false)">📊 Export Semua</button>
           <button class="btn" onclick="exportBekasCSV(true)">✅ Export Terpilih</button>
           <button class="btn" style="background:#2E7D5B;" onclick="shareWABekasTerpilih()">💬 Kirim WA Terpilih</button>
@@ -1671,6 +1762,14 @@
       <div class="panel" id="bekasMasukGUPanel" style="display:none;">
         <h3 style="margin-bottom:4px;">📥 Barang Bekas Masuk dari Cabang</h3>
         <div class="desc" style="color:var(--ink-dim);font-size:12px;margin-bottom:14px;">Barang bekas yang dikirim cabang ke Gudang Utama — konfirmasi terima biar resmi masuk daftar Barang Bekas Gudang Utama.</div>
+        <div class="row" style="margin-bottom:14px;">
+          <div class="field"><label>Urutkan</label>
+            <select id="bekasMasukGUSortOrder" onchange="renderBekasMasukGU()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
+            </select>
+          </div>
+        </div>
         <div style="overflow-x:auto;">
         <table><thead><tr><th>#</th><th>Tanggal Kirim</th><th>Dari Cabang</th><th>Barang</th><th>Qty</th><th>Kondisi</th><th>Keterangan</th><th>Opsi</th></tr></thead>
         <tbody id="bekasMasukGUTable"><tr><td colspan="8" class="empty">Memuat...</td></tr></tbody></table>
@@ -1699,6 +1798,12 @@
         <h3>Riwayat Mutasi</h3>
         <div class="row" style="margin-bottom:14px;">
           <div class="field" style="flex:1;min-width:200px;"><label>Cari</label><input type="text" id="mutasiHistSearch" placeholder="Cari tanggal/kode/nama/rak/user..." oninput="debouncedRenderReset('mutasiHist','renderMutasiHist')"></div>
+          <div class="field"><label>Urutkan</label>
+            <select id="mutasiSortOrder" onchange="resetRenderLimit('mutasiHist');renderMutasiHist()">
+              <option value="terbaru">Tanggal: Terbaru</option>
+              <option value="terlama">Tanggal: Terlama</option>
+            </select>
+          </div>
         </div>
         <div class="row" style="margin-bottom:14px;">
           <button class="btn" onclick="exportMutasiCSV(false)">📊 Export Semua</button>
@@ -1996,6 +2101,12 @@
               <option value="closing">Klosingan Bulanan</option>
               <option value="laporan">Laporan</option>
               <option value="backup">Backup/Restore</option>
+            </select>
+          </div>
+          <div class="field"><label>Urutkan</label>
+            <select id="logSortOrder" onchange="resetRenderLimit('log');renderLog()">
+              <option value="terbaru">Waktu: Terbaru</option>
+              <option value="terlama">Waktu: Terlama</option>
             </select>
           </div>
           <div class="field"><label>Dari Tanggal</label><input type="date" id="logDari" onchange="resetRenderLimit('log');renderLog()"></div>
@@ -2511,6 +2622,29 @@ function saveToUndoStack(label, changes) {
 }
 
 async function applyUndoChanges(changes, useField) {
+  // FIX BUG: sebelumnya undo/redo langsung TIMPA (set()) tiap dokumen ke snapshot lama/baru
+  // TANPA ngecek dulu apakah dokumen itu sudah diubah LAGI oleh orang lain (staff lain/tab lain)
+  // sejak aksi ini tercatat. Karena WMS ini dipakai bareng-bareng banyak staff sekaligus,
+  // ini bisa bikin Undo/Redo diam-diam NGEHAPUS/NIMPA perubahan staff lain yang nyelip di
+  // antaranya (misal staff lain sempat approve transaksi lain yang nyentuh barang yang sama).
+  // Sekarang: baca dulu kondisi TERKINI tiap dokumen, bandingkan ke kondisi yang "seharusnya"
+  // ada kalau memang belum ada yang nyentuh sejak aksi ini — kalau beda (artinya ada perubahan
+  // lain yang nyelip), user diberi tahu & diminta konfirmasi eksplisit sebelum ditimpa, gak
+  // ditimpa diam-diam kayak sebelumnya.
+  const expectedField = useField === 'before' ? 'after' : 'before';
+  const drift = [];
+  for (const c of changes) {
+    const ref = db.collection(c.collection).doc(c.id);
+    const snap = await ref.get();
+    const kondisiSekarang = snap.exists ? snap.data() : null;
+    const kondisiSeharusnya = c[expectedField] ?? null;
+    if (JSON.stringify(kondisiSekarang) !== JSON.stringify(kondisiSeharusnya)) drift.push(c);
+  }
+  if (drift.length) {
+    const namaAksi = useField === 'before' ? 'undo' : 'redo';
+    const lanjut = await customConfirm(`⚠️ ${drift.length} data yang mau di-${namaAksi} ini SUDAH BERUBAH LAGI (kemungkinan sedang/sudah diproses staff lain) sejak aksi ini tercatat.\n\nTetap paksa ${namaAksi}? Perubahan lain yang nyelip di data ini BISA IKUT TERTIMPA/HILANG.`);
+    if (!lanjut) throw new Error(`Dibatalkan — data sudah berubah lagi sejak aksi ini, gak jadi ditimpa.`);
+  }
   for (const c of changes) {
     const val = c[useField];
     const ref = db.collection(c.collection).doc(c.id);
@@ -2946,7 +3080,20 @@ function doLogin() {
     try { await db.collection('users').doc(cred.user.uid).update({ lastLogin: new Date().toISOString() }); }
     catch(e) { console.warn('Gagal catat lastLogin (non-critical):', e); }
   }).catch(err => {
-    document.getElementById('loginErr').textContent = 'Login gagal: email atau password salah.';
+    // FIX: sebelumnya SELALU nampilin "email atau password salah" apapun error aslinya —
+    // padahal gagal login bisa juga gara-gara internet mati, akun kena limit terlalu banyak
+    // percobaan, dll. Sekarang pesannya nyesuain kode error dari Firebase, biar user gak salah
+    // kira dia salah ketik password padahal sebenarnya cuma internetnya yang bermasalah.
+    const pesan = {
+      'auth/wrong-password': 'Login gagal: email atau password salah.',
+      'auth/user-not-found': 'Login gagal: email atau password salah.',
+      'auth/invalid-email': 'Format email tidak valid.',
+      'auth/invalid-credential': 'Login gagal: email atau password salah.',
+      'auth/too-many-requests': 'Terlalu banyak percobaan login gagal. Tunggu beberapa saat, atau reset password lewat "Lupa password?".',
+      'auth/network-request-failed': 'Gagal login: tidak ada koneksi internet. Cek koneksi lalu coba lagi.',
+      'auth/user-disabled': 'Akun ini dinonaktifkan. Hubungi admin.'
+    }[err.code] || ('Login gagal: ' + (err.message || 'terjadi kesalahan tidak diketahui.'));
+    document.getElementById('loginErr').textContent = pesan;
   });
 }
 function doLogout() { auth.signOut(); }
@@ -4127,17 +4274,25 @@ function renderTrendBadge(elId, current, previous) {
   const panah = sama ? '' : (naik ? '▲' : '▼');
   el.innerHTML = `<span style="color:${warna};">${panah} ${Math.abs(pct).toFixed(0)}%</span> <span style="color:var(--ink-dim);font-weight:400;">vs kemarin</span>`;
 }
-function sortTanggalTerbaru(arr, field, tieBreakField) {
+function sortTanggalTerbaru(arr, field, tieBreakField, arah) {
   field = field || 'tanggal';
+  const terlama = arah === 'terlama';
   return arr.slice().sort((a,b) => {
     const diff = new Date(b[field]||0) - new Date(a[field]||0);
-    if (diff !== 0) return diff;
+    const diffArah = terlama ? -diff : diff;
+    if (diffArah !== 0) return diffArah;
     // Tie-breaker: kalau tanggalnya PERSIS sama (mis. 10 barang diinput bareng dalam 1x simpan,
     // tanggalnya identik semua) — pakai nomor urut input biar urutan tampil tetap sesuai urutan
-    // pas diinput, bukan acak ngikut urutan Firestore.
+    // pas diinput, bukan acak ngikut urutan Firestore. Tie-break selalu ascending apapun arah
+    // tanggalnya, karena ini soal urutan proses input, bukan soal lama/baru.
     if (tieBreakField) return (a[tieBreakField] ?? 0) - (b[tieBreakField] ?? 0);
     return 0;
   });
+}
+// Baca pilihan urutan tanggal (Terbaru/Terlama) dari dropdown Urutkan, default 'terbaru'
+// kalau elemennya gak ada atau belum dipilih apa-apa.
+function getSortArahTanggal(selectId) {
+  return document.getElementById(selectId)?.value || 'terbaru';
 }
 
 /* ---------- AUTO-UPPERCASE SEMUA INPUT TEKS ---------- */
@@ -4339,13 +4494,35 @@ function renderItems() {
     (i.nama||'').toLowerCase().includes(q) || (i.kode||'').toLowerCase().includes(q) ||
     (i.acuan||'').toLowerCase().includes(q) || (i.acuanList||[]).some(a => a.toLowerCase().includes(q)) || (i.keterangan||'').toLowerCase().includes(q)
   );
-  if (fStatus) rows = rows.filter(i => {
+  if (fStatus === 'harga-kosong') {
+    // Baris tetap kelihatan sampai Harga Beli MAUPUN Harga Gabungan udah dua-duanya keisi —
+    // biar pas lagi isi cepat, baris gak keburu ilang begitu Harga Beli doang yang kelar diisi.
+    rows = rows.filter(i => ((Number(i.hargaDasar)||0) + (Number(i.hargaPPN)||0)) === 0 || !(Number(i.hargaGabungan)||0));
+  } else if (fStatus === 'gabungan-kosong') {
+    // Khusus: Harga Beli udah ada, tapi Harga Gabungan-nya belum diisi/masih 0.
+    rows = rows.filter(i => ((Number(i.hargaDasar)||0) + (Number(i.hargaPPN)||0)) > 0 && !(Number(i.hargaGabungan)||0));
+  } else if (fStatus === 'beli-kosong') {
+    // Kebalikannya: Harga Gabungan udah ada, tapi Harga Beli-nya belum diisi/masih 0.
+    rows = rows.filter(i => !(((Number(i.hargaDasar)||0) + (Number(i.hargaPPN)||0))) && (Number(i.hargaGabungan)||0) > 0);
+  } else if (fStatus) rows = rows.filter(i => {
     const low = (i.saldo ?? 0) <= (i.stokMinimum ?? 0);
     return fStatus === 'kritis' ? low : !low;
   });
   if (fKategori) rows = rows.filter(i => (i.kategori||'') === fKategori);
   itemsFilteredIds = rows.map(i => i.id);
-  rows = rows.slice().sort((a,b) => (a.nama||'').localeCompare((b.nama||''), 'id', {sensitivity:'base'}));
+  const itemSortOrder = document.getElementById('itemSortOrder')?.value || 'nama-az';
+  rows = rows.slice().sort((a,b) => {
+    switch (itemSortOrder) {
+      case 'nama-za': return (b.nama||'').localeCompare((a.nama||''), 'id', {sensitivity:'base'});
+      case 'terbaru': return new Date(b.createdAt||0) - new Date(a.createdAt||0);
+      case 'terlama': return new Date(a.createdAt||0) - new Date(b.createdAt||0);
+      case 'stok-tertinggi': return (b.saldo||0) - (a.saldo||0);
+      case 'stok-terendah': return (a.saldo||0) - (b.saldo||0);
+      case 'harga-tertinggi': return ((b.hargaDasar||0)+(b.hargaPPN||0)) - ((a.hargaDasar||0)+(a.hargaPPN||0));
+      case 'harga-terendah': return ((a.hargaDasar||0)+(a.hargaPPN||0)) - ((b.hargaDasar||0)+(b.hargaPPN||0));
+      default: return (a.nama||'').localeCompare((b.nama||''), 'id', {sensitivity:'base'});
+    }
+  });
   const totalFiltered = rows.length;
   rows = rows.slice(0, itemsRenderLimit);
   const loadMoreWrap = document.getElementById('itemsLoadMoreWrap');
@@ -4369,8 +4546,10 @@ function renderItems() {
       <td><span class="pill ${low?'low':'ok'}">${i.saldo ?? 0}</span></td>
       <td>${i.satuan||'-'}</td>
       <td>${i.lokasiRak||'-'}</td>
-      <td>${rupiah((i.hargaDasar||0)+(i.hargaPPN||0))}</td>
-      <td>${rupiah(i.hargaGabungan)}</td><td>${rupiah(i.hargaKSI)}</td><td>${rupiah(i.hargaKI)}</td>
+      <td>${((i.hargaDasar||0)+(i.hargaPPN||0)) === 0
+        ? `<input type="number" inputmode="numeric" class="quick-harga-input" placeholder="Rp 0" title="Harga kosong — ketik lalu Enter/klik di luar buat simpan cepat" style="width:90px;padding:4px 6px;border:1.5px solid #B8860B;border-radius:4px;background:#FFF8E1;" onkeydown="if(event.key==='Enter'){this.blur();}" onblur="simpanHargaCepat('${i.id}', this.value, this)">`
+        : `<span onclick="bukaEditHargaCepat('${i.id}', this)" title="Klik untuk edit cepat" style="cursor:pointer;border-bottom:1px dashed #999;">${rupiah((i.hargaDasar||0)+(i.hargaPPN||0))}</span>`}</td>
+      <td><span onclick="bukaEditGabunganCepat('${i.id}', this)" title="Klik untuk isi/edit manual Harga Gabungan" style="cursor:pointer;border-bottom:1px dashed #999;">${rupiah(i.hargaGabungan)}</span></td><td>${rupiah(i.hargaKSI)}</td><td>${rupiah(i.hargaKI)}</td>
       <td>${i.stokMinimum ?? 0}</td>
       <td><span class="pill ${low?'low':'ok'}">${low?'KRITIS':'AMAN'}</span></td>
       <td>${i.keterangan||'-'}</td>
@@ -6598,9 +6777,22 @@ async function submitMasuk() {
     }
     // Stok TIDAK langsung diubah di sini. Transaksi masuk masuk ke Antrian Approval
     // dulu (status 'pending'); stok baru ke-update setelah di-approve, urut tanggal.
+    // FIX BUG: sebelumnya tiap baris barang disimpan SATU-SATU pakai await berurutan (bukan
+    // sekali kirim) — kalau nota isinya banyak barang dan koneksi putus di tengah (misal pas
+    // baris ke-3 dari 5), baris 1 & 2 SUDAH kesimpen sebagai pending, sisanya HILANG tanpa
+    // jejak — nota jadi "kepotong separuh" tanpa disadari, harus diinput ulang manual. Sekarang
+    // semua baris dikirim dalam SATU batch write (atomik) — kalaupun gagal, GAK ADA baris yang
+    // kesimpen sebagian, jadi jelas & aman buat dicoba simpan ulang dari awal.
+    for (let i = 0; i < payloads.length; i += 400) {
+      const chunk = payloads.slice(i, i + 400);
+      const batchMasuk = db.batch();
+      chunk.forEach(payload => {
+        if (lampiranId) payload.lampiranId = lampiranId;
+        batchMasuk.set(db.collection('transactions').doc(), payload);
+      });
+      await batchMasuk.commit();
+    }
     for (const payload of payloads) {
-      if (lampiranId) payload.lampiranId = lampiranId;
-      await db.collection('transactions').add(payload);
       logActivity('masuk', 'Ajukan Stok Masuk', `${payload.kode} - ${payload.nama} +${payload.qty} (supplier: ${supplier||'-'}) — menunggu approve`);
     }
     showToast(`${payloads.length} transaksi masuk disimpan, menunggu approve di Antrian Approval`);
@@ -6657,7 +6849,7 @@ function renderMasukHist() {
     (t.nama||'').toLowerCase().includes(q) || (t.keterangan||'').toLowerCase().includes(q) || (t.kode||'').toLowerCase().includes(q) ||
     (t.acuan||'').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows, 'tanggal', 'urutanInput');
+  rows = sortTanggalTerbaru(rows, 'tanggal', 'urutanInput', getSortArahTanggal('masukSortOrder'));
   masukHistFilteredIds = rows.map(r => r.id);
   const totalFilteredMasuk = rows.length;
   const limitMasuk = getRenderLimit('masukHist');
@@ -7074,6 +7266,105 @@ function getBatchesMasuk(item) {
 // itemSaatIni (opsional) dikasih kalau item ini punya `gabunganManual: true` — artinya user
 // pernah ketik LANGSUNG angka Harga Gabungan-nya (bukan lewat %), jadi harga itu FIXED, gak
 // ikut ke-itung ulang dari Modal+persen lagi sampai user ganti manual lagi atau balik ke mode %.
+// EDIT HARGA CEPAT: dipakai dari kolom "Harga Modal" di tabel Master Barang, biar barang yang
+// harganya masih kosong (atau mau dikoreksi cepat) gak perlu buka modal Edit lengkap dulu.
+// Angka yang diketik dipakai APA ADANYA sebagai Harga Beli/Modal (hargaDasar), PPN=0 — sama
+// persis kayak field "Harga Beli" di modal Edit Barang (lihat updateItemDariHargaBeli()).
+// Harga Gabungan/KI/KSI ikut ke-hitung ulang otomatis lewat hitungHargaJualOtomatis(), konsisten
+// sama satu-satunya rumus yang dipakai di seluruh aplikasi.
+function bukaEditHargaCepat(id, spanEl) {
+  const input = document.createElement('input');
+  input.type = 'number'; input.inputMode = 'numeric';
+  input.className = 'quick-harga-input';
+  input.value = '';
+  input.placeholder = 'Harga baru';
+  input.title = 'Ketik lalu Enter/klik di luar buat simpan';
+  input.style.cssText = 'width:90px;padding:4px 6px;border:1.5px solid #B8860B;border-radius:4px;background:#FFF8E1;';
+  input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+  input.onblur = () => simpanHargaCepat(id, input.value, input);
+  spanEl.replaceWith(input);
+  input.focus();
+}
+async function simpanHargaCepat(id, val, el) {
+  if (val === '' || val === null) { renderItems(); return; } // batal, gak diisi apa-apa
+  const hargaBaru = Number(val);
+  if (isNaN(hargaBaru) || hargaBaru < 0) { showToast('Harga tidak valid', true); renderItems(); return; }
+  const item = itemsCache.find(x => x.id === id);
+  if (!item) { renderItems(); return; }
+  if (el) el.disabled = true;
+  try {
+    const hasil = hitungHargaJualOtomatis(hargaBaru, 0, item.persenGabungan,
+      item.gabunganManual ? { gabunganManual: true, hargaGabungan: item.hargaGabungan } : null);
+    const updateData = { hargaDasar: hargaBaru, hargaPPN: 0, ...hasil };
+    // Kalau barang ini SUDAH punya riwayat Barang Masuk asli (bukan cuma stok awal/legacy),
+    // harga beneran yang dipakai FIFO/HPP itu nempel di batch aktifnya (batch tertua yang qty-nya
+    // masih > 0) — bukan cuma field di level barang. Kalau ini gak ikut dibenerin, editan cepat
+    // ini bisa "ketimpa" balik ke harga batch yang lama begitu ada transaksi lain jalan.
+    if (Array.isArray(item.batchesMasuk) && item.batchesMasuk.length) {
+      const batches = item.batchesMasuk.map(b => ({...b})).sort((a,b) => (a.tanggal||'').localeCompare(b.tanggal||''));
+      const idxAktif = batches.findIndex(b => (b.qty || 0) > 0);
+      if (idxAktif !== -1) {
+        batches[idxAktif] = { ...batches[idxAktif], hargaDasar: hargaBaru, hargaPPN: 0 };
+        updateData.batchesMasuk = batches;
+      }
+    }
+    await db.collection('items').doc(id).update(updateData);
+    logActivity('barang', 'Edit Harga Cepat', `${item.kode} - ${item.nama}: Rp 0 → ${rupiah(hargaBaru)}`);
+    showToast(`Harga ${item.nama} disimpan: ${rupiah(hargaBaru)}`);
+    // Update cache lokal biar tabel langsung ke-render tanpa nunggu roundtrip snapshot Firestore
+    Object.assign(item, updateData);
+  } catch (err) {
+    showToast('Gagal simpan harga: ' + (err.message || err), true);
+  }
+  renderItems();
+}
+
+// EDIT GABUNGAN CEPAT: sama konsepnya kayak edit Harga Modal cepat di atas, tapi buat kolom
+// "Harga Gabungan". Klik → isi angka → otomatis kepasang ke MODE MANUAL (fixed), persis kayak
+// kalau isi manual di modal Edit Barang (lihat updateItemGabunganManual()). Harga KI/KSI TETAP
+// otomatis = Modal, gak kesentuh sama sekali oleh fungsi ini — sesuai desain baku aplikasi.
+function bukaEditGabunganCepat(id, spanEl) {
+  const item = itemsCache.find(x => x.id === id);
+  const input = document.createElement('input');
+  input.type = 'number'; input.inputMode = 'numeric';
+  input.className = 'quick-harga-input';
+  input.value = item ? (item.hargaGabungan ?? '') : '';
+  input.placeholder = 'Harga Gabungan';
+  input.title = 'Ketik lalu Enter/klik di luar buat simpan (jadi mode manual/fixed)';
+  input.style.cssText = 'width:90px;padding:4px 6px;border:1.5px solid #2E7D5B;border-radius:4px;background:#E8F5E9;';
+  input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+  input.onblur = () => simpanGabunganCepat(id, input.value, input);
+  spanEl.replaceWith(input);
+  input.focus(); input.select();
+}
+async function simpanGabunganCepat(id, val, el) {
+  if (val === '' || val === null) { renderItems(); return; } // batal, gak diisi apa-apa
+  const gabunganBaru = Number(val);
+  if (isNaN(gabunganBaru) || gabunganBaru < 0) { showToast('Harga tidak valid', true); renderItems(); return; }
+  const item = itemsCache.find(x => x.id === id);
+  if (!item) { renderItems(); return; }
+  if (el) el.disabled = true;
+  try {
+    const hasil = hitungHargaJualOtomatis(item.hargaDasar, item.hargaPPN, item.persenGabungan,
+      { gabunganManual: true, hargaGabungan: gabunganBaru });
+    const riwayatLama = Array.isArray(item.riwayatHargaJual) ? item.riwayatHargaJual : [];
+    const riwayatBaru = [...riwayatLama, {
+      tipe: 'Gabungan (manual, edit cepat)', hargaSebelum: item.hargaGabungan || 0, hargaBaru: gabunganBaru,
+      tanggal: new Date().toISOString(), user: currentUserData.name
+    }];
+    await db.collection('items').doc(id).update({
+      hargaGabungan: hasil.hargaGabungan, hargaKI: hasil.hargaKI, hargaKSI: hasil.hargaKSI,
+      gabunganManual: true, riwayatHargaJual: riwayatBaru
+    });
+    logActivity('barang', 'Edit Gabungan Cepat', `${item.kode} - ${item.nama}: ${rupiah(item.hargaGabungan||0)} → ${rupiah(gabunganBaru)}`);
+    showToast(`Harga Gabungan ${item.nama} disimpan: ${rupiah(gabunganBaru)}`);
+    Object.assign(item, { hargaGabungan: hasil.hargaGabungan, hargaKI: hasil.hargaKI, hargaKSI: hasil.hargaKSI, gabunganManual: true, riwayatHargaJual: riwayatBaru });
+  } catch (err) {
+    showToast('Gagal simpan Harga Gabungan: ' + (err.message || err), true);
+  }
+  renderItems();
+}
+
 function hitungHargaJualOtomatis(hargaDasar, hargaPPN, persenGabungan, itemSaatIni) {
   const modal = (Number(hargaDasar) || 0) + (Number(hargaPPN) || 0);
   const persen = Number(persenGabungan) || 0;
@@ -7275,6 +7566,17 @@ async function approveMasuk(id, isOldest) {
         ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item),
         acuan: hargaAktif.acuan, acuanList: acuanListBaru, acuanBySupplier: acuanBySupplierBaru
       });
+      // FIX BUG: update status transaksi jadi 'selesai' DIPINDAH ke dalam transaction yang SAMA
+      // (bukan await terpisah SETELAH runTransaction selesai). Sebelumnya, kalau koneksi putus
+      // tepat di antara runTransaction (stok sudah nambah) dan update status ini, transaksi bisa
+      // "nyangkut" di status pending padahal stoknya udah nambah — approve ulang jadi nambah stok
+      // itu KEDUA KALINYA (dobel). Dengan digabung dalam 1 transaction: stok & status SELALU
+      // berubah bareng, gak mungkin cuma salah satu yang berhasil.
+      tx.update(trxRefM, {
+        status: 'selesai', saldoSetelah: newSaldo, approvedAt: new Date().toISOString(), approvedBy: currentUserData.name,
+        kode: kodeTerbaru, nama: namaTerbaru, acuan: acuanTerbaru, satuan: satuanTerbaru,
+        hargaDasar: hDasarTrx, hargaPPN: hPPNTrx, nilai: nilaiBaru
+      });
     });
     for (const sn of (t.serials || [])) {
       await db.collection('units').add({
@@ -7287,11 +7589,6 @@ async function approveMasuk(id, isOldest) {
         riwayat: [{ tipe: 'Masuk', tanggal: t.tanggal, keterangan: `Diterima dari Barang Masuk (supplier: ${t.supplier||'-'})`, user: currentUserData.name }]
       });
     }
-    await db.collection('transactions').doc(id).update({
-      status: 'selesai', saldoSetelah: newSaldo, approvedAt: new Date().toISOString(), approvedBy: currentUserData.name,
-      kode: kodeTerbaru, nama: namaTerbaru, acuan: acuanTerbaru, satuan: satuanTerbaru,
-      hargaDasar: hDasarTrx, hargaPPN: hPPNTrx, nilai: nilaiBaru
-    });
     logActivity('masuk', 'Approve Stok Masuk', `${kodeTerbaru} - ${namaTerbaru} +${t.qty} (saldo jadi ${newSaldo})`);
     // Kalau transaksi ini asalnya dari fitur "Isi dari Order Barang", update status penerimaan
     // di Order Barang yang terkait — biar Order Barang & Stok Masuk tetap sinkron otomatis,
@@ -7319,16 +7616,26 @@ async function approveMasuk(id, isOldest) {
 }
 
 async function batalkanApproveMasuk(id) {
+  const _key = `batalkanApproveMasuk_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const t = txCache.find(x => x.id === id);
-  if (!t) return;
+  if (!t) { _selesaiDiproses(_key); return; }
   const sudahApprove = (t.status || 'pending') === 'selesai';
-  if (!sudahApprove) { showToast('Transaksi ini belum di-approve', true); return; }
-  if (!await customConfirm(`Batalkan approve Barang Masuk "${t.nama}" (${t.kode})?\n\nStok akan berkurang ${t.qty}. Transaksi kembali ke status Pending.`)) return;
+  if (!sudahApprove) { showToast('Transaksi ini belum di-approve', true); _selesaiDiproses(_key); return; }
+  if (!await customConfirm(`Batalkan approve Barang Masuk "${t.nama}" (${t.kode})?\n\nStok akan berkurang ${t.qty}. Transaksi kembali ke status Pending.`)) { _selesaiDiproses(_key); return; }
   try {
     const changes = [];
     const itemRefM = db.collection('items').doc(t.itemId);
+    const trxRefM = db.collection('transactions').doc(id);
     let namaTerbaru, kodeTerbaru, newSaldo;
+    // FIX BUG: status transaksi dicek ULANG di dalam Firestore transaction (bukan cuma dari
+    // txCache lokal) sebelum stok dikurangi — sama seperti pengaman yang sudah ada di
+    // approveMasuk. Tanpa ini, klik dobel / retry setelah koneksi lambat bisa motong stok
+    // barang ini DUA KALI padahal cuma sekali "Batalkan Approve" yang dimaksud user.
     await db.runTransaction(async (tx) => {
+      const trxSnap = await tx.get(trxRefM);
+      if (!trxSnap.exists) throw new Error('Transaksi tidak ditemukan');
+      if ((trxSnap.data().status || 'pending') !== 'selesai') throw new Error('Transaksi ini sudah dibatalkan approve-nya sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
       const snap = await tx.get(itemRefM);
       if (!snap.exists) throw new Error('Barang tidak ditemukan di master');
       const item = { id: snap.id, ...snap.data() };
@@ -7344,6 +7651,9 @@ async function batalkanApproveMasuk(id) {
       };
       changes.push({ collection: 'items', id: t.itemId, before: item, after: { ...item, ...itemUpdate } });
       tx.update(itemRefM, itemUpdate);
+      const txUpdate = { status: 'pending', saldoSetelah: null, approvedAt: null, approvedBy: null };
+      changes.push({ collection: 'transactions', id, before: t, after: { ...t, ...txUpdate } });
+      tx.update(trxRefM, txUpdate);
     });
     const unitsSnap = await db.collection('units').where('itemId', '==', t.itemId).where('tanggalMasuk', '==', t.tanggal).get();
     if (t.serials && t.serials.length > 0) {
@@ -7353,14 +7663,12 @@ async function batalkanApproveMasuk(id) {
         await d.ref.delete();
       }
     }
-    const txUpdate = { status: 'pending', saldoSetelah: null, approvedAt: null, approvedBy: null };
-    changes.push({ collection: 'transactions', id, before: t, after: { ...t, ...txUpdate } });
-    await db.collection('transactions').doc(id).update(txUpdate);
     saveToUndoStack(`Batalkan Approve Stok Masuk ${kodeTerbaru} - ${namaTerbaru}`, changes);
     logActivity('masuk', 'Batalkan Approve Stok Masuk', `${kodeTerbaru} - ${namaTerbaru} -${t.qty} (saldo jadi ${newSaldo})`);
     showToast('✅ Approval dibatalkan. Stok dikurangi, transaksi kembali pending.');
     refreshAllCaches();
   } catch(e) { showToast('❌ Gagal batalkan: ' + e.message, true); }
+  finally { _selesaiDiproses(_key); }
 }
 
 function batalkanBatchMasuk(item, trxId, qtyTerbatalkan) {
@@ -7409,52 +7717,78 @@ async function approveKeluar(id, isOldest) {
     if (!await customConfirm(`⚠️ Stok tidak cukup untuk:\n\n${kurangStok.join('\n')}\n\nTetap approve? Stok akan jadi minus/negatif.`)) return;
   }
   try {
-    // Cek ulang status LANGSUNG DARI DATABASE (bukan cuma cache lokal) sebelum mulai potong
-    // stok — biar approve dobel dari tab/device lain juga ke-block, gak cuma dari tombol ini.
-    const cekStatusSnap = await db.collection('keluarTransaksi').doc(id).get();
-    if (!cekStatusSnap.exists) throw new Error('Transaksi tidak ditemukan');
-    if ((cekStatusSnap.data().status || 'pending') === 'selesai') throw new Error('Transaksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
+    const keluarRefApprove = db.collection('keluarTransaksi').doc(id);
+    const itemsAsal = r.items || [];
     const updatedItems = [];
     let totalHargaBaru = 0;
-    for (const it of (r.items || [])) {
-      const itemRefK = db.collection('items').doc(it.itemId);
-      let namaTerbaru, kodeTerbaru, satuanTerbaru, hargaTerbaru, subtotalBaru, newSaldo;
-      // Transaction Firestore: baca & tulis saldo/batch item secara atomik,
-      // supaya aman kalau ada beberapa orang approve barang yang sama bersamaan.
-      await db.runTransaction(async (tx) => {
-        const snap = await tx.get(itemRefK);
-        const item = snap.exists ? { id: snap.id, ...snap.data() } : null;
-        namaTerbaru = item?.nama ?? it.nama;
-        kodeTerbaru = item?.kode ?? it.kode;
-        satuanTerbaru = item?.satuan ?? it.satuan;
-        // PENTING: harga & batch yang kepotong HARUS ikut batch yang dipilih user pas
-        // ajukan transaksi (it.harga / it.batchTrxId) — bukan re-fetch harga master
-        // terkini. Kalau ngambil dari master lagi di sini, harga bisa "lompat" ngikut
-        // barang masuk lain yang kebetulan di-approve duluan/belakangan, padahal user
-        // udah milih batch spesifik pas submit.
-        hargaTerbaru = it.harga || 0;
-        subtotalBaru = hargaTerbaru * it.qty;
-        newSaldo = (item?.saldo || 0) - it.qty;
-        const itemUpdate = { saldo: newSaldo };
-        if (item) {
-          const batchesSisa = it.batchTrxId
-            ? kurangiBatchSpesifik(item, it.batchTrxId, it.qty)
-            : kurangiBatchFIFO(item, it.qty);
-          const hargaAktif = hargaAktifDariBatches(batchesSisa);
-          itemUpdate.batchesMasuk = batchesSisa;
-          // Harga Dasar/PPN (modal) ngikutin batch yang sisa (FIFO). Harga Jual (KI/KSI/Gabungan)
-          // OTOMATIS dihitung ulang dari Modal terbaru ini — KI/KSI = Modal, Gabungan = Modal +
-          // persen markup yang diatur di Master Barang.
-          itemUpdate.hargaDasar = hargaAktif.hargaDasar;
-          itemUpdate.hargaPPN = hargaAktif.hargaPPN;
-          Object.assign(itemUpdate, hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item));
-        }
-        tx.update(itemRefK, itemUpdate);
+    // FIX BUG PENTING: SEMUA barang dalam transaksi ini + status transaksi keseluruhan sekarang
+    // diproses dalam SATU Firestore transaction (sebelumnya: tiap barang punya runTransaction
+    // SENDIRI-SENDIRI di dalam loop, dan status transaksi cuma di-update SEKALI di akhir loop).
+    // Bug lama: kalau approve gagal/koneksi putus di TENGAH loop (misal barang ke-3 dari 5
+    // gagal), barang 1 & 2 SUDAH kepotong stoknya permanen padahal status transaksi masih
+    // "pending" — approve ulang jadi motong stok barang 1 & 2 itu KEDUA KALINYA (dobel).
+    // Sekarang: semua barang + status berubah BARENG dalam 1 transaction, atau GAK ADA SAMA
+    // SEKALI yang berubah kalau ada kegagalan — gak ada lagi kondisi "kepotong separuh".
+    await db.runTransaction(async (tx) => {
+      // --- TAHAP BACA (semua get() WAJIB kelar duluan sebelum ada update(), aturan Firestore transaction) ---
+      const trxSnap = await tx.get(keluarRefApprove);
+      if (!trxSnap.exists) throw new Error('Transaksi tidak ditemukan');
+      if ((trxSnap.data().status || 'pending') === 'selesai') throw new Error('Transaksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
+      const itemSnaps = [];
+      for (const it of itemsAsal) itemSnaps.push(await tx.get(db.collection('items').doc(it.itemId)));
+
+      // --- TAHAP HITUNG (di memori, belum nulis apa-apa ke Firestore) ---
+      const itemWrites = [];
+      for (let i = 0; i < itemsAsal.length; i++) {
+        const it = itemsAsal[i];
+        const snap = itemSnaps[i];
+        if (!snap.exists) throw new Error(`Barang "${it.nama||it.kode||it.itemId}" tidak ditemukan di Master Barang (mungkin sudah dihapus) — approve dibatalkan, gak ada barang lain yang berubah.`);
+        const item = { id: snap.id, ...snap.data() };
+        const namaTerbaru = item.nama ?? it.nama;
+        const kodeTerbaru = item.kode ?? it.kode;
+        const satuanTerbaru = item.satuan ?? it.satuan;
+        // PENTING: harga & batch yang kepotong HARUS ikut batch yang dipilih user pas ajukan
+        // transaksi (it.harga / it.batchTrxId) — bukan re-fetch harga master terkini. Kalau
+        // ngambil dari master lagi di sini, harga bisa "lompat" ngikut barang masuk lain yang
+        // kebetulan di-approve duluan/belakangan, padahal user udah milih batch spesifik pas submit.
+        const hargaTerbaru = it.harga || 0;
+        const subtotalBaru = hargaTerbaru * it.qty;
+        const newSaldo = (item.saldo || 0) - it.qty;
+        const batchesSisa = it.batchTrxId
+          ? kurangiBatchSpesifik(item, it.batchTrxId, it.qty)
+          : kurangiBatchFIFO(item, it.qty);
+        const hargaAktif = hargaAktifDariBatches(batchesSisa);
+        // Harga Dasar/PPN (modal) ngikutin batch yang sisa (FIFO). Harga Jual (KI/KSI/Gabungan)
+        // OTOMATIS dihitung ulang dari Modal terbaru ini — KI/KSI = Modal, Gabungan = Modal +
+        // persen markup yang diatur di Master Barang.
+        const itemUpdate = {
+          saldo: newSaldo, batchesMasuk: batchesSisa,
+          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item)
+        };
+        itemWrites.push({ ref: db.collection('items').doc(it.itemId), data: itemUpdate });
+        totalHargaBaru += subtotalBaru;
+        updatedItems.push({ ...it, nama: namaTerbaru, kode: kodeTerbaru, satuan: satuanTerbaru, harga: hargaTerbaru, subtotal: subtotalBaru, _newSaldo: newSaldo });
+      }
+
+      // --- TAHAP TULIS (semua sekaligus, dalam transaction yang sama) ---
+      itemWrites.forEach(w => tx.update(w.ref, w.data));
+      tx.update(keluarRefApprove, {
+        status: 'selesai', approvedAt: new Date().toISOString(), approvedBy: currentUserData.name,
+        items: updatedItems.map(({ _newSaldo, ...simpan }) => simpan), totalHarga: totalHargaBaru
       });
-      totalHargaBaru += subtotalBaru;
+    });
+
+    // Efek samping tambahan (histori per-barang, Barang Bekas, update Unit/Serial) — dijalankan
+    // SETELAH transaction utama di atas berhasil. Ini sengaja TIDAK ikut di dalam transaction
+    // (biar gak kena limit ukuran/jumlah operasi transaction kalau barangnya banyak), tapi
+    // risikonya sekarang jauh lebih aman: stok & status transaksi UTAMA sudah pasti benar &
+    // konsisten duluan — kalaupun salah satu histori/efek-samping ini gagal di tengah jalan,
+    // yang hilang cuma catatan pelengkap, BUKAN duplikasi potongan stok.
+    for (const it of updatedItems) {
       await db.collection('transactions').add({
         cabangId: currentCabangId,
-        itemId: it.itemId, kode: kodeTerbaru, nama: namaTerbaru, type: 'keluar', qty: it.qty, nilai: subtotalBaru,
+        itemId: it.itemId, kode: it.kode, nama: it.nama, type: 'keluar', qty: it.qty, nilai: it.subtotal,
         modal: ((it.batchInfo?.hargaDasar||0) + (it.batchInfo?.hargaPPN||0)) * it.qty,
         tipe: r.tipe,
         // Acuan/nama vendor ikut dicatat di transaksi Keluar juga, diambil dari batch yang
@@ -7462,18 +7796,18 @@ async function approveKeluar(id, isOldest) {
         // asalnya dari nota/vendor yang mana, sama seperti riwayat Masuk.
         acuan: it.batchInfo?.acuan || '',
         keterangan: `[${r.tipe}/${r.kodeUnit||'-'}] ${r.keterangan||''}`.trim(),
-        tanggal: r.tanggal, user: r.user, saldoSetelah: newSaldo, refTransaksiId: id
+        tanggal: r.tanggal, user: r.user, saldoSetelah: it._newSaldo, refTransaksiId: id
       });
       if ((it.statusBekas === 'Ada' || it.statusBekas === 'Gantung') && it.qtyBekas > 0) {
         await db.collection('barangBekas').add({
           cabangId: currentCabangId,
-          tanggal: r.tanggal, refKeluarId: id, refItemId: it.itemId, kode: kodeTerbaru, nama: namaTerbaru,
+          tanggal: r.tanggal, refKeluarId: id, refItemId: it.itemId, kode: it.kode, nama: it.nama,
           qty: it.qtyBekas, kondisi: it.kondisiBekas,
           statusGudang: it.statusBekas === 'Gantung' ? 'Gantung' : 'Di Gudang',
           kodeUnit: r.kodeUnit, mekanik: r.mekanik,
           keterangan: it.statusBekas === 'Gantung'
-            ? `Bekas dijanjikan (Gantung) dari penukaran ${namaTerbaru} unit ${r.kodeUnit||'-'}, belum diserahkan fisiknya`
-            : `Bekas dari penukaran ${namaTerbaru} unit ${r.kodeUnit||'-'}`,
+            ? `Bekas dijanjikan (Gantung) dari penukaran ${it.nama} unit ${r.kodeUnit||'-'}, belum diserahkan fisiknya`
+            : `Bekas dari penukaran ${it.nama} unit ${r.kodeUnit||'-'}`,
           user: r.user, createdAt: new Date().toISOString()
         });
       }
@@ -7493,12 +7827,7 @@ async function approveKeluar(id, isOldest) {
           }
         }
       }
-      updatedItems.push({ ...it, nama: namaTerbaru, kode: kodeTerbaru, satuan: satuanTerbaru, harga: hargaTerbaru, subtotal: subtotalBaru });
     }
-    await db.collection('keluarTransaksi').doc(id).update({
-      status: 'selesai', approvedAt: new Date().toISOString(), approvedBy: currentUserData.name,
-      items: updatedItems, totalHarga: totalHargaBaru
-    });
     // Kalau transaksi ini berasal dari Buku Servis, sinkronkan juga salinan nama/kode/satuan di riwayat servis
     const svTerkait = (servisCache || []).find(sv => sv.keluarTransaksiId === id);
     if (svTerkait) {
@@ -7515,23 +7844,41 @@ async function approveKeluar(id, isOldest) {
 }
 
 async function batalkanApproveKeluar(id) {
+  const _key = `batalkanApproveKeluar_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const r = keluarCache.find(x => x.id === id);
-  if (!r) return;
+  if (!r) { _selesaiDiproses(_key); return; }
   const sudahApprove = (r.status || 'pending') === 'selesai';
-  if (!sudahApprove) { showToast('Transaksi ini belum di-approve', true); return; }
-  if (!await customConfirm(`Batalkan approve Barang Keluar Unit "${r.kodeUnit||'-'}"?\n\nStok barang akan dikembalikan. Transaksi kembali ke status Pending.`)) return;
+  if (!sudahApprove) { showToast('Transaksi ini belum di-approve', true); _selesaiDiproses(_key); return; }
+  if (!await customConfirm(`Batalkan approve Barang Keluar Unit "${r.kodeUnit||'-'}"?\n\nStok barang akan dikembalikan. Transaksi kembali ke status Pending.`)) { _selesaiDiproses(_key); return; }
   try {
     const changes = [];
     const restoreItems = [];
-    for (const it of (r.items || [])) {
-      const itemRefK = db.collection('items').doc(it.itemId);
-      let namaTerbaru, kodeTerbaru, newSaldo;
-      await db.runTransaction(async (tx) => {
-        const snap = await tx.get(itemRefK);
+    const itemsAsal = r.items || [];
+    const keluarRefBatal = db.collection('keluarTransaksi').doc(id);
+    // FIX BUG: semua barang dalam transaksi ini + status transaksi keseluruhan sekarang
+    // diproses dalam SATU Firestore transaction, sama seperti perbaikan yang sudah dipasang
+    // di approveKeluar. Sebelumnya tiap barang punya runTransaction SENDIRI-SENDIRI di dalam
+    // loop, dan status transaksi baru di-update SEKALI di akhir — kalau koneksi putus di
+    // tengah loop, sebagian barang sudah kebalikin stoknya tapi status masih "selesai",
+    // sehingga klik "Batalkan" lagi bisa ngembaliin stok barang yang sama KEDUA KALINYA.
+    // Status juga dicek ULANG dari Firestore (bukan cuma keluarCache lokal) sebagai
+    // pengaman kalau ada tab/device lain yang barusan membatalkan approve-nya duluan.
+    await db.runTransaction(async (tx) => {
+      const rSnap = await tx.get(keluarRefBatal);
+      if (!rSnap.exists) throw new Error('Transaksi tidak ditemukan');
+      if ((rSnap.data().status || 'pending') !== 'selesai') throw new Error('Approve transaksi ini sudah dibatalkan sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kembali 2x.');
+      const itemSnaps = [];
+      for (const it of itemsAsal) itemSnaps.push(await tx.get(db.collection('items').doc(it.itemId)));
+
+      const itemWrites = [];
+      for (let i = 0; i < itemsAsal.length; i++) {
+        const it = itemsAsal[i];
+        const snap = itemSnaps[i];
         const item = snap.exists ? { id: snap.id, ...snap.data() } : null;
-        namaTerbaru = item?.nama ?? it.nama;
-        kodeTerbaru = item?.kode ?? it.kode;
-        newSaldo = (item?.saldo || 0) + it.qty;
+        const namaTerbaru = item?.nama ?? it.nama;
+        const kodeTerbaru = item?.kode ?? it.kode;
+        const newSaldo = (item?.saldo || 0) + it.qty;
         const itemUpdate = { saldo: newSaldo };
         if (item) {
           const batchesBaru = restoreBatchFIFO(item, it.qty, it.batchTrxId, it.batchInfo);
@@ -7542,11 +7889,19 @@ async function batalkanApproveKeluar(id) {
           Object.assign(itemUpdate, hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, item.persenGabungan, item));
         }
         if (item) changes.push({ collection: 'items', id: it.itemId, before: item, after: { ...item, ...itemUpdate } });
-        tx.update(itemRefK, itemUpdate);
-      });
-      restoreItems.push({ itemId: it.itemId, nama: namaTerbaru, kode: kodeTerbaru, qty: it.qty });
-      // Sama kayak reverseApprovedKeluarItems — unit Track Serial yang tadi 'keluar' balikin
-      // ke 'tersedia' pas approve-nya dibatalkan.
+        itemWrites.push({ ref: db.collection('items').doc(it.itemId), data: itemUpdate });
+        restoreItems.push({ itemId: it.itemId, nama: namaTerbaru, kode: kodeTerbaru, qty: it.qty });
+      }
+
+      itemWrites.forEach(w => tx.update(w.ref, w.data));
+      const klUpdate = { status: 'pending', approvedAt: null, approvedBy: null };
+      changes.push({ collection: 'keluarTransaksi', id, before: r, after: { ...r, ...klUpdate } });
+      tx.update(keluarRefBatal, klUpdate);
+    });
+    // Efek samping (unit serial, hapus histori transaksi/barang bekas terkait) — dijalankan
+    // SETELAH transaction utama berhasil, sama seperti approveKeluar: stok & status utama
+    // sudah pasti benar & konsisten duluan sebelum efek samping ini menyusul.
+    for (const it of itemsAsal) {
       if (Array.isArray(it.serials) && it.serials.length) {
         for (const sn of it.serials) {
           const u = unitsCache.find(x => x.itemId === it.itemId && x.serialNumber === sn);
@@ -7569,15 +7924,13 @@ async function batalkanApproveKeluar(id) {
       changes.push({ collection: 'barangBekas', id: d.id, before: d.data(), after: null });
       await d.ref.delete();
     }
-    const klUpdate = { status: 'pending', approvedAt: null, approvedBy: null };
-    changes.push({ collection: 'keluarTransaksi', id, before: r, after: { ...r, ...klUpdate } });
-    await db.collection('keluarTransaksi').doc(id).update(klUpdate);
     const itemNames = restoreItems.map(x => `${x.nama} +${x.qty}`).join(', ');
     saveToUndoStack(`Batalkan Approve Stok Keluar Unit ${r.kodeUnit||'-'}`, changes);
     logActivity('keluar', 'Batalkan Approve Stok Keluar', `Unit ${r.kodeUnit||'-'}: ${itemNames} dikembalikan`);
     showToast('✅ Approval dibatalkan. Stok dikembalikan, transaksi kembali pending.');
     refreshAllCaches();
   } catch(e) { showToast('❌ Gagal batalkan: ' + e.message, true); }
+  finally { _selesaiDiproses(_key); }
 }
 
 function restoreBatchFIFO(item, qtyRestore, batchTrxId, batchInfoAsli) {
@@ -8091,7 +8444,7 @@ function renderOrderHist() {
   if (!tbl) return;
   const q = (document.getElementById('orderSearch')?.value || '').toLowerCase().trim();
   const statusFilter = document.getElementById('orderFilterStatus')?.value || '';
-  let rows = [...(orderModeCariSemua ? orderCariSemuaHasil : orderCache)].sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||''));
+  let rows = sortTanggalTerbaru(orderModeCariSemua ? orderCariSemuaHasil : orderCache, 'tanggal', null, getSortArahTanggal('orderSortOrder'));
   if (statusFilter) rows = rows.filter(r => (r.status||'pending') === statusFilter);
   if (q) {
     rows = rows.filter(r =>
@@ -8921,7 +9274,7 @@ function renderKeluarHist(sourceOverride) {
     (r.mekanik||'').toLowerCase().includes(q) || (r.keterangan||'').toLowerCase().includes(q) ||
     (r.items||[]).some(it => (it.nama||'').toLowerCase().includes(q) || (it.kode||'').toLowerCase().includes(q) || (it.statusBekas||'').toLowerCase().includes(q))
   );
-  rows = sortTanggalTerbaru(rows);
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('klSortOrder'));
   klHistFilteredIds = rows.map(r => r.id);
   const totalFilteredKl = rows.length;
   const limitKl = getRenderLimit('klHist');
@@ -8963,31 +9316,36 @@ function toggleKlSelectAll(checked) {
 
 async function deleteKeluarBatch(ids, sourceLabel) {
   if (!ids.length) { showToast('Tidak ada transaksi yang dipilih', true); return; }
+  const _key = `deleteKeluarBatch_${ids.slice().sort().join(',')}`;
+  if (_cekLagiDiproses(_key)) return;
   const trxs = ids.map(id => keluarCache.find(x => x.id === id)).filter(Boolean);
   const approvedCount = trxs.filter(t => (t.status||'pending') === 'selesai').length;
   const pendingCount = trxs.length - approvedCount;
-  if (!await customConfirm(`Hapus ${trxs.length} transaksi keluar (${approvedCount} sudah approved — stok akan dikembalikan, ${pendingCount} masih pending)?\n\nTindakan ini tidak bisa dibatalkan.`)) return;
-  let done = 0;
+  if (!await customConfirm(`Hapus ${trxs.length} transaksi keluar (${approvedCount} sudah approved — stok akan dikembalikan, ${pendingCount} masih pending)?\n\nTindakan ini tidak bisa dibatalkan.`)) { _selesaiDiproses(_key); return; }
+  let done = 0, dilewati = 0;
   try {
     for (const trx of trxs) {
-      const sudahApprove = (trx.status || 'pending') === 'selesai';
+      // klaimHapusKeluarTransaksi menghapus dokumennya secara atomik & ngasih tau kalau
+      // ternyata udah kehapus duluan (misal transaksi ini juga lagi diproses di tempat lain
+      // hampir bersamaan) — kalau gitu, skip aja, jangan sampai reverse stok dobel.
+      const { trxData, sudahApprove } = await klaimHapusKeluarTransaksi(trx.id);
+      if (!trxData) { dilewati++; continue; }
       if (sudahApprove) {
         // Pakai helper yang sama kayak hapus satuan — biar batch-nya ikut balik ke asalnya
         // dengan benar (bukan cuma nambah saldo doang, lihat penjelasan di reverseApprovedKeluarItems).
-        await reverseApprovedKeluarItems(trx.items);
+        await reverseApprovedKeluarItems(trxData.items);
         const bbSnap = await db.collection('barangBekas').where('refKeluarId', '==', trx.id).get();
         for (const d of bbSnap.docs) await d.ref.delete();
         const trSnap = await db.collection('transactions').where('refTransaksiId', '==', trx.id).get();
         for (const d of trSnap.docs) await d.ref.delete();
       }
-      await db.collection('keluarTransaksi').doc(trx.id).delete();
       done++;
     }
-    logActivity('keluar', 'Hapus Massal Transaksi Keluar', `${done} transaksi dihapus (${sourceLabel})`);
+    logActivity('keluar', 'Hapus Massal Transaksi Keluar', `${done} transaksi dihapus (${sourceLabel})${dilewati ? `, ${dilewati} dilewati (udah diproses duluan)` : ''}`);
     showToast(`${done} transaksi keluar berhasil dihapus`);
   } catch(e) {
     showToast(`Gagal hapus (${done}/${trxs.length} selesai): ` + e.message, true);
-  }
+  } finally { _selesaiDiproses(_key); }
 }
 
 function deleteKeluarTerpilih() {
@@ -8998,6 +9356,28 @@ function deleteKeluarTerpilih() {
 function deleteKeluarSemua() {
   if (!klHistFilteredIds.length) { showToast('Tidak ada transaksi untuk dihapus', true); return; }
   deleteKeluarBatch(klHistFilteredIds, 'semua sesuai filter yang sedang tampil');
+}
+
+// FIX BUG: klaim & hapus dokumen keluarTransaksi secara ATOMIK lewat Firestore transaction —
+// dipakai bareng oleh deleteKeluarTransaksi, editKeluarTransaksi, deleteKeluarBatch, dan
+// hapusServisSatuCascade. reverseApprovedKeluarItems (di bawah) nambahin stok TANPA cek dulu
+// apakah ini udah pernah dijalanin, jadi kalau salah satu fungsi di atas kepanggil 2x (klik
+// dobel, retry abis koneksi putus, atau dari tab/device lain hampir bersamaan), stoknya bisa
+// ketambah 2x. Dengan helper ini, dokumen keluarTransaksi dibaca+dihapus dalam SATU transaction:
+// panggilan pertama yang berhasil menghapusnya, panggilan kedua (siapapun yang motret duluan)
+// bakal nemu dokumennya udah gak ada (trxData null) dan langsung berhenti sebelum sempat
+// nge-reverse stok.
+async function klaimHapusKeluarTransaksi(id) {
+  const ref = db.collection('keluarTransaksi').doc(id);
+  let trxData = null, sudahApprove = false;
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return;
+    trxData = { id: snap.id, ...snap.data() };
+    sudahApprove = (trxData.status || 'pending') === 'selesai';
+    tx.delete(ref);
+  });
+  return { trxData, sudahApprove };
 }
 
 // Dipakai bareng oleh deleteKeluarTransaksi & editKeluarTransaksi — dua-duanya butuh
@@ -9042,19 +9422,24 @@ async function reverseApprovedKeluarItems(items) {
 }
 
 async function deleteKeluarTransaksi(id) {
+  const _key = `deleteKeluarTransaksi_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const trx = keluarCache.find(x => x.id === id);
-  if (!trx) return;
-  if (await isPeriodeTerkunci(trx.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau ubah.', true); return; }
-  const sudahApprove = (trx.status || 'pending') === 'selesai';
+  if (!trx) { _selesaiDiproses(_key); return; }
+  if (await isPeriodeTerkunci(trx.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau ubah.', true); _selesaiDiproses(_key); return; }
+  const sudahApproveTampilan = (trx.status || 'pending') === 'selesai';
   const svTerkait = servisCache.find(s => s.keluarTransaksiId === id);
-  if (!await customConfirm(sudahApprove
+  if (!await customConfirm(sudahApproveTampilan
     ? `Hapus transaksi ini yang SUDAH di-approve? Stok barang yang keluar akan dikembalikan.${svTerkait ? '\n\n⚠️ Transaksi ini berasal dari Buku Servis — riwayat servisnya juga akan ikut terhapus supaya data tetap sinkron.' : ''}`
-    : `Tolak/hapus transaksi ini yang masih pending? Belum ada stok yang berubah.${svTerkait ? '\n\n⚠️ Transaksi ini berasal dari Buku Servis — riwayat servisnya juga akan ikut terhapus supaya data tetap sinkron.' : ''}`)) return;
+    : `Tolak/hapus transaksi ini yang masih pending? Belum ada stok yang berubah.${svTerkait ? '\n\n⚠️ Transaksi ini berasal dari Buku Servis — riwayat servisnya juga akan ikut terhapus supaya data tetap sinkron.' : ''}`)) { _selesaiDiproses(_key); return; }
 
   try {
     const changes = [];
+    const { trxData, sudahApprove } = await klaimHapusKeluarTransaksi(id);
+    if (!trxData) { showToast('Transaksi ini sudah dihapus sebelumnya (kemungkinan diklik dobel).', true); return; }
+    changes.push({ collection: 'keluarTransaksi', id, before: trxData, after: null });
     if (sudahApprove) {
-      const itemChanges = await reverseApprovedKeluarItems(trx.items);
+      const itemChanges = await reverseApprovedKeluarItems(trxData.items);
       changes.push(...itemChanges);
       const bbSnap = await db.collection('barangBekas').where('refKeluarId', '==', id).get();
       for (const d of bbSnap.docs) {
@@ -9067,63 +9452,65 @@ async function deleteKeluarTransaksi(id) {
         await d.ref.delete();
       }
     }
-    changes.push({ collection: 'keluarTransaksi', id, before: trx, after: null });
-    await db.collection('keluarTransaksi').doc(id).delete();
     if (svTerkait) {
       changes.push({ collection: 'bukuServis', id: svTerkait.id, before: svTerkait, after: null });
       await db.collection('bukuServis').doc(svTerkait.id).delete();
     }
-    saveToUndoStack(`Barang Keluar #${trx.id} (Unit: ${trx.kodeUnit})`, changes);
-    logActivity('keluar', sudahApprove ? 'Hapus Transaksi Keluar (Approved)' : 'Tolak Transaksi Keluar (Pending)', `Unit ${trx.kodeUnit||'-'} (${trx.tipe}), ${rupiah(trx.totalHarga)}${svTerkait ? ' — beserta riwayat servis terkait' : ''}`);
+    saveToUndoStack(`Barang Keluar #${trxData.id} (Unit: ${trxData.kodeUnit})`, changes);
+    logActivity('keluar', sudahApprove ? 'Hapus Transaksi Keluar (Approved)' : 'Tolak Transaksi Keluar (Pending)', `Unit ${trxData.kodeUnit||'-'} (${trxData.tipe}), ${rupiah(trxData.totalHarga)}${svTerkait ? ' — beserta riwayat servis terkait' : ''}`);
     showToast(sudahApprove ? 'Transaksi dihapus, stok dikembalikan' : 'Transaksi ditolak/dihapus dari antrian');
   } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  finally { _selesaiDiproses(_key); }
 }
 
 async function editKeluarTransaksi(id) {
+  const _key = `editKeluarTransaksi_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const trx = keluarCache.find(x => x.id === id);
-  if (!trx) return;
-  if (await isPeriodeTerkunci(trx.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau ubah.', true); return; }
+  if (!trx) { _selesaiDiproses(_key); return; }
+  if (await isPeriodeTerkunci(trx.tanggal)) { showToast('Transaksi ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau ubah.', true); _selesaiDiproses(_key); return; }
   const svTerkait = servisCache.find(s => s.keluarTransaksiId === id);
   if (svTerkait) {
     showToast('Transaksi ini berasal dari Buku Servis — silakan edit lewat tombol ✏️ di Riwayat Servis (menu Servis) supaya data HM/KM & jenis servisnya ikut sinkron.', true);
-    return;
+    _selesaiDiproses(_key); return;
   }
-  const sudahApprove = (trx.status || 'pending') === 'selesai';
-  if (!await customConfirm(sudahApprove
+  const sudahApproveTampilan = (trx.status || 'pending') === 'selesai';
+  if (!await customConfirm(sudahApproveTampilan
     ? `Edit transaksi ini (Unit ${trx.kodeUnit||'-'})? Stok yang sudah keluar akan dikembalikan dulu, lalu form di atas akan terisi datanya untuk diedit dan disimpan ulang (masuk antrian pending lagi).`
-    : `Edit transaksi pending ini (Unit ${trx.kodeUnit||'-'})? Form di atas akan terisi datanya untuk diedit dan disimpan ulang.`)) return;
+    : `Edit transaksi pending ini (Unit ${trx.kodeUnit||'-'})? Form di atas akan terisi datanya untuk diedit dan disimpan ulang.`)) { _selesaiDiproses(_key); return; }
   try {
+    const { trxData, sudahApprove } = await klaimHapusKeluarTransaksi(id);
+    if (!trxData) { showToast('Transaksi ini sudah diproses/dihapus sebelumnya (kemungkinan diklik dobel).', true); return; }
     if (sudahApprove) {
       // Kembalikan stok seperti sebelum transaksi ini dibuat — pakai helper yang sama
       // kayak hapus, biar batch-nya balik ke asalnya juga, bukan cuma nambah saldo.
-      await reverseApprovedKeluarItems(trx.items);
+      await reverseApprovedKeluarItems(trxData.items);
     }
     // Hapus barang bekas & log transaksi terkait biar gak dobel setelah disimpan ulang
     const bbSnap = await db.collection('barangBekas').where('refKeluarId', '==', id).get();
     for (const d of bbSnap.docs) await d.ref.delete();
     const trSnap = await db.collection('transactions').where('refTransaksiId', '==', id).get();
     for (const d of trSnap.docs) await d.ref.delete();
-    // Hapus transaksi lama (nanti dibuat ulang saat disimpan)
-    await db.collection('keluarTransaksi').doc(id).delete();
 
     // Isi form dengan data transaksi ini
-    document.getElementById('klTanggal').value = trx.tanggal ? localDateStr(trx.tanggal) : '';
-    document.getElementById('klTipe').value = trx.tipe;
-    document.getElementById('klKodeUnit').value = trx.kodeUnit || '';
-    document.getElementById('klMekanik').value = trx.mekanik || '';
-    document.getElementById('klKeterangan').value = trx.keterangan || '';
-    document.getElementById('klPlat').value = trx.noPlat || '';
-    document.getElementById('klSopir').value = trx.namaSopir || '';
-    klRows = (trx.items || []).map(it => ({
+    document.getElementById('klTanggal').value = trxData.tanggal ? localDateStr(trxData.tanggal) : '';
+    document.getElementById('klTipe').value = trxData.tipe;
+    document.getElementById('klKodeUnit').value = trxData.kodeUnit || '';
+    document.getElementById('klMekanik').value = trxData.mekanik || '';
+    document.getElementById('klKeterangan').value = trxData.keterangan || '';
+    document.getElementById('klPlat').value = trxData.noPlat || '';
+    document.getElementById('klSopir').value = trxData.namaSopir || '';
+    klRows = (trxData.items || []).map(it => ({
       itemId: it.itemId, qty: it.qty, statusBekas: it.statusBekas || 'Tidak Ada',
       qtyBekas: it.qtyBekas || 0, kondisiBekas: it.kondisiBekas || 'Belum Dicek', catatan: it.catatan || '',
       serialDipilih: Array.isArray(it.serials) ? [...it.serials] : []
     }));
     renderKlRows();
-    logActivity('keluar', 'Edit Transaksi Keluar', `Unit ${trx.kodeUnit||'-'} (${trx.tipe}) dibuka untuk diedit`);
+    logActivity('keluar', 'Edit Transaksi Keluar', `Unit ${trxData.kodeUnit||'-'} (${trxData.tipe}) dibuka untuk diedit`);
     showToast('✏️ Data dimuat ke form di atas — edit lalu tekan "Simpan Transaksi" untuk menyimpan ulang');
     document.getElementById('klTanggal').scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch(e) { showToast('Gagal memuat data untuk edit: ' + e.message, true); }
+  finally { _selesaiDiproses(_key); }
 }
 
 
@@ -9734,7 +10121,7 @@ function renderUnits() {
     const item = itemsCache.find(i => i.id === u.itemId) || {};
     return (u.serialNumber||'').toLowerCase().includes(q) || (item.kode||'').toLowerCase().includes(q) || (item.nama||'').toLowerCase().includes(q);
   });
-  rows = rows.sort((a,b) => (b.tanggalMasuk||'').localeCompare(a.tanggalMasuk||''));
+  rows = sortTanggalTerbaru(rows, 'tanggalMasuk', null, getSortArahTanggal('unitSortOrder'));
   unitsFilteredRows = rows;
   const totalFilteredUnit = rows.length;
   const limitUnit = getRenderLimit('units');
@@ -9756,6 +10143,7 @@ function renderUnits() {
 }
 document.getElementById('unitFilterItem')?.addEventListener?.('change', renderUnits);
 document.getElementById('unitFilterStatus')?.addEventListener?.('change', renderUnits);
+document.getElementById('unitSortOrder')?.addEventListener?.('change', renderUnits);
 
 let unitsFilteredRows = [];
 function exportUnitsCSV() {
@@ -9870,7 +10258,7 @@ function renderMutasiHist() {
   const tbl = document.getElementById('mutasiHistTable');
   if (!tbl) return;
   const q = (document.getElementById('mutasiHistSearch')?.value || '').toLowerCase().trim();
-  let rows = sortTanggalTerbaru(mutasiCache);
+  let rows = sortTanggalTerbaru(mutasiCache, 'tanggal', null, getSortArahTanggal('mutasiSortOrder'));
   if (q) rows = rows.filter(m =>
     fmtDate(m.tanggal).toLowerCase().includes(q) ||
     (m.kode||'').toLowerCase().includes(q) || (m.nama||'').toLowerCase().includes(q) ||
@@ -9953,7 +10341,7 @@ function renderBekas() {
     (r.mekanik||'').toLowerCase().includes(q) || (r.keterangan||'').toLowerCase().includes(q) ||
     (r.kondisi||'').toLowerCase().includes(q) || (r.statusGudang||'').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows);
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('bekasSortOrder'));
   window._bekasFilteredRows = rows;
 
   // MULTI-CABANG: tombol "Kirim ke GU" cuma muncul di cabang biasa (bukan GU sendiri)
@@ -10207,7 +10595,7 @@ function subscribeBekasMasukGU() {
 function renderBekasMasukGU() {
   const tbl = document.getElementById('bekasMasukGUTable');
   if (!tbl) return;
-  const rows = sortTanggalTerbaru(bekasMasukGUCache);
+  const rows = sortTanggalTerbaru(bekasMasukGUCache, 'tanggal', null, getSortArahTanggal('bekasMasukGUSortOrder'));
   tbl.innerHTML = rows.length ? rows.map((r, idx) => `
     <tr>
       <td>${idx+1}</td>
@@ -10240,7 +10628,7 @@ async function konfirmasiTerimaBekasGU(id) {
     // dokumen item terpisah walau kodenya sama). Jadi dicari ulang item yang KODE-nya sama
     // tapi di Master Stok GU sendiri, biar nanti kalau barang ini diperbaiki & "Masukkan ke
     // Stok", nambahnya ke item yang BENERAN ada di GU, bukan ke item cabang lain yang gak nyambung.
-    const itemDiGU = itemsCache.find(i => i.kode === r.kode && i.cabangId === gu.id);
+    const itemDiGU = itemsCache.find(i => kodeSama(i.kode, r.kode) && i.cabangId === gu.id);
     const batch = db.batch();
     const newRef = db.collection('barangBekas').doc();
     batch.set(newRef, {
@@ -10430,7 +10818,7 @@ function renderLog() {
   if (q) rows = rows.filter(r =>
     (r.user||'').toLowerCase().includes(q) || (r.aksi||'').toLowerCase().includes(q) || (r.detail||'').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows, 'timestamp');
+  rows = sortTanggalTerbaru(rows, 'timestamp', null, getSortArahTanggal('logSortOrder'));
   window._logRows = rows;
   const totalFilteredLog = rows.length;
   const limitLog = getRenderLimit('log');
@@ -11469,21 +11857,49 @@ function isSuperAdmin(u) {
 
 // Aturan akses kelola user:
 // - Super Admin bisa kelola siapa saja.
-// - Admin cabang cuma boleh kelola user yang cabangId-nya sama dengan cabangnya sendiri.
+// - Admin cabang cuma boleh kelola user yang cabang-nya termasuk dalam cakupan akses admin ini.
 // - Akun Super Admin tidak boleh diubah/dinonaktifkan/dihapus oleh siapapun selain Super Admin lain.
+//
+// FIX BUG: sebelumnya cuma bandingin field `cabangId` (tunggal) doang — `target.cabangId !==
+// currentUserData.cabangId`. Ini gak nyambung buat admin yang aksesnya ke BEBERAPA cabang
+// sekaligus (field `cabangAccess` array, bukan `cabangId` tunggal — sesuai arsitektur "campuran"
+// yang emang didukung sistem ini). Akibatnya ADA DUA KEMUNGKINAN BUG:
+// 1) Admin multi-cabang (gak punya cabangId tunggal) jadi gak bisa kelola SIAPAPUN, walau user
+//    yang mau dikelola jelas-jelas ada di salah satu cabang wewenangnya (overly-restrictive).
+// 2) Lebih parah: DUA admin multi-cabang yang BEDA cakupan cabangnya (sama-sama gak punya
+//    cabangId tunggal, cuma cabangAccess array) malah bisa saling kelola akun satu sama lain,
+//    walau cabang wewenang mereka gak overlap sama sekali — karena undefined === undefined lolos
+//    perbandingan lama (celah kontrol akses).
+// Sekarang: dibandingkan berdasarkan IRISAN cakupan cabang yang SEBENARNYA (cabangAccess array
+// atau [cabangId] tunggal), bukan cuma satu field yang mungkin kosong.
+function cakupanCabangUser(u) {
+  if (!u) return [];
+  if (Array.isArray(u.cabangAccess)) return u.cabangAccess;
+  if (u.cabangId) return [u.cabangId];
+  return [];
+}
 function canManageUser(target) {
   if (!target || !currentUserData) return false;
   if (isSuperAdmin(target) && !isSuperAdmin(currentUserData)) return false;
-  if (!isSuperAdmin(currentUserData) && target.cabangId !== currentUserData.cabangId) return false;
-  return true;
+  if (isSuperAdmin(currentUserData)) return true;
+  const cakupanAdmin = cakupanCabangUser(currentUserData);
+  const cakupanTarget = cakupanCabangUser(target);
+  // Admin cabang (bukan Super Admin) cuma boleh kelola user yang MINIMAL salah satu cabangnya
+  // termasuk dalam cakupan akses admin ini — dan kalau salah satu pihak gak punya cabang sama
+  // sekali (data gak lengkap), dianggap TIDAK boleh dikelola (lebih aman daripada nebak lolos).
+  if (!cakupanAdmin.length || !cakupanTarget.length) return false;
+  return cakupanTarget.some(id => cakupanAdmin.includes(id));
 }
 
 function renderUsers(users) {
   const tbl = document.getElementById('usersTable');
   if (!tbl) return;
   const superAdmin = isSuperAdmin(currentUserData);
-  // Admin cabang cuma lihat & kelola user di cabangnya sendiri, Super Admin lihat semua
-  let visibleUsers = superAdmin ? users : users.filter(u => u.cabangId === currentUserData.cabangId);
+  // FIX BUG: sama kayak canManageUser — sebelumnya cuma bandingin cabangId tunggal, jadi admin
+  // yang aksesnya ke BEBERAPA cabang (cabangAccess array) gak kelihatan user siapa-siapa di
+  // tabel ini (list-nya keliatan kosong terus, padahal ada user yang seharusnya kelola-able).
+  const cakupanAdminList = cakupanCabangUser(currentUserData);
+  let visibleUsers = superAdmin ? users : users.filter(u => cakupanCabangUser(u).some(id => cakupanAdminList.includes(id)));
 
   populateUserFilterCabang();
   const q = (document.getElementById('userSearch')?.value || '').toLowerCase().trim();
@@ -12526,7 +12942,7 @@ function renderReturMasukHist() {
     (r.alasan || '').toLowerCase().includes(q) ||
     (r.catatan || '').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows);
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('returMasukSortOrder'));
   window._returMasukFilteredRows = rows;
   
   document.getElementById('returMasukHistTable').innerHTML = rows.length ? rows.map((r, idx) => `
@@ -12650,48 +13066,61 @@ async function approveReturMasuk(id) {
 }
 
 async function deleteReturMasuk(id) {
+  const _key = `deleteReturMasuk_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const retur = returMasukCache.find(r => r.id === id);
-  if (!retur) return;
-  if (await isPeriodeTerkunci(retur.tanggal)) { showToast('Retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau hapus.', true); return; }
+  if (!retur) { _selesaiDiproses(_key); return; }
+  if (await isPeriodeTerkunci(retur.tanggal)) { showToast('Retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau hapus.', true); _selesaiDiproses(_key); return; }
   
-  const status = retur.status || 'pending';
-  if (!await customConfirm(status === 'selesai' 
+  const statusTampilan = retur.status || 'pending';
+  if (!await customConfirm(statusTampilan === 'selesai' 
     ? `Hapus retur yang sudah di-approve? Stok akan ditambah kembali.`
-    : `Tolak/hapus retur masuk "${retur.refTransaksiData?.nama}"?`)) return;
+    : `Tolak/hapus retur masuk "${retur.refTransaksiData?.nama}"?`)) { _selesaiDiproses(_key); return; }
   
   try {
-    if (status === 'selesai') {
-      // Reverse stok — pakai restoreBatchFIFO (bukan cuma nambah saldo doang), biar batch
-      // tetap sinkron. Gak ada batchTrxId spesifik yang ke-simpen pas approve retur ini
-      // (approveReturMasuk motong pakai FIFO otomatis, gak nyimpen batch mana yang kepotong),
-      // jadi qty balik akurat tapi info harga/acuan batch asalnya gak bisa direkonstruksi
-      // persis — sama keterbatasan kayak pembatalan Order antar Cabang.
-      const itemRefRMDel = db.collection('items').doc(retur.itemId);
-      await db.runTransaction(async (tx) => {
+    const returRefRM = db.collection('returMasuk').doc(id);
+    const itemRefRMDel = db.collection('items').doc(retur.itemId);
+    // FIX BUG: dokumen retur dibaca-ulang & DIHAPUS dalam SATU transaction yang sama dengan
+    // update stok — status dicek dari Firestore (bukan cache lokal), dan begitu dokumennya
+    // kehapus, panggilan kedua (klik dobel / retry) bakal nemu dokumen ini udah gak ada dan
+    // berhenti, gak sempat nambah stok lagi.
+    let statusAsli = 'pending';
+    await db.runTransaction(async (tx) => {
+      const returSnap = await tx.get(returRefRM);
+      if (!returSnap.exists) throw new Error('Retur ini sudah dihapus sebelumnya (kemungkinan diklik dobel).');
+      statusAsli = returSnap.data().status || 'pending';
+      if (statusAsli === 'selesai') {
         const snap = await tx.get(itemRefRMDel);
-        if (!snap.exists) return;
-        const itemFresh = { id: snap.id, ...snap.data() };
-        const batches = restoreBatchFIFO(itemFresh, retur.qty, null, null);
-        const hargaAktif = hargaAktifDariBatches(batches);
-        tx.update(itemRefRMDel, {
-          saldo: (itemFresh.saldo||0) + retur.qty, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
-          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
-        });
-      });
+        if (snap.exists) {
+          // Reverse stok — pakai restoreBatchFIFO (bukan cuma nambah saldo doang), biar batch
+          // tetap sinkron. Gak ada batchTrxId spesifik yang ke-simpen pas approve retur ini
+          // (approveReturMasuk motong pakai FIFO otomatis, gak nyimpen batch mana yang kepotong),
+          // jadi qty balik akurat tapi info harga/acuan batch asalnya gak bisa direkonstruksi
+          // persis — sama keterbatasan kayak pembatalan Order antar Cabang.
+          const itemFresh = { id: snap.id, ...snap.data() };
+          const batches = restoreBatchFIFO(itemFresh, retur.qty, null, null);
+          const hargaAktif = hargaAktifDariBatches(batches);
+          tx.update(itemRefRMDel, {
+            saldo: (itemFresh.saldo||0) + retur.qty, batchesMasuk: batches,
+            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+            ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
+          });
+        }
+      }
+      tx.delete(returRefRM);
+    });
+    if (statusAsli === 'selesai') {
       // Hapus entry barang bekas
       const bbSnap = await db.collection('barangBekas').where('refReturMasukId', '==', id).get();
       for (let doc of bbSnap.docs) {
         await db.collection('barangBekas').doc(doc.id).delete();
       }
     }
-    
-    await db.collection('returMasuk').doc(id).delete();
     logActivity('retur', 'Hapus Retur Masuk', `${retur.refTransaksiData?.kode} ${retur.refTransaksiData?.nama}`);
     showToast('Retur masuk dihapus');
   } catch(e) {
     showToast('Gagal hapus retur: ' + e.message, true);
-  }
+  } finally { _selesaiDiproses(_key); }
 }
 
 // ===== RETUR KELUAR =====
@@ -12870,7 +13299,7 @@ function renderReturKeluarHist() {
     (r.alasan || '').toLowerCase().includes(q) ||
     (r.kondisi || '').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows);
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('returKeluarSortOrder'));
   window._returKeluarFilteredRows = rows;
   
   document.getElementById('returKeluarHistTable').innerHTML = rows.length ? rows.map((r, idx) => `
@@ -13013,14 +13442,16 @@ async function approveReturKeluar(id) {
 }
 
 async function deleteReturKeluar(id) {
+  const _key = `deleteReturKeluar_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const retur = returKeluarCache.find(r => r.id === id);
-  if (!retur) return;
-  if (await isPeriodeTerkunci(retur.tanggal)) { showToast('Retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau hapus.', true); return; }
+  if (!retur) { _selesaiDiproses(_key); return; }
+  if (await isPeriodeTerkunci(retur.tanggal)) { showToast('Retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau hapus.', true); _selesaiDiproses(_key); return; }
   
   const status = retur.status || 'pending';
   if (!await customConfirm(status === 'selesai' 
     ? `Hapus retur yang sudah di-approve? Stok akan berkurang kembali.`
-    : `Tolak/hapus retur keluar?`)) return;
+    : `Tolak/hapus retur keluar?`)) { _selesaiDiproses(_key); return; }
   
   try {
     if (status === 'selesai' && retur.itemId) {
@@ -13063,7 +13494,7 @@ async function deleteReturKeluar(id) {
     showToast('Retur keluar dihapus');
   } catch(e) {
     showToast('Gagal hapus retur: ' + e.message, true);
-  }
+  } finally { _selesaiDiproses(_key); }
 }
 
 /* ============= KOREKSI STOK FUNCTIONS ============= */
@@ -13237,7 +13668,7 @@ function renderKoreksiHist() {
     (k.alasan || '').toLowerCase().includes(q) ||
     (k.catatan || '').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows);
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('koreksiSortOrder'));
   window._koreksiFilteredRows = rows;
   
   document.getElementById('koreksiHistTable').innerHTML = rows.length ? rows.map((k, idx) => `
@@ -13352,8 +13783,16 @@ async function approveKoreksiStok(id) {
         batches = getBatchesMasuk(itemFresh);
       }
       const hargaAktifBaru = hargaAktifDariBatches(batches);
+      // FIX BUG: saldo SEBELUMNYA di-set ke angka absolut (koreksi.stokActual) yang "dibekukan"
+      // sejak form koreksi pertama kali diajukan — kalau ada Stok Masuk/Keluar LAIN yang
+      // di-approve duluan untuk barang yang sama di antara waktu ajukan & approve koreksi ini,
+      // efeknya bisa ketimpa/hilang dari angka saldo final. Sekarang dihitung RELATIF dari
+      // saldo TERKINI (itemFresh.saldo, dibaca ulang di dalam transaction ini), sama seperti
+      // pola aman yang dipakai di approveMasuk/approveKeluar — supaya perubahan stok lain yang
+      // nyelip di antaranya tetap ke-preserve, gak ketimpa koreksi ini.
+      const saldoBaru = (itemFresh.saldo || 0) + koreksi.selisih;
       tx.update(itemRefKoreksi, {
-        saldo: koreksi.stokActual, batchesMasuk: batches,
+        saldo: saldoBaru, batchesMasuk: batches,
         hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
         ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
@@ -13413,66 +13852,80 @@ async function rejectKoreksiStok(id) {
 }
 
 async function deleteKoreksiStok(id) {
+  const _key = `deleteKoreksiStok_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const koreksi = koreksiStokCache.find(k => k.id === id);
-  if (!koreksi) return;
+  if (!koreksi) { _selesaiDiproses(_key); return; }
   
-  const status = koreksi.status || 'pending';
-  if (!await customConfirm(status === 'selesai' 
+  const statusTampilan = koreksi.status || 'pending';
+  if (!await customConfirm(statusTampilan === 'selesai' 
     ? `Hapus koreksi yang sudah di-approve? Stok akan balik ke ${koreksi.barangData?.stokSistem}`
-    : `Hapus koreksi stok "${koreksi.barangData?.nama}"?`)) return;
+    : `Hapus koreksi stok "${koreksi.barangData?.nama}"?`)) { _selesaiDiproses(_key); return; }
   
   try {
-    if (status === 'selesai') {
-      // Reverse stok balik ke sistem — arahnya KEBALIKAN dari approve: kalau dulu selisihnya
-      // POSITIF (nambah batch baru trxId 'koreksimenu_<id>'), sekarang cari & buang batch itu
-      // spesifik (block kalau udah sebagian kepake keluar). Kalau dulu NEGATIF (potong FIFO
-      // tanpa batch spesifik ketrack), sekarang tambahin balik pakai restoreBatchFIFO (batch
-      // baru, harga gak bisa direkonstruksi persis — keterbatasan yang sama kayak kasus lain).
-      const trxIdBatchKoreksi = 'koreksimenu_' + id;
-      const itemRefKoreksiDel = db.collection('items').doc(koreksi.itemId);
-      let diblokir = false, sisaDiBatch = 0;
-      await db.runTransaction(async (tx) => {
+    const koreksiRef = db.collection('koreksiStok').doc(id);
+    const itemRefKoreksiDel = db.collection('items').doc(koreksi.itemId);
+    const trxIdBatchKoreksi = 'koreksimenu_' + id;
+    let diblokir = false, sisaDiBatch = 0, statusAsli = 'pending';
+    // FIX BUG: status koreksi dicek ULANG dari Firestore & dokumennya dihapus dalam SATU
+    // transaction yang sama dengan update stok — sebelumnya dokumen koreksiStok baru dihapus
+    // BELAKANGAN (di luar transaction), jadi klik dobel / retry bisa nge-reverse stok
+    // (terutama utk selisih negatif, yang gak punya pengecekan batch spesifik) dua kali,
+    // walau field saldo-nya sendiri kebetulan aman (di-set ke angka tetap), batchesMasuk-nya
+    // bisa numpuk entry restore ganda.
+    await db.runTransaction(async (tx) => {
+      const koreksiSnap = await tx.get(koreksiRef);
+      if (!koreksiSnap.exists) throw new Error('Koreksi ini sudah dihapus sebelumnya (kemungkinan diklik dobel).');
+      statusAsli = koreksiSnap.data().status || 'pending';
+      if (statusAsli === 'selesai') {
         const snap = await tx.get(itemRefKoreksiDel);
-        if (!snap.exists) return;
-        const itemFresh = { id: snap.id, ...snap.data() };
-        let batches;
-        if (koreksi.selisih > 0) {
-          batches = getBatchesMasuk(itemFresh);
-          const idxBatch = batches.findIndex(b => b.trxId === trxIdBatchKoreksi);
-          sisaDiBatch = idxBatch >= 0 ? (batches[idxBatch].qty || 0) : 0;
-          if (sisaDiBatch < koreksi.selisih) { diblokir = true; return; }
-          if (sisaDiBatch === koreksi.selisih) batches.splice(idxBatch, 1);
-          else batches[idxBatch].qty = sisaDiBatch - koreksi.selisih;
-        } else if (koreksi.selisih < 0) {
-          batches = restoreBatchFIFO(itemFresh, Math.abs(koreksi.selisih), null, null);
-        } else {
-          batches = getBatchesMasuk(itemFresh);
+        if (snap.exists) {
+          // Reverse stok balik ke sistem — arahnya KEBALIKAN dari approve: kalau dulu selisihnya
+          // POSITIF (nambah batch baru trxId 'koreksimenu_<id>'), sekarang cari & buang batch itu
+          // spesifik (block kalau udah sebagian kepake keluar). Kalau dulu NEGATIF (potong FIFO
+          // tanpa batch spesifik ketrack), sekarang tambahin balik pakai restoreBatchFIFO (batch
+          // baru, harga gak bisa direkonstruksi persis — keterbatasan yang sama kayak kasus lain).
+          const itemFresh = { id: snap.id, ...snap.data() };
+          let batches;
+          if (koreksi.selisih > 0) {
+            batches = getBatchesMasuk(itemFresh);
+            const idxBatch = batches.findIndex(b => b.trxId === trxIdBatchKoreksi);
+            sisaDiBatch = idxBatch >= 0 ? (batches[idxBatch].qty || 0) : 0;
+            if (sisaDiBatch < koreksi.selisih) { diblokir = true; return; }
+            if (sisaDiBatch === koreksi.selisih) batches.splice(idxBatch, 1);
+            else batches[idxBatch].qty = sisaDiBatch - koreksi.selisih;
+          } else if (koreksi.selisih < 0) {
+            batches = restoreBatchFIFO(itemFresh, Math.abs(koreksi.selisih), null, null);
+          } else {
+            batches = getBatchesMasuk(itemFresh);
+          }
+          const hargaAktif = hargaAktifDariBatches(batches);
+          tx.update(itemRefKoreksiDel, {
+            saldo: koreksi.barangData?.stokSistem || 0, batchesMasuk: batches,
+            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+            ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
+          });
         }
-        const hargaAktif = hargaAktifDariBatches(batches);
-        tx.update(itemRefKoreksiDel, {
-          saldo: koreksi.barangData?.stokSistem || 0, batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
-          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
-        });
-      });
-      if (diblokir) {
-        showToast(`Gak bisa dihapus: dari ${koreksi.selisih} unit koreksi ini, cuma sisa ${sisaDiBatch} di stok (sisanya udah kepake keluar). Batalkan transaksi Barang Keluar yang makai batch ini dulu.`, true);
-        return;
       }
-      
+      if (diblokir) return;
+      tx.delete(koreksiRef);
+    });
+    if (diblokir) {
+      showToast(`Gak bisa dihapus: dari ${koreksi.selisih} unit koreksi ini, cuma sisa ${sisaDiBatch} di stok (sisanya udah kepake keluar). Batalkan transaksi Barang Keluar yang makai batch ini dulu.`, true);
+      return;
+    }
+    if (statusAsli === 'selesai') {
       // Hapus entry barang bekas jika ada
       const bbSnap = await db.collection('barangBekas').where('refKoreksiId', '==', id).get();
       for (let doc of bbSnap.docs) {
         await db.collection('barangBekas').doc(doc.id).delete();
       }
     }
-    
-    await db.collection('koreksiStok').doc(id).delete();
     logActivity('koreksi', 'Hapus Koreksi Stok', `${koreksi.barangData?.kode} ${koreksi.barangData?.nama}`);
     showToast('Koreksi stok dihapus');
   } catch(e) {
     showToast('Gagal hapus koreksi: ' + e.message, true);
-  }
+  } finally { _selesaiDiproses(_key); }
 }
 
 /* ============= STOK OPNAME FUNCTIONS ============= */
@@ -13548,7 +14001,7 @@ function renderOpnameList() {
     fmtDate(o.tanggal).toLowerCase().includes(q) ||
     (o.lokasi || '').toLowerCase().includes(q)
   );
-  rows = sortTanggalTerbaru(rows);
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('opnameSortOrder'));
   
   document.getElementById('opnameListTable').innerHTML = rows.length ? rows.map((o, idx) => `
     <tr>
@@ -13820,11 +14273,19 @@ async function finalizeOpname() {
     const cekSnap = await db.collection('stokOpname').doc(currentOpnameSession.id).get();
     if (!cekSnap.exists) throw new Error('Session opname tidak ditemukan');
     if (cekSnap.data().stokSudahDiterapkan) throw new Error('Opname ini udah pernah di-finalize sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak keterapkan 2x.');
+    // FIX BUG: cek barang mana yang SUDAH kepenerapkan duluan (kalau proses finalize sebelumnya
+    // sempat gagal/putus di tengah jalan sebelum sempat nandain stokSudahDiterapkan=true) —
+    // pakai jejak record koreksiStok yang refOpnameId-nya sama session ini. Barang yang udah ada
+    // recordnya DILEWATI, cuma barang yang BELUM diproses yang dilanjutkan. Ini mencegah selisih
+    // yang sama diterapkan DUA KALI ke stok kalau finalize sempat gagal separuh jalan lalu dicoba lagi.
+    const sudahDiprosesSnap = await db.collection('koreksiStok').where('refOpnameId', '==', currentOpnameSession.id).get();
+    const itemIdSudahDiproses = new Set(sudahDiprosesSnap.docs.map(d => d.data().itemId));
     // Terapin semua selisih ke stok beneran — pakai pola batch-safe yang sama kayak Koreksi
     // Stok (bukan cuma nge-set saldo doang). Sekaligus bikin record di koleksi koreksiStok
     // (status langsung 'selesai', ditandain dari opname) biar tetap ada jejaknya di riwayat
     // Koreksi Stok, tanpa perlu approve dobel — hasil hitung fisik ITU SENDIRI udah jadi bukti.
     for (const d of berselisih) {
+      if (itemIdSudahDiproses.has(d.itemId)) continue; // sudah diterapkan di percobaan finalize sebelumnya yang sempat gagal separuh jalan
       const itemRefOpname = db.collection('items').doc(d.itemId);
       await db.runTransaction(async (tx) => {
         const snap = await tx.get(itemRefOpname);
@@ -13843,8 +14304,14 @@ async function finalizeOpname() {
           batches = kurangiBatchFIFO(itemFresh, Math.abs(d.selisih));
         }
         const hargaAktifBaru = hargaAktifDariBatches(batches);
+        // FIX BUG: saldo SEBELUMNYA di-set ke angka absolut (d.stokActual) yang dibekukan sejak
+        // barang ini di-count fisik — sama persis bug yang ada di Koreksi Stok manual. Kalau ada
+        // transaksi lain (Stok Masuk/Keluar) yang di-approve untuk barang yang sama di antara
+        // waktu count fisik & finalize opname, efeknya bisa ketimpa/hilang. Sekarang dihitung
+        // RELATIF dari saldo TERKINI (itemFresh.saldo, dibaca ulang di dalam transaction ini).
+        const saldoBaru = (itemFresh.saldo || 0) + d.selisih;
         tx.update(itemRefOpname, {
-          saldo: d.stokActual, batchesMasuk: batches,
+          saldo: saldoBaru, batchesMasuk: batches,
           hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
           ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
@@ -14630,6 +15097,7 @@ function renderRiwayatServis() {
     (r.unitKode||'').toLowerCase().includes(q) || (r.unitNama||'').toLowerCase().includes(q) ||
     (r.mekanik||'').toLowerCase().includes(q)
   );
+  rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('svSortOrder'));
   svFilteredIds = rows.map(r => r.id);
   const totalFilteredSv = rows.length;
   const limitSv = getRenderLimit('svHist');
@@ -14679,25 +15147,29 @@ function exportServisCSV(onlySelected) {
 async function hapusServisSatuCascade(sv) {
   if (await isPeriodeTerkunci(sv.tanggal)) { throw new Error('Riwayat servis ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau ubah.'); }
   const changes = [];
-  const klTrx = sv.keluarTransaksiId ? keluarCache.find(x => x.id === sv.keluarTransaksiId) : null;
-  const sudahApprove = klTrx ? (klTrx.status || 'pending') === 'selesai' : false;
-  if (klTrx) {
-    if (sudahApprove) {
-      const itemChanges = await reverseApprovedKeluarItems(klTrx.items);
-      changes.push(...itemChanges);
-      const bbSnap = await db.collection('barangBekas').where('refKeluarId', '==', klTrx.id).get();
-      for (const d of bbSnap.docs) {
-        changes.push({ collection: 'barangBekas', id: d.id, before: d.data(), after: null });
-        await d.ref.delete();
-      }
-      const trSnap = await db.collection('transactions').where('refTransaksiId', '==', klTrx.id).get();
-      for (const d of trSnap.docs) {
-        changes.push({ collection: 'transactions', id: d.id, before: d.data(), after: null });
-        await d.ref.delete();
+  const klTrxCache = sv.keluarTransaksiId ? keluarCache.find(x => x.id === sv.keluarTransaksiId) : null;
+  if (klTrxCache) {
+    // klaimHapusKeluarTransaksi (lihat komentar di definisinya) mencegah stok direverse dobel
+    // kalau fungsi ini kepanggil 2x buat riwayat servis yang sama (misal lewat hapus massal +
+    // klik satuan hampir bersamaan).
+    const { trxData: klTrx, sudahApprove } = await klaimHapusKeluarTransaksi(klTrxCache.id);
+    if (klTrx) {
+      changes.push({ collection: 'keluarTransaksi', id: klTrx.id, before: klTrx, after: null });
+      if (sudahApprove) {
+        const itemChanges = await reverseApprovedKeluarItems(klTrx.items);
+        changes.push(...itemChanges);
+        const bbSnap = await db.collection('barangBekas').where('refKeluarId', '==', klTrx.id).get();
+        for (const d of bbSnap.docs) {
+          changes.push({ collection: 'barangBekas', id: d.id, before: d.data(), after: null });
+          await d.ref.delete();
+        }
+        const trSnap = await db.collection('transactions').where('refTransaksiId', '==', klTrx.id).get();
+        for (const d of trSnap.docs) {
+          changes.push({ collection: 'transactions', id: d.id, before: d.data(), after: null });
+          await d.ref.delete();
+        }
       }
     }
-    changes.push({ collection: 'keluarTransaksi', id: klTrx.id, before: klTrx, after: null });
-    await db.collection('keluarTransaksi').doc(klTrx.id).delete();
   }
   changes.push({ collection: 'bukuServis', id: sv.id, before: sv, after: null });
   await db.collection('bukuServis').doc(sv.id).delete();
@@ -14755,13 +15227,15 @@ async function deleteServisSemua() {
 }
 
 async function deleteServisTransaksi(id) {
+  const _key = `deleteServisTransaksi_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const sv = servisCache.find(x => x.id === id);
-  if (!sv) return;
+  if (!sv) { _selesaiDiproses(_key); return; }
   const klTrx = sv.keluarTransaksiId ? keluarCache.find(x => x.id === sv.keluarTransaksiId) : null;
   const sudahApprove = klTrx ? (klTrx.status || 'pending') === 'selesai' : false;
   if (!await customConfirm(sudahApprove
     ? `Hapus riwayat servis Unit ${sv.unitKode||'-'} yang SUDAH di-approve? Stok barang yang terpakai akan dikembalikan.`
-    : `Hapus riwayat servis Unit ${sv.unitKode||'-'} ini?`)) return;
+    : `Hapus riwayat servis Unit ${sv.unitKode||'-'} ini?`)) { _selesaiDiproses(_key); return; }
 
   try {
     const changes = await hapusServisSatuCascade(sv);
@@ -14769,16 +15243,19 @@ async function deleteServisTransaksi(id) {
     logActivity('keluar', sudahApprove ? 'Hapus Riwayat Servis (Approved)' : 'Hapus Riwayat Servis (Pending)', `Unit ${sv.unitKode||'-'} - Servis ${sv.jenisServis||''}`);
     showToast(sudahApprove ? 'Riwayat servis dihapus, stok dikembalikan' : 'Riwayat servis dihapus');
   } catch(e) { showToast('Gagal hapus riwayat servis: ' + e.message, true); }
+  finally { _selesaiDiproses(_key); }
 }
 
 async function editServisTransaksi(id) {
+  const _key = `editServisTransaksi_${id}`;
+  if (_cekLagiDiproses(_key)) return;
   const sv = servisCache.find(x => x.id === id);
-  if (!sv) return;
+  if (!sv) { _selesaiDiproses(_key); return; }
   const klTrx = sv.keluarTransaksiId ? keluarCache.find(x => x.id === sv.keluarTransaksiId) : null;
   const sudahApprove = klTrx ? (klTrx.status || 'pending') === 'selesai' : false;
   if (!await customConfirm(sudahApprove
     ? `Edit riwayat servis Unit ${sv.unitKode||'-'}? Stok yang sudah keluar akan dikembalikan dulu, lalu form Buku Servis di atas akan terisi datanya untuk diedit dan disimpan ulang (masuk antrian pending lagi).`
-    : `Edit riwayat servis Unit ${sv.unitKode||'-'}? Form Buku Servis di atas akan terisi datanya untuk diedit dan disimpan ulang.`)) return;
+    : `Edit riwayat servis Unit ${sv.unitKode||'-'}? Form Buku Servis di atas akan terisi datanya untuk diedit dan disimpan ulang.`)) { _selesaiDiproses(_key); return; }
   try {
     await hapusServisSatuCascade(sv);
 
@@ -14805,6 +15282,7 @@ async function editServisTransaksi(id) {
     showToast('✏️ Data dimuat ke form Buku Servis di atas — edit lalu simpan ulang');
     document.getElementById('svTanggal').scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch(e) { showToast('Gagal memuat data untuk edit: ' + e.message, true); }
+  finally { _selesaiDiproses(_key); }
 }
 
 /* =========================================================================
@@ -15358,7 +15836,7 @@ function renderOrderCabangHist() {
   const isGU = gu && currentCabangId === gu.id;
   const titleEl = document.getElementById('ocHistTitle');
   if (titleEl) titleEl.textContent = isGU ? '🔙 Retur Masuk dari Cabang (perlu dikonfirmasi & riwayat)' : 'Riwayat Order Saya (cabang aktif)';
-  const rows = orderCabangCache.filter(o => o.cabangAsalId === currentCabangId);
+  const rows = sortTanggalTerbaru(orderCabangCache.filter(o => o.cabangAsalId === currentCabangId), 'tanggal', null, getSortArahTanggal('ocSortOrder'));
   const statusLabel = { pending: 'Menunggu Approve', dikirim: 'Dikirim (Ditunggu Cabang)', sebagian: 'Diterima Sebagian', diterima: 'Selesai Diterima', dibatalkan: 'Dibatalkan' };
   tbl.innerHTML = rows.length ? rows.map((o, idx) => `
     <tr>
@@ -15396,6 +15874,13 @@ function renderOcApprovalTable() {
 }
 
 // Gudang Utama approve: stok Gudang Utama berkurang, status -> dikirim
+// FIX BUG: pencocokan barang antar cabang sebelumnya pakai perbandingan Kode PERSIS (case-
+// sensitive, gak di-trim) — kalau kodenya beda dikit (spasi nyempil, huruf besar/kecil beda),
+// barang dianggap "gak ketemu" padahal sebenarnya barang yang sama. Helper ini dipakai di semua
+// pencocokan kode antar cabang (Order ke Gudang Utama, Kirim Langsung, dst) biar konsisten &
+// gak sensitif ke spasi/huruf besar-kecil.
+function kodeSama(a, b) { return (a||'').toString().trim().toLowerCase() === (b||'').toString().trim().toLowerCase(); }
+
 async function approveKirimOc(orderId) {
   const _key = `approveKirimOc_${orderId}`;
   if (_cekLagiDiproses(_key)) return;
@@ -15403,9 +15888,20 @@ async function approveKirimOc(orderId) {
   const o = orderCabangCache.find(x => x.id === orderId);
   if (!o) return;
   if (o.status && o.status !== 'menunggu' && o.status !== 'pending') { showToast('Order ini udah pernah diproses sebelumnya (status: ' + o.status + ').', true); return; }
+  // FIX BUG: sebelumnya kalau barang gak ketemu di Master Stok Gudang Utama (mismatch kode),
+  // sistem DIAM-DIAM MELEWATI barang itu (stok GU gak kepotong, gak ada peringatan sama
+  // sekali) — sementara di sisi cabang penerima, barang yang gak ketemu malah OTOMATIS DIBIKIN
+  // BARU. Hasilnya stok "muncul dari udara" di cabang tanpa potongan yang sepadan di GU. Sekarang
+  // dicek DULU semua barang ketemu SEBELUM mulai proses apapun — kalau ada yang gak ketemu,
+  // approve dibatalkan total & admin dikasih tau jelas barang mana yang bermasalah.
+  const tidakDitemukanGU = (o.items||[]).filter(it => !itemsCache.some(i => kodeSama(i.kode, it.kode) && i.cabangId === currentCabangId));
+  if (tidakDitemukanGU.length) {
+    showToast(`❌ Approve dibatalkan — ${tidakDitemukanGU.length} barang gak ketemu di Master Stok Gudang Utama (cek kodenya): ${tidakDitemukanGU.map(x=>x.kode||x.nama).join(', ')}`, true);
+    return;
+  }
   // cek stok cukup di Gudang Utama (item di-scope cabangId = Gudang Utama)
   for (const it of (o.items||[])) {
-    const itemGU = itemsCache.find(i => i.kode === it.kode && i.cabangId === currentCabangId);
+    const itemGU = itemsCache.find(i => kodeSama(i.kode, it.kode) && i.cabangId === currentCabangId);
     if (!itemGU || (itemGU.saldo||0) < it.qty) {
       if (!await customConfirm(`⚠️ Stok "${it.nama}" di Gudang Utama tidak cukup (tersedia: ${itemGU?itemGU.saldo:0}, diminta: ${it.qty}). Tetap lanjut kirim (stok bisa minus)?`)) return;
     }
@@ -15418,8 +15914,8 @@ async function approveKirimOc(orderId) {
     // PENTING: potong stok GU pakai FIFO batch (bukan cuma kurangin saldo), transaction per
     // barang biar saldo & batchesMasuk tetap sinkron — sama pola kayak Kirim Langsung/Retur GU.
     for (const it of (o.items||[])) {
-      const itemGU = itemsCache.find(x => x.kode === it.kode && x.cabangId === currentCabangId);
-      if (!itemGU) continue;
+      const itemGU = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
+      if (!itemGU) throw new Error(`Barang "${it.kode||it.nama}" gak ketemu lagi di Master Stok GU (kemungkinan diubah/dihapus barusan) — approve dibatalkan, cek data & ulangi.`);
       const itemRefApprove = db.collection('items').doc(itemGU.id);
       await db.runTransaction(async (tx) => {
         const snap = await tx.get(itemRefApprove);
@@ -15465,8 +15961,12 @@ async function konfirmasiTerimaOc(orderId) {
     if (cekSnap.data().status === 'diterima') throw new Error('Order ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
     const items = o.items || [];
     for (const it of items) {
-      let itemCabang = itemsCache.find(x => x.kode === it.kode && x.cabangId === currentCabangId);
-      const itemSumber = guItemsCache.find(x => x.kode === it.kode);
+      // FIX BUG: dulu pencocokan kode persis (case-sensitive) — kalau meleset dikit karena
+      // spasi/huruf besar-kecil, barang yang SEBENARNYA sudah ada di cabang ini gak ketemu,
+      // dan malah dibikinkan barang BARU (duplikat) alih-alih nambah stok ke barang yang sudah
+      // ada. Sekarang pakai kodeSama() yang toleran spasi & huruf besar-kecil.
+      let itemCabang = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
+      const itemSumber = guItemsCache.find(x => kodeSama(x.kode, it.kode));
       const infoBatchBaru = {
         hargaDasar: itemSumber?.hargaDasar||0, hargaPPN: itemSumber?.hargaPPN||0,
         hargaKI: itemSumber?.hargaKI||0, hargaKSI: itemSumber?.hargaKSI||0, hargaGabungan: itemSumber?.hargaGabungan||0,
@@ -15801,7 +16301,7 @@ function renderReturOcHist() {
   if (!tbl) return;
   const gu = gudangUtamaObj();
   if (!gu || currentCabangId === gu.id) { tbl.innerHTML = ''; return; }
-  const rows = sortTanggalTerbaru(orderCabangCache.filter(o => o.sumber === 'retur' && o.cabangTujuanId === currentCabangId));
+  const rows = sortTanggalTerbaru(orderCabangCache.filter(o => o.sumber === 'retur' && o.cabangTujuanId === currentCabangId), 'tanggal', null, getSortArahTanggal('returOcSortOrder'));
   const statusLabel = { dikirim: 'Dikirim (Ditunggu GU)', sebagian: 'Diterima Sebagian', diterima: 'Selesai Diterima', dibatalkan: 'Dibatalkan' };
   tbl.innerHTML = rows.length ? rows.map((o, idx) => `
     <tr>
