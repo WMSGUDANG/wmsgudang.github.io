@@ -4,6 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GUDANG // WMS</title>
+<script>
+// ===== CEK KOMPATIBILITAS BROWSER (paling awal, sengaja ditulis pakai JavaScript versi LAMA/ES5,
+// TANPA optional chaining/?. atau fitur modern lain) =====
+// Aplikasi ini di bawah pakai banyak fitur JS modern (?. dan ??, dari sekitar tahun 2020 ke atas).
+// Kalau browser/HP-nya cukup lama, script utama gak akan bisa dibaca sama sekali dan layar bakal
+// putih kosong tanpa penjelasan apa-apa — bikin bingung, dikira aplikasinya rusak. Script kecil
+// ini jalan DULUAN, ngetes apakah browser-nya ngerti fitur modern itu; kalau enggak, langsung
+// kasih pesan yang jelas di layar sebelum sempat bingung liat layar putih.
+(function () {
+  var didukung = true;
+  try { new Function('return ({})?.x ?? 1;')(); } catch (e) { didukung = false; }
+  if (!didukung) {
+    document.write(
+      '<div style="font-family:Arial,sans-serif;max-width:480px;margin:60px auto;padding:24px;' +
+      'border:2px solid #E8622C;border-radius:12px;background:#fff8f5;color:#222;text-align:center;">' +
+      '<h2 style="color:#E8622C;margin-top:0;">Browser Perlu Diperbarui</h2>' +
+      '<p>Aplikasi Gudang WMS butuh versi browser yang lebih baru untuk bisa jalan dengan benar.</p>' +
+      '<p>Coba buka pakai <b>Google Chrome</b> atau <b>Firefox</b> versi terbaru, atau update dulu ' +
+      'aplikasi browser di HP kamu lewat Play Store / App Store.</p>' +
+      '<p style="font-size:12px;color:#888;">(Kode: fitur JS modern tidak dikenali browser ini)</p>' +
+      '</div>'
+    );
+  }
+})();
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23E8622C'/%3E%3Cpath d='M50 20 L82 36 L82 72 L50 88 L18 72 L18 36 Z' fill='none' stroke='%23fff' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M18 36 L50 52 L82 36 M50 52 L50 88' fill='none' stroke='%23fff' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <!-- PWA / "Add to Home Screen" support — biar pas ditambahin ke layar utama HP, tampil kayak
      app asli (ada icon rapi, buka fullscreen tanpa address bar), bukan cuma shortcut browser. -->
@@ -2703,7 +2728,7 @@ async function undo() {
     refreshAllViewsAfterUndo();
   } catch(e) {
     undoStack.push(item); // gagal -> taruh lagi biar gak ilang dari riwayat
-    showToast('Gagal undo: ' + e.message, true);
+    showToast('Gagal undo: ' + pesanErrorRamah(e), true);
   }
   updateUndoRedoButtons();
 }
@@ -2721,7 +2746,7 @@ async function redo() {
     refreshAllViewsAfterUndo();
   } catch(e) {
     redoStack.push(item);
-    showToast('Gagal redo: ' + e.message, true);
+    showToast('Gagal redo: ' + pesanErrorRamah(e), true);
   }
   updateUndoRedoButtons();
 }
@@ -2813,7 +2838,7 @@ async function loadRingkasanSemuaCabang() {
       </tr>
     `).join('') || '<tr><td colspan="5" class="empty">Belum ada cabang</td></tr>';
   } catch(e) {
-    tbl.innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat ringkasan: ${e.message}</td></tr>`;
+    tbl.innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat ringkasan: ${pesanErrorRamah(e)}</td></tr>`;
   }
 }
 
@@ -3049,7 +3074,7 @@ if (firebaseConfig.apiKey === "GANTI_INI") {
         // ambil data user/cabang) — dulu ini bikin user stuck di layar blank tanpa penjelasan
         // sama sekali. Sekarang kasih pesan jelas + arahin buat coba lagi, bukan diem doang.
         console.error('Gagal proses login:', e);
-        showToast('Gagal memuat data setelah login (' + e.message + '). Coba refresh halaman atau cek koneksi internet.', true);
+        showToast('Gagal memuat data setelah login (' + pesanErrorRamah(e) + '). Coba refresh halaman atau cek koneksi internet.', true);
       }
     } else {
       currentUser = null;
@@ -3151,7 +3176,7 @@ async function saveAccountName() {
     document.getElementById('curName').textContent = nama;
     logActivity('auth', 'Ganti Nama', `Nama diubah menjadi "${nama}"`);
     showToast('Nama berhasil diperbarui');
-  } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } catch(e) { showToast('Gagal: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('saveAccountName'); }
 }
 
@@ -3172,8 +3197,35 @@ async function changeAccountPassword() {
     document.getElementById('accNewPass').value = '';
     document.getElementById('accNewPass2').value = '';
   } catch(e) {
-    showToast(e.code === 'auth/wrong-password' ? 'Password lama salah' : 'Gagal: ' + e.message, true);
+    showToast(e.code === 'auth/wrong-password' ? 'Password lama salah' : 'Gagal: ' + pesanErrorRamah(e), true);
   }
+}
+
+// Terjemahin kode error Firebase/network yang paling umum ke Bahasa Indonesia yang gampang
+// dimengerti staff gudang — dulu banyak tempat langsung nampilin pesanErrorRamah(e) mentah-mentah ke
+// user, yang buat error TERDUGA (misal "Transaksi ini udah pernah di-approve...") udah ramah
+// karena memang sengaja ditulis gitu, tapi buat error TAK TERDUGA (internet putus, server
+// Firebase lagi bermasalah, dll) bisa muncul teks teknis bahasa Inggris yang membingungkan.
+// Fallback ke pesanErrorRamah(e) asli kalau kodenya gak dikenali (termasuk semua error custom yang udah
+// ditulis ramah dari awal — itu gak punya e.code, jadi otomatis lewat ke fallback ini).
+function pesanErrorRamah(e) {
+  const kodeKeRamah = {
+    'unavailable': 'Koneksi ke server lagi bermasalah. Cek internet kamu, tunggu sebentar, lalu coba lagi.',
+    'network-request-failed': 'Gagal terhubung ke internet. Cek koneksi kamu, lalu coba lagi.',
+    'deadline-exceeded': 'Server kelamaan merespon (kemungkinan internet lambat). Coba lagi.',
+    'permission-denied': 'Kamu gak punya izin buat melakukan ini. Kalau menurut kamu ini seharusnya boleh, hubungi admin.',
+    'unauthenticated': 'Sesi login kamu udah berakhir. Silakan login ulang.',
+    'resource-exhausted': 'Server lagi kebanyakan permintaan (kuota harian mungkin habis). Coba lagi nanti atau hubungi admin.',
+    'cancelled': 'Proses dibatalkan di tengah jalan. Coba lagi.',
+    'already-exists': 'Data ini sudah ada sebelumnya.',
+    'not-found': 'Data yang dicari tidak ditemukan (mungkin sudah dihapus).',
+    'aborted': 'Proses gagal karena ada perubahan data lain yang bentrok. Coba lagi.'
+  };
+  if (e && e.code) {
+    const kode = String(e.code).replace(/^firestore\/|^auth\//, '');
+    if (kodeKeRamah[kode]) return kodeKeRamah[kode];
+  }
+  return (e && e.message) || 'Terjadi kesalahan yang tidak diketahui.';
 }
 
 let _toastHideTimer = null;
@@ -4076,7 +4128,7 @@ async function simpanKoreksiHargaBatch() {
       renderHistBatchTable(itemUpdated);
     }
   } catch(e) {
-    showToast('Gagal koreksi: ' + e.message, true);
+    showToast('Gagal koreksi: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses(_key); }
 }
@@ -4408,7 +4460,7 @@ async function cariSemuaDataGeneric(cfg) {
     infoEl.textContent = `📌 Mode pencarian semua data aktif: ditemukan ${hasil.length} data dari ${dari || 'awal'} sampai ${sampai || 'sekarang'} (tidak terbatas cache).`;
     if (typeof window[cfg.renderFnName] === 'function') window[cfg.renderFnName]();
   } catch(e) {
-    showToast('Gagal mencari: ' + e.message, true);
+    showToast('Gagal mencari: ' + pesanErrorRamah(e), true);
   }
 }
 function resetCariSemuaDataGeneric(cfg) {
@@ -4621,7 +4673,7 @@ async function deleteItemsTerpilih() {
     await bulkDeleteWithUndo('items', rows, `${rows.length} Master Barang Terpilih`);
     rows.forEach(r => selectedStokIds.delete(r.id));
     showToast(`${rows.length} barang dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteItemsSemua() {
@@ -4631,7 +4683,7 @@ async function deleteItemsSemua() {
   try {
     await bulkDeleteWithUndo('items', rows, `${rows.length} Master Barang (Semua)`);
     showToast(`${rows.length} barang dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 function exportItemsCSV() {
@@ -5032,7 +5084,7 @@ async function gabungkanBarangTerpilih() {
     renderDupPrimarySection();
     updateDupGabungBtn();
   } catch(e) {
-    showToast('Gagal menggabungkan: ' + e.message, true);
+    showToast('Gagal menggabungkan: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('gabungkanBarangTerpilih'); }
 }
@@ -5365,7 +5417,7 @@ async function saveItem() {
     }
     showToast(linked ? 'Barang baru dibuat & langsung dipilih di baris' : 'Barang tersimpan');
     closeItemModal();
-  } catch(e) { showToast('Gagal simpan: ' + e.message, true); }
+  } catch(e) { showToast('Gagal simpan: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -5445,7 +5497,7 @@ async function submitKoreksi() {
     logActivity('barang', 'Koreksi Stok', `${i.kode||'-'} - ${i.nama}: ${i.saldo||0} → ${baru} (${selisih>0?'+':''}${selisih}), alasan: ${alasan}`);
     showToast('Stok berhasil dikoreksi');
     closeKoreksiModal();
-  } catch(e) { showToast('Gagal koreksi: ' + e.message, true); }
+  } catch(e) { showToast('Gagal koreksi: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -5459,7 +5511,7 @@ async function toggleItemAktif(id) {
     await db.collection('items').doc(id).update({ aktif: jadiAktif });
     logActivity('barang', jadiAktif ? 'Aktifkan Barang' : 'Nonaktifkan Barang', `${item.kode||'-'} - ${item.nama}`);
     showToast(`Barang berhasil di${label}kan`);
-  } catch(e) { showToast(`Gagal ${label}: ` + e.message, true); }
+  } catch(e) { showToast(`Gagal ${label}: ` + pesanErrorRamah(e), true); }
 }
 
 async function deleteItem(id) {
@@ -5471,7 +5523,7 @@ async function deleteItem(id) {
     saveToUndoStack(`Master Barang ${item.kode} - ${item.nama}`, [{ collection: 'items', id, before: item, after: null }]);
     logActivity('barang', 'Hapus Barang', `${item.kode} - ${item.nama}`);
     showToast('Barang dihapus');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 let histModalItemId = null;
@@ -5971,7 +6023,7 @@ async function kirimGambarHistoriBarang() {
   } catch(e) {
     if (holder.parentNode) document.body.removeChild(holder);
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim histori: ' + e.message, true);
+    if (e.name !== 'AbortError') showToast('Gagal mengirim histori: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -6645,7 +6697,7 @@ async function lihatLampiranMasukById(lampiranId) {
     const doc = await db.collection('masukLampiran').doc(lampiranId).get();
     if (!doc.exists) { showToast('Lampiran tidak ditemukan (mungkin sudah dihapus)', true); return; }
     lihatLampiranMasuk(doc.data().fotoBase64);
-  } catch(e) { showToast('Gagal buka lampiran: ' + e.message, true); }
+  } catch(e) { showToast('Gagal buka lampiran: ' + pesanErrorRamah(e), true); }
 }
 
 // ===== FOTO NOTA/SURAT JALAN — STOK KELUAR (pola sama persis kayak Stok Masuk di atas) =====
@@ -6685,7 +6737,7 @@ async function lihatLampiranKlById(lampiranId) {
     const doc = await db.collection('keluarLampiran').doc(lampiranId).get();
     if (!doc.exists) { showToast('Lampiran tidak ditemukan (mungkin sudah dihapus)', true); return; }
     lihatLampiranMasuk(doc.data().fotoBase64); // reuse viewer yang sama, cukup buka tab baru nampilin gambar
-  } catch(e) { showToast('Gagal buka lampiran: ' + e.message, true); }
+  } catch(e) { showToast('Gagal buka lampiran: ' + pesanErrorRamah(e), true); }
 }
 
 async function submitMasuk() {
@@ -6797,7 +6849,7 @@ async function submitMasuk() {
     }
     showToast(`${payloads.length} transaksi masuk disimpan, menunggu approve di Antrian Approval`);
     resetMasukForm();
-  } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } catch(e) { showToast('Gagal: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitMasuk'); }
 }
 
@@ -6825,7 +6877,7 @@ async function cariMasukSemuaData() {
     infoEl.textContent = `📌 Mode pencarian semua data aktif: ditemukan ${hasil.length} transaksi dari ${dari || 'awal'} sampai ${sampai || 'sekarang'} (tidak terbatas cache).`;
     renderMasukHist();
   } catch(e) {
-    showToast('Gagal mencari: ' + e.message, true);
+    showToast('Gagal mencari: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -6939,7 +6991,7 @@ async function deleteMasukTransaksi(id) {
     saveToUndoStack(`Stok Masuk ${t.kode} - ${t.nama} (+${t.qty})`, changes);
     logActivity('masuk', sudahApprove ? 'Hapus Transaksi Masuk (Approved)' : 'Tolak Transaksi Masuk (Pending)', `${t.kode} - ${t.nama} (-${t.qty})`);
     showToast(sudahApprove ? 'Transaksi dihapus, stok dikurangi kembali' : 'Transaksi ditolak/dihapus dari antrian');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function editMasukTransaksi(id) {
@@ -6989,7 +7041,7 @@ async function editMasukTransaksi(id) {
     logActivity('masuk', 'Edit Transaksi Masuk', `${t.kode} - ${t.nama} dibuka untuk diedit`);
     showToast('✏️ Data dimuat ke form Barang Masuk — edit lalu tekan "Simpan Transaksi" untuk menyimpan ulang');
     document.getElementById('masukTanggal').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch(e) { showToast('Gagal memuat data untuk edit: ' + e.message, true); }
+  } catch(e) { showToast('Gagal memuat data untuk edit: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteMasukBatch(ids, sourceLabel) {
@@ -7023,7 +7075,7 @@ async function deleteMasukBatch(ids, sourceLabel) {
       ? `${done} transaksi dihapus. ${diblokirList.length} dilewati karena barangnya udah kepake keluar: ${diblokirList.slice(0,3).join(', ')}${diblokirList.length>3?', ...':''}`
       : `${done} transaksi masuk berhasil dihapus`);
   } catch(e) {
-    showToast(`Gagal hapus (${done}/${trxs.length} selesai): ` + e.message, true);
+    showToast(`Gagal hapus (${done}/${trxs.length} selesai): ` + pesanErrorRamah(e), true);
   }
 }
 
@@ -7089,7 +7141,7 @@ async function simpanEditNotaMasuk() {
     logActivity('masuk', 'Edit Info Nota Massal', `${ids.length} barang - ${Object.keys(perubahan).join(', ')}`);
     showToast(`${ids.length} barang berhasil diupdate`);
     document.getElementById('editNotaMasukModalBg').classList.remove('show');
-  } catch(e) { showToast('Gagal update: ' + e.message, true); }
+  } catch(e) { showToast('Gagal update: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('simpanEditNotaMasuk'); }
 }
 
@@ -7137,7 +7189,7 @@ async function tolakPesananPemesan(id) {
     });
     logActivity('keluar', 'Tolak Pesanan Pemesan', `${trx.kodeUnit||'-'} (${trx.user||'-'}) - ${alasan.trim()}`);
     showToast('Pesanan ditolak, alasannya tersimpan buat Pemesan');
-  } catch(e) { showToast('Gagal tolak: ' + e.message, true); }
+  } catch(e) { showToast('Gagal tolak: ' + pesanErrorRamah(e), true); }
 }
 
 // MULTI-CABANG: menu khusus permintaan barang yang diajukan akun Pemesan (KI/KSI/Gabungan),
@@ -7611,7 +7663,7 @@ async function approveMasuk(id, isOldest) {
       } catch(e) { console.warn('Gagal update status Order Barang terkait:', e); }
     }
     showToast('Stok masuk di-approve. Batch harga baru ditambahkan, harga aktif Master Stok mengikuti FIFO');
-  } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } catch(e) { showToast('Gagal approve: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -7667,7 +7719,7 @@ async function batalkanApproveMasuk(id) {
     logActivity('masuk', 'Batalkan Approve Stok Masuk', `${kodeTerbaru} - ${namaTerbaru} -${t.qty} (saldo jadi ${newSaldo})`);
     showToast('✅ Approval dibatalkan. Stok dikurangi, transaksi kembali pending.');
     refreshAllCaches();
-  } catch(e) { showToast('❌ Gagal batalkan: ' + e.message, true); }
+  } catch(e) { showToast('❌ Gagal batalkan: ' + pesanErrorRamah(e), true); }
   finally { _selesaiDiproses(_key); }
 }
 
@@ -7839,7 +7891,7 @@ async function approveKeluar(id, isOldest) {
     }
     logActivity('keluar', 'Approve Barang Keluar', `Unit ${r.kodeUnit||'-'} (${r.tipe}) - ${r.totalItem} item`);
     showToast('Barang keluar di-approve, semua data (nama/kode/satuan/harga) mengikuti master stok terbaru');
-  } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } catch(e) { showToast('Gagal approve: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -7929,7 +7981,7 @@ async function batalkanApproveKeluar(id) {
     logActivity('keluar', 'Batalkan Approve Stok Keluar', `Unit ${r.kodeUnit||'-'}: ${itemNames} dikembalikan`);
     showToast('✅ Approval dibatalkan. Stok dikembalikan, transaksi kembali pending.');
     refreshAllCaches();
-  } catch(e) { showToast('❌ Gagal batalkan: ' + e.message, true); }
+  } catch(e) { showToast('❌ Gagal batalkan: ' + pesanErrorRamah(e), true); }
   finally { _selesaiDiproses(_key); }
 }
 
@@ -8419,7 +8471,7 @@ async function submitOrder() {
     logActivity('order', 'Buat Order Barang', `Supplier ${supplier} - ${items.length} item`);
     showToast('Order barang tersimpan');
     resetOrderForm();
-  } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } catch(e) { showToast('Gagal: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitOrder'); }
 }
 
@@ -8537,7 +8589,7 @@ async function saveOrderDiterima() {
     logActivity('order', 'Update Penerimaan Barang', `${o.supplier||'-'} - status: ${status}`);
     showToast('Status barang tersimpan');
     closeOrderDetailModal();
-  } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } catch(e) { showToast('Gagal: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -8550,7 +8602,7 @@ async function updateOrderStatus(id, status) {
   try {
     await db.collection('orderBarang').doc(id).update({ status });
     logActivity('order', 'Update Status Order', `${id}: ${status}`);
-  } catch(e) { showToast('Gagal update status: ' + e.message, true); }
+  } catch(e) { showToast('Gagal update status: ' + pesanErrorRamah(e), true); }
 }
 
 // PO baru selalu berstatus "Menunggu Approval" dulu — cuma admin yang bisa approve, biar gak
@@ -8571,7 +8623,7 @@ async function approveOrderPO(id) {
     await db.collection('orderBarang').doc(id).update({ disetujui: true, approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
     logActivity('order', 'Approve PO', `Supplier ${o.supplier||'-'}${o.totalEstimasi ? ` - estimasi ${rupiah(o.totalEstimasi)}` : ''}`);
     showToast('PO di-approve, siap dikirim ke supplier');
-  } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } catch(e) { showToast('Gagal approve: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -8583,7 +8635,7 @@ async function deleteOrder(id) {
     await db.collection('orderBarang').doc(id).delete();
     logActivity('order', 'Hapus Order Barang', `Supplier ${o.supplier||'-'}`);
     showToast('Order dihapus');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteOrderTerpilih() {
@@ -8595,7 +8647,7 @@ async function deleteOrderTerpilih() {
     await bulkDeleteWithUndo('orderBarang', rows, `${rows.length} Order Barang Terpilih`);
     logActivity('order', 'Hapus Order Terpilih', `${rows.length} order`);
     showToast(`${rows.length} order dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 function nomorOrder(o) {
@@ -8740,7 +8792,7 @@ async function kirimNotaJadiTrxListGenerik(rows, blockFn, judul, fileLabel) {
     }
   } catch(e) {
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + e.message, true);
+    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -8772,7 +8824,7 @@ async function deleteOrderSemua() {
   try {
     await bulkDeleteWithUndo('orderBarang', rows, `${rows.length} Order Barang (Semua)`);
     showToast(`${rows.length} order dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 /* ---------- BARANG KELUAR (multi-item per transaksi) ---------- */
@@ -9217,7 +9269,7 @@ async function submitKeluarTransaksi() {
     logActivity('keluar', 'Ajukan Barang Keluar', `Unit ${kodeUnit||'-'} (${tipe}) - ${totalItem} item, ${rupiah(totalHarga)}, mekanik: ${mekanik||'-'} — menunggu approve`);
     showToast('Transaksi barang keluar disimpan, menunggu approve di Antrian Approval');
     resetKlForm();
-  } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } catch(e) { showToast('Gagal: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitKeluarTransaksi'); }
 }
 
@@ -9243,7 +9295,7 @@ async function cariKeluarSemuaData() {
     infoEl.textContent = `📌 Mode pencarian semua data aktif: ditemukan ${hasil.length} transaksi dari ${dari || 'awal'} sampai ${sampai || 'sekarang'} (tidak terbatas cache 3.000).`;
     renderKeluarHist(hasil);
   } catch(e) {
-    showToast('Gagal mencari: ' + e.message, true);
+    showToast('Gagal mencari: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -9344,7 +9396,7 @@ async function deleteKeluarBatch(ids, sourceLabel) {
     logActivity('keluar', 'Hapus Massal Transaksi Keluar', `${done} transaksi dihapus (${sourceLabel})${dilewati ? `, ${dilewati} dilewati (udah diproses duluan)` : ''}`);
     showToast(`${done} transaksi keluar berhasil dihapus`);
   } catch(e) {
-    showToast(`Gagal hapus (${done}/${trxs.length} selesai): ` + e.message, true);
+    showToast(`Gagal hapus (${done}/${trxs.length} selesai): ` + pesanErrorRamah(e), true);
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -9459,7 +9511,7 @@ async function deleteKeluarTransaksi(id) {
     saveToUndoStack(`Barang Keluar #${trxData.id} (Unit: ${trxData.kodeUnit})`, changes);
     logActivity('keluar', sudahApprove ? 'Hapus Transaksi Keluar (Approved)' : 'Tolak Transaksi Keluar (Pending)', `Unit ${trxData.kodeUnit||'-'} (${trxData.tipe}), ${rupiah(trxData.totalHarga)}${svTerkait ? ' — beserta riwayat servis terkait' : ''}`);
     showToast(sudahApprove ? 'Transaksi dihapus, stok dikembalikan' : 'Transaksi ditolak/dihapus dari antrian');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
   finally { _selesaiDiproses(_key); }
 }
 
@@ -9509,7 +9561,7 @@ async function editKeluarTransaksi(id) {
     logActivity('keluar', 'Edit Transaksi Keluar', `Unit ${trxData.kodeUnit||'-'} (${trxData.tipe}) dibuka untuk diedit`);
     showToast('✏️ Data dimuat ke form di atas — edit lalu tekan "Simpan Transaksi" untuk menyimpan ulang');
     document.getElementById('klTanggal').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch(e) { showToast('Gagal memuat data untuk edit: ' + e.message, true); }
+  } catch(e) { showToast('Gagal memuat data untuk edit: ' + pesanErrorRamah(e), true); }
   finally { _selesaiDiproses(_key); }
 }
 
@@ -9587,7 +9639,7 @@ async function simpanTtdKeluar() {
     logActivity('keluar', 'Tanda Tangan Konfirmasi Penerimaan', `${namaPenerima} - transaksi ${_ttdKeluarId}`);
     showToast('Tanda tangan tersimpan');
     closeTtdModal();
-  } catch(e) { showToast('Gagal simpan tanda tangan: ' + e.message, true); }
+  } catch(e) { showToast('Gagal simpan tanda tangan: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('simpanTtdKeluar'); }
 }
 function lihatTtdKeluar(id) {
@@ -9822,7 +9874,7 @@ async function kirimLaporanGenerikGambar(judul, rows, kolom) {
   } catch(e) {
     if (holder.parentNode) document.body.removeChild(holder);
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim laporan: ' + e.message, true);
+    if (e.name !== 'AbortError') showToast('Gagal mengirim laporan: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -10090,7 +10142,7 @@ async function kirimNotaJadiTrxList(rows) {
     }
   } catch(e) {
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + e.message, true);
+    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -10195,7 +10247,7 @@ async function markRusak(id) {
     await tambahRiwayatUnit(id, 'Rusak', 'Ditandai rusak manual dari menu Unit/Serial');
     logActivity('barang', 'Unit Rusak', `Serial ${u?.serialNumber||id} ditandai rusak`);
     showToast('Unit ditandai rusak');
-  } catch(e) { showToast('Gagal menandai rusak: ' + e.message, true); }
+  } catch(e) { showToast('Gagal menandai rusak: ' + pesanErrorRamah(e), true); }
 }
 // Kebalikan dari markRusak — buat kasus salah tandai, atau unit yang tadinya rusak udah
 // diperbaiki dan siap dipakai lagi.
@@ -10207,7 +10259,7 @@ async function kembalikanUnitTersedia(id) {
     await tambahRiwayatUnit(id, 'Kembali Tersedia', 'Dikembalikan manual dari menu Unit/Serial (misal: sudah diperbaiki, atau salah tandai)');
     logActivity('barang', 'Unit Dikembalikan Tersedia', `Serial ${u?.serialNumber||id} dikembalikan ke Tersedia`);
     showToast('Unit dikembalikan ke status Tersedia');
-  } catch(e) { showToast('Gagal mengembalikan unit: ' + e.message, true); }
+  } catch(e) { showToast('Gagal mengembalikan unit: ' + pesanErrorRamah(e), true); }
 }
 
 /* ---------- MUTASI RAK ---------- */
@@ -10250,7 +10302,7 @@ async function submitMutasi() {
     document.getElementById('mutasiKe').value = '';
     logActivity('mutasi', 'Mutasi Rak', `${item.kode} - ${item.nama}: ${dariRak} → ${keRak} (qty ${qty})`);
     showToast('Mutasi tercatat, lokasi barang diperbarui');
-  } catch(e) { showToast('Gagal: ' + e.message, true); }
+  } catch(e) { showToast('Gagal: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitMutasi'); }
 }
 
@@ -10302,7 +10354,7 @@ async function hapusMutasiSatu(id) {
     await db.collection('mutations').doc(id).delete();
     logActivity('mutasi', 'Hapus Catatan Mutasi', id);
     showToast('Catatan mutasi dihapus');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 async function hapusMutasiTerpilih() {
   const rows = gatherMutasiTerpilih();
@@ -10312,7 +10364,7 @@ async function hapusMutasiTerpilih() {
     await bulkDeleteWithUndo('mutations', rows, `${rows.length} Mutasi Rak Terpilih`);
     logActivity('mutasi', 'Hapus Mutasi Terpilih', `${rows.length} item`);
     showToast(`${rows.length} catatan mutasi dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 async function hapusMutasiSemua() {
   const rows = window._mutasiFilteredRows || mutasiCache;
@@ -10322,7 +10374,7 @@ async function hapusMutasiSemua() {
     await bulkDeleteWithUndo('mutations', rows, `${rows.length} Mutasi Rak (Semua)`);
     logActivity('mutasi', 'Hapus Semua Mutasi', `${rows.length} item`);
     showToast(`${rows.length} catatan mutasi dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 /* ---------- BARANG BEKAS ---------- */
@@ -10413,7 +10465,7 @@ async function updateBekasKondisi(id, kondisi) {
     await db.collection('barangBekas').doc(id).update({ kondisi });
     logActivity('bekas', 'Ubah Kondisi Bekas', `${b?.nama||id} → ${kondisi}`);
     showToast('Kondisi diperbarui');
-  } catch(e) { showToast('Gagal ubah kondisi: ' + e.message, true); }
+  } catch(e) { showToast('Gagal ubah kondisi: ' + pesanErrorRamah(e), true); }
 }
 async function updateBekasStatus(id, statusGudang) {
   const b = bekasCache.find(x => x.id === id);
@@ -10429,7 +10481,7 @@ async function updateBekasStatus(id, statusGudang) {
     await db.collection('barangBekas').doc(id).update({ statusGudang });
     logActivity('bekas', 'Ubah Status Bekas', `${b?.nama||id} → ${statusGudang}`);
     showToast('Status diperbarui');
-  } catch(e) { showToast('Gagal ubah status: ' + e.message, true); }
+  } catch(e) { showToast('Gagal ubah status: ' + pesanErrorRamah(e), true); }
 }
 
 // Barang bekas kondisi "Bisa Diperbaiki" yang udah SELESAI diperbaiki dimasukin balik jadi
@@ -10454,11 +10506,15 @@ async function masukkanBekasKeStok(id) {
   const biayaPerbaikan = Number(biayaInput) || 0;
   if (!await customConfirm(`Masukkan ${b.qty} unit "${b.nama}" ke stok Master (setelah diperbaiki)?\n\nHarga dasar batch baru: ${rupiah(biayaPerbaikan)}/unit\n\nStatus barang bekas ini akan berubah jadi "Dipakai Ulang" dan gak bisa diproses lagi setelah ini.`)) { renderBekas(); return; }
   try {
-    const cekSnap = await db.collection('barangBekas').doc(id).get();
-    if (!cekSnap.exists) throw new Error('Barang bekas tidak ditemukan');
-    if (cekSnap.data().statusGudang === 'Dipakai Ulang') throw new Error('Barang bekas ini udah pernah dimasukkan ke stok sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
+    const bekasRefMasuk = db.collection('barangBekas').doc(id);
     const itemRefBekas = db.collection('items').doc(itemIdBekas);
+    // FIX BUG: status "Dipakai Ulang" dicek ULANG dari Firestore & diupdate dalam SATU transaction
+    // yang sama dengan penambahan stok — sebelumnya cek status dan tambah stok itu 2 operasi
+    // terpisah, jadi klik dobel / retry masih bisa nambah stok 2x sebelum status sempat keupdate.
     await db.runTransaction(async (tx) => {
+      const bekasSnap = await tx.get(bekasRefMasuk);
+      if (!bekasSnap.exists) throw new Error('Barang bekas tidak ditemukan');
+      if (bekasSnap.data().statusGudang === 'Dipakai Ulang') throw new Error('Barang bekas ini udah pernah dimasukkan ke stok sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
       const snap = await tx.get(itemRefBekas);
       if (!snap.exists) throw new Error('Barang ini sudah tidak ada di Master Stok');
       const itemFresh = { id: snap.id, ...snap.data() };
@@ -10480,6 +10536,7 @@ async function masukkanBekasKeStok(id) {
         hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
         ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
+      tx.update(bekasRefMasuk, { statusGudang: 'Dipakai Ulang', masukStokAt: new Date().toISOString(), masukStokBy: currentUserData.name });
     });
     await db.collection('transactions').add({
       cabangId: currentCabangId, itemId: itemIdBekas, kode: b.kode||'', nama: b.nama, type: 'masuk', qty: b.qty,
@@ -10487,10 +10544,9 @@ async function masukkanBekasKeStok(id) {
       keterangan: `Dari Barang Bekas yang diperbaiki (kondisi awal: ${b.kondisi})`,
       tanggal: new Date().toISOString(), user: currentUserData.name, refBekasId: id, status: 'selesai'
     });
-    await db.collection('barangBekas').doc(id).update({ statusGudang: 'Dipakai Ulang', masukStokAt: new Date().toISOString(), masukStokBy: currentUserData.name });
     logActivity('bekas', 'Barang Bekas Masuk ke Stok', `${b.nama} +${b.qty} (biaya perbaikan: ${rupiah(biayaPerbaikan)}/unit)`);
     showToast(`${b.qty} unit "${b.nama}" berhasil masuk ke stok`);
-  } catch(e) { showToast('Gagal masukkan ke stok: ' + e.message, true); renderBekas(); }
+  } catch(e) { showToast('Gagal masukkan ke stok: ' + pesanErrorRamah(e), true); renderBekas(); }
   } finally { _selesaiDiproses(_key); }
 }
 // Foto Barang Bekas — beda dari pola upload di menu lain (yang formnya masih "in-progress"
@@ -10540,7 +10596,7 @@ async function deleteBekas(id) {
     await db.collection('barangBekas').doc(id).delete();
     logActivity('bekas', 'Hapus Catatan Bekas', `${b?.nama||id}`);
     showToast('Catatan dihapus');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 /* =========================================================================
@@ -10570,7 +10626,7 @@ async function kirimBekasKeGudangUtama() {
     }
     logActivity('bekas', 'Kirim Barang Bekas ke GU', `${rows.length} item dari ${cabangNama(currentCabangId)}`);
     showToast(`${rows.length} barang bekas dikirim ke Gudang Utama, menunggu konfirmasi terima`);
-  } catch(e) { showToast('Gagal kirim: ' + e.message, true); }
+  } catch(e) { showToast('Gagal kirim: ' + pesanErrorRamah(e), true); }
 }
 
 let bekasMasukGUUnsub = null;
@@ -10620,32 +10676,36 @@ async function konfirmasiTerimaBekasGU(id) {
   if (r.statusGudang === 'Diterima GU') { showToast('Kiriman ini udah pernah dikonfirmasi terima sebelumnya.', true); return; }
   if (!await customConfirm(`Konfirmasi barang bekas "${r.nama}" (${r.qty}) dari ${r.kirimGuCabangAsalNama || '-'} sudah diterima fisik di Gudang Utama?`)) return;
   try {
-    const cekSnap = await db.collection('barangBekas').doc(id).get();
-    if (!cekSnap.exists) throw new Error('Data barang bekas tidak ditemukan');
-    if (cekSnap.data().statusGudang === 'Diterima GU') throw new Error('Kiriman ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel).');
-    // PENTING: itemId/refItemId di record ASLI itu nunjuk ke dokumen item milik CABANG
-    // PENGIRIM — gak valid dipakai langsung di konteks Gudang Utama (tiap cabang punya
-    // dokumen item terpisah walau kodenya sama). Jadi dicari ulang item yang KODE-nya sama
-    // tapi di Master Stok GU sendiri, biar nanti kalau barang ini diperbaiki & "Masukkan ke
-    // Stok", nambahnya ke item yang BENERAN ada di GU, bukan ke item cabang lain yang gak nyambung.
-    const itemDiGU = itemsCache.find(i => kodeSama(i.kode, r.kode) && i.cabangId === gu.id);
-    const batch = db.batch();
-    const newRef = db.collection('barangBekas').doc();
-    batch.set(newRef, {
-      cabangId: gu.id, tanggal: new Date().toISOString(),
-      itemId: itemDiGU ? itemDiGU.id : null, kode: r.kode || '', nama: r.nama, qty: r.qty,
-      kodeUnit: r.kodeUnit || '', mekanik: r.mekanik || '',
-      kondisi: r.kondisi || 'Belum Dicek', statusGudang: 'Di Gudang',
-      keterangan: `Kiriman dari ${r.kirimGuCabangAsalNama || '-'}${r.keterangan ? ' — ' + r.keterangan : ''}${!itemDiGU ? ' ⚠️ (barang ini gak ketemu di Master Stok GU dengan kode yang sama — kalau mau "Masukkan ke Stok" nanti, cek manual dulu)' : ''}`,
-      user: currentUserData.name, createdAt: new Date().toISOString()
+    const bekasRefGU = db.collection('barangBekas').doc(id);
+    // FIX BUG: sebelumnya cek status pakai .get() BIASA (di luar batch write), jadi ada celah
+    // waktu antara cek & tulis — klik dobel bisa bikin record barang bekas duplikat di GU.
+    // Sekarang dipindah ke runTransaction biar baca status & tulis semuanya atomik.
+    await db.runTransaction(async (tx) => {
+      const bekasSnap = await tx.get(bekasRefGU);
+      if (!bekasSnap.exists) throw new Error('Data barang bekas tidak ditemukan');
+      if (bekasSnap.data().statusGudang === 'Diterima GU') throw new Error('Kiriman ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel).');
+      // PENTING: itemId/refItemId di record ASLI itu nunjuk ke dokumen item milik CABANG
+      // PENGIRIM — gak valid dipakai langsung di konteks Gudang Utama (tiap cabang punya
+      // dokumen item terpisah walau kodenya sama). Jadi dicari ulang item yang KODE-nya sama
+      // tapi di Master Stok GU sendiri, biar nanti kalau barang ini diperbaiki & "Masukkan ke
+      // Stok", nambahnya ke item yang BENERAN ada di GU, bukan ke item cabang lain yang gak nyambung.
+      const itemDiGU = itemsCache.find(i => kodeSama(i.kode, r.kode) && i.cabangId === gu.id);
+      const newRef = db.collection('barangBekas').doc();
+      tx.set(newRef, {
+        cabangId: gu.id, tanggal: new Date().toISOString(),
+        itemId: itemDiGU ? itemDiGU.id : null, kode: r.kode || '', nama: r.nama, qty: r.qty,
+        kodeUnit: r.kodeUnit || '', mekanik: r.mekanik || '',
+        kondisi: r.kondisi || 'Belum Dicek', statusGudang: 'Di Gudang',
+        keterangan: `Kiriman dari ${r.kirimGuCabangAsalNama || '-'}${r.keterangan ? ' — ' + r.keterangan : ''}${!itemDiGU ? ' ⚠️ (barang ini gak ketemu di Master Stok GU dengan kode yang sama — kalau mau "Masukkan ke Stok" nanti, cek manual dulu)' : ''}`,
+        user: currentUserData.name, createdAt: new Date().toISOString()
+      });
+      tx.update(bekasRefGU, {
+        statusGudang: 'Diterima GU', diterimaGuAt: new Date().toISOString(), diterimaGuOleh: currentUserData.name
+      });
     });
-    batch.update(db.collection('barangBekas').doc(id), {
-      statusGudang: 'Diterima GU', diterimaGuAt: new Date().toISOString(), diterimaGuOleh: currentUserData.name
-    });
-    await batch.commit();
     logActivity('bekas', 'Konfirmasi Terima Barang Bekas dari Cabang', `${r.nama} (${r.qty}) dari ${r.kirimGuCabangAsalNama || '-'}`);
     showToast('Barang bekas diterima, sudah masuk daftar Barang Bekas Gudang Utama');
-  } catch(e) { showToast('Gagal konfirmasi: ' + e.message, true); }
+  } catch(e) { showToast('Gagal konfirmasi: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -10669,7 +10729,7 @@ async function hapusBekasTerpilih() {
     await bulkDeleteWithUndo('barangBekas', rows, `${rows.length} Barang Bekas Terpilih`);
     logActivity('bekas', 'Hapus Barang Bekas Terpilih', `${rows.length} item`);
     showToast(`${rows.length} catatan barang bekas dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function hapusBekasSemua() {
@@ -10680,7 +10740,7 @@ async function hapusBekasSemua() {
     await bulkDeleteWithUndo('barangBekas', rows, `${rows.length} Barang Bekas (Semua)`);
     logActivity('bekas', 'Hapus Semua Barang Bekas', `${rows.length} item`);
     showToast(`${rows.length} catatan barang bekas dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 /* ---------- PILIH BARANG BEKAS TERPILIH: WA & NOTA ---------- */
@@ -10790,7 +10850,7 @@ async function kirimNotaJadiBekasTerpilih() {
   } catch(e) {
     if (holder.parentNode) document.body.removeChild(holder);
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + e.message, true);
+    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -10956,7 +11016,7 @@ async function kirimGambarLogTerpilih() {
   } catch(e) {
     if (holder.parentNode) document.body.removeChild(holder);
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + e.message, true);
+    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -10981,7 +11041,7 @@ async function hapusLogTerpilih() {
       await batch.commit();
     }
     showToast(`${rows.length} log aktivitas dihapus`);
-  } catch(e) { showToast('Gagal menghapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal menghapus: ' + pesanErrorRamah(e), true); }
 }
 
 /* ---------- LAPORAN ---------- */
@@ -11483,7 +11543,7 @@ async function renderClosingWidget() {
         <div><div style="font-size:11px;color:var(--ink-dim);">Laba/Rugi (s.d. hari ini)</div><div style="font-size:16px;font-weight:700;color:${labaSekarang>=0?'var(--success)':'var(--danger)'};">${rupiah(labaSekarang)}</div>${badgeBanding(labaSekarang, labaLalu)}</div>
       </div>`;
   } catch(e) {
-    el.innerHTML = `<span style="color:var(--danger);">Gagal memuat: ${e.message}</span>`;
+    el.innerHTML = `<span style="color:var(--danger);">Gagal memuat: ${pesanErrorRamah(e)}</span>`;
   }
 }
 
@@ -11606,7 +11666,7 @@ async function cekPeriodeClosing() {
         : `<div style="color:var(--ink-dim);font-size:12px;">Cuma Admin yang bisa nutup buku.</div>`;
     }
   } catch(e) {
-    document.getElementById('closingPreviewTable').innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat: ${e.message}</td></tr>`;
+    document.getElementById('closingPreviewTable').innerHTML = `<tr><td colspan="5" class="empty">Gagal memuat: ${pesanErrorRamah(e)}</td></tr>`;
   }
 }
 
@@ -11628,7 +11688,7 @@ async function tutupBukuBulanIni() {
     showToast(`Buku periode ${data.periode} berhasil ditutup`);
     cekPeriodeClosing();
     renderClosingHistTable();
-  } catch(e) { showToast('Gagal tutup buku: ' + e.message, true); }
+  } catch(e) { showToast('Gagal tutup buku: ' + pesanErrorRamah(e), true); }
 }
 
 async function bukaUlangClosing(docId) {
@@ -11644,7 +11704,7 @@ async function bukaUlangClosing(docId) {
     showToast('Closing dibuka ulang, transaksi periode ini bisa diedit lagi');
     cekPeriodeClosing();
     renderClosingHistTable();
-  } catch(e) { showToast('Gagal buka ulang: ' + e.message, true); }
+  } catch(e) { showToast('Gagal buka ulang: ' + pesanErrorRamah(e), true); }
 }
 
 async function renderClosingHistTable() {
@@ -11670,7 +11730,7 @@ async function renderClosingHistTable() {
       </tr>`;
     }).join('');
   } catch(e) {
-    tbl.innerHTML = `<tr><td colspan="7" class="empty">Gagal memuat: ${e.message}</td></tr>`;
+    tbl.innerHTML = `<tr><td colspan="7" class="empty">Gagal memuat: ${pesanErrorRamah(e)}</td></tr>`;
   }
 }
 
@@ -11988,7 +12048,7 @@ async function toggleRole(uid, currentRole) {
     await db.collection('users').doc(uid).update({ role: newRole });
     logActivity('user', 'Ubah Role', `UID ${uid} → ${newRole}`);
     showToast('Role diperbarui');
-  } catch(e) { showToast('Gagal ubah role: ' + e.message, true); }
+  } catch(e) { showToast('Gagal ubah role: ' + pesanErrorRamah(e), true); }
 }
 
 async function resetUserPassword(email) {
@@ -11998,7 +12058,7 @@ async function resetUserPassword(email) {
   auth.sendPasswordResetEmail(email).then(() => {
     logActivity('user', 'Reset Password', `Link reset dikirim ke ${email}`);
     showToast('Link reset password terkirim ke ' + email);
-  }).catch(e => showToast('Gagal: ' + e.message, true));
+  }).catch(e => showToast('Gagal: ' + pesanErrorRamah(e), true));
 }
 
 async function toggleUserActive(uid, currentlyActive) {
@@ -12016,7 +12076,7 @@ async function toggleUserActive(uid, currentlyActive) {
     await db.collection('users').doc(uid).update({ active: newActive });
     logActivity('user', newActive ? 'Aktifkan User' : 'Nonaktifkan User', `UID ${uid}`);
     showToast(newActive ? 'User diaktifkan' : 'User dinonaktifkan');
-  } catch(e) { showToast('Gagal ubah status user: ' + e.message, true); }
+  } catch(e) { showToast('Gagal ubah status user: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteUserDoc(uid) {
@@ -12032,7 +12092,7 @@ async function deleteUserDoc(uid) {
     await db.collection('users').doc(uid).delete();
     logActivity('user', 'Hapus Akses User', `UID ${uid}`);
     showToast('Akses user dihapus dari sistem');
-  } catch(e) { showToast('Gagal hapus akses user: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus akses user: ' + pesanErrorRamah(e), true); }
 }
 
 function openUserModal() {
@@ -12176,7 +12236,7 @@ async function saveNewUser() {
     document.getElementById('newUserName').value = '';
     document.getElementById('newUserEmail').value = '';
     document.getElementById('newUserPass').value = '';
-  } catch(e) { showToast('Gagal buat user: ' + e.message, true); }
+  } catch(e) { showToast('Gagal buat user: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('saveNewUser'); }
 }
 
@@ -12238,7 +12298,7 @@ async function renderBackupSummary() {
       <div class="card"><div class="lbl">${BACKUP_COLLECTION_LABEL[c.name] || c.name}</div><div class="val">${c.count}</div></div>
     `).join('');
   } catch(e) {
-    wrap.innerHTML = `<div class="empty">Gagal memuat ringkasan: ${e.message}</div>`;
+    wrap.innerHTML = `<div class="empty">Gagal memuat ringkasan: ${pesanErrorRamah(e)}</div>`;
   }
 }
 
@@ -12275,8 +12335,8 @@ async function backupAllDataExcel() {
     logActivity('backup', 'Backup Data (Excel)', `${totalDocs} dokumen dari ${BACKUP_COLLECTIONS.length} koleksi`);
     showToast('Backup Excel berhasil didownload');
   } catch(e) {
-    statusEl.textContent = `❌ Gagal backup Excel: ${e.message}`;
-    showToast('Gagal backup Excel: ' + e.message, true);
+    statusEl.textContent = `❌ Gagal backup Excel: ${pesanErrorRamah(e)}`;
+    showToast('Gagal backup Excel: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -12311,8 +12371,8 @@ async function backupAllData() {
     catch(e) { console.warn('Gagal catat waktu backup terakhir (non-critical):', e); }
     cekBackupReminder();
   } catch(e) {
-    statusEl.textContent = `❌ Gagal backup: ${e.message}`;
-    showToast('Gagal backup: ' + e.message, true);
+    statusEl.textContent = `❌ Gagal backup: ${pesanErrorRamah(e)}`;
+    showToast('Gagal backup: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('backupAllData'); }
 }
@@ -12359,8 +12419,8 @@ async function restoreAllData() {
     renderBackupSummary();
     fileInput.value = '';
   } catch(e) {
-    statusEl.textContent = `❌ Gagal restore: ${e.message}`;
-    showToast('Gagal restore: ' + e.message, true);
+    statusEl.textContent = `❌ Gagal restore: ${pesanErrorRamah(e)}`;
+    showToast('Gagal restore: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('restoreAllData'); }
 }
@@ -12924,7 +12984,7 @@ async function submitReturMasuk() {
     logActivity('retur', 'Ajukan Retur Masuk', `${selectedReturMasukTx.kode} ${selectedReturMasukTx.nama} -${qty} (Alasan: ${alasan})`);
     showToast('Retur masuk diajukan, menunggu approve');
   } catch(e) {
-    showToast('Gagal ajukan retur: ' + e.message, true);
+    showToast('Gagal ajukan retur: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('submitReturMasuk'); }
 }
@@ -12989,7 +13049,7 @@ async function hapusReturMasukTerpilih() {
     await bulkDeleteWithUndo('returMasuk', rows, `${rows.length} Retur Masuk Terpilih`);
     logActivity('retur', 'Hapus Retur Masuk Terpilih', `${rows.length} item`);
     showToast(`${rows.length} retur masuk dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 async function hapusReturMasukSemua() {
   const rows = window._returMasukFilteredRows || returMasukCache;
@@ -12999,7 +13059,7 @@ async function hapusReturMasukSemua() {
     await bulkDeleteWithUndo('returMasuk', rows, `${rows.length} Retur Masuk (Semua)`);
     logActivity('retur', 'Hapus Semua Retur Masuk', `${rows.length} item`);
     showToast(`${rows.length} retur masuk dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function approveReturMasuk(id) {
@@ -13013,14 +13073,18 @@ async function approveReturMasuk(id) {
   if (!await customConfirm(`Approve retur masuk "${retur.refTransaksiData?.nama}" -${retur.qty}?\n\nStok barang akan berkurang dan masuk ke BARANG BEKAS untuk pengembalian ke supplier.`)) return;
   
   try {
-    const cekSnap = await db.collection('returMasuk').doc(id).get();
-    if (!cekSnap.exists) throw new Error('Retur tidak ditemukan');
-    if ((cekSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
-    // PENTING: potong stok pakai FIFO batch (bukan cuma kurangin saldo doang) — sama pola
-    // kayak Barang Keluar, biar saldo & batchesMasuk tetap sinkron.
+    const returRefRM2 = db.collection('returMasuk').doc(id);
     const itemRefRM = db.collection('items').doc(retur.itemId);
     let itemFresh = null;
+    // FIX BUG: status retur dicek ULANG dari Firestore & diupdate jadi 'selesai' di DALAM
+    // transaction yang sama dengan pengurangan stok — sebelumnya 2 operasi terpisah, klik
+    // dobel bisa motong stok 2x sebelum status sempat keupdate.
     await db.runTransaction(async (tx) => {
+      const returSnap = await tx.get(returRefRM2);
+      if (!returSnap.exists) throw new Error('Retur tidak ditemukan');
+      if ((returSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
+      // PENTING: potong stok pakai FIFO batch (bukan cuma kurangin saldo doang) — sama pola
+      // kayak Barang Keluar, biar saldo & batchesMasuk tetap sinkron.
       const snap = await tx.get(itemRefRM);
       if (!snap.exists) throw new Error('Item tidak ditemukan');
       itemFresh = { id: snap.id, ...snap.data() };
@@ -13031,6 +13095,7 @@ async function approveReturMasuk(id) {
         hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
         ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
+      tx.update(returRefRM2, { status: 'selesai', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
     });
     const item = itemFresh;
     
@@ -13050,17 +13115,10 @@ async function approveReturMasuk(id) {
       user: currentUserData.name
     });
     
-    // Update retur status
-    await db.collection('returMasuk').doc(id).update({
-      status: 'selesai',
-      approvedBy: currentUserData.name,
-      approvedAt: new Date().toISOString()
-    });
-    
     logActivity('retur', 'Approve Retur Masuk', `${retur.refTransaksiData?.kode} ${retur.refTransaksiData?.nama} -${retur.qty}`);
     showToast('Retur masuk di-approve, stok berkurang dan barang masuk ke BARANG BEKAS');
   } catch(e) {
-    showToast('Gagal approve retur: ' + e.message, true);
+    showToast('Gagal approve retur: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses(_key); }
 }
@@ -13119,7 +13177,7 @@ async function deleteReturMasuk(id) {
     logActivity('retur', 'Hapus Retur Masuk', `${retur.refTransaksiData?.kode} ${retur.refTransaksiData?.nama}`);
     showToast('Retur masuk dihapus');
   } catch(e) {
-    showToast('Gagal hapus retur: ' + e.message, true);
+    showToast('Gagal hapus retur: ' + pesanErrorRamah(e), true);
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -13280,7 +13338,7 @@ async function submitReturKeluar() {
     showToast('Retur keluar diajukan, menunggu approve');
     clearReturKeluarSelected();
   } catch(e) {
-    showToast('Gagal ajukan retur: ' + e.message, true);
+    showToast('Gagal ajukan retur: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('submitReturKeluar'); }
 }
@@ -13348,7 +13406,7 @@ async function hapusReturKeluarTerpilih() {
     await bulkDeleteWithUndo('returKeluar', rows, `${rows.length} Retur Keluar Terpilih`);
     logActivity('retur', 'Hapus Retur Keluar Terpilih', `${rows.length} item`);
     showToast(`${rows.length} retur keluar dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 async function hapusReturKeluarSemua() {
   const rows = window._returKeluarFilteredRows || returKeluarCache;
@@ -13358,7 +13416,7 @@ async function hapusReturKeluarSemua() {
     await bulkDeleteWithUndo('returKeluar', rows, `${rows.length} Retur Keluar (Semua)`);
     logActivity('retur', 'Hapus Semua Retur Keluar', `${rows.length} item`);
     showToast(`${rows.length} retur keluar dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function approveReturKeluar(id) {
@@ -13375,20 +13433,21 @@ async function approveReturKeluar(id) {
   if (!await customConfirm(`Approve retur keluar: ${retur.refTransaksiData?.itemNama || '-'} x${retur.qty} dari unit ${retur.refTransaksiData?.kodeUnit || '-'} (${retur.refTransaksiData?.mekanik || '-'})?\n\nKondisi: ${retur.kondisi}`)) return;
 
   try {
-    const cekSnap = await db.collection('returKeluar').doc(id).get();
-    if (!cekSnap.exists) throw new Error('Retur tidak ditemukan');
-    if ((cekSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
-    const itemAwal = itemsCache.find(i => i.id === retur.itemId);
-    if (!itemAwal) throw new Error('Barang tidak ditemukan di master stok');
-
-    // PENTING: barang yang diretur ditambahin sebagai BATCH BARU (bukan cuma nambah saldo
-    // doang) — biar FIFO tetap akurat. Gak ada info batch asal barang ini pas dia keluar dulu
-    // (retur keluar gak nyimpen batchTrxId dari transaksi keluar aslinya), jadi harga batch
-    // baru ini ngikut harga AKTIF Master Stok saat ini (best-effort, sama pola kayak Koreksi
-    // Stok pas nemu stok lebih banyak dari sistem).
+    const returRefRK2 = db.collection('returKeluar').doc(id);
     const itemRefRK = db.collection('items').doc(retur.itemId);
     let item = null;
+    // FIX BUG: status retur dicek ULANG dari Firestore & diupdate jadi 'selesai' di DALAM
+    // transaction yang sama dengan penambahan stok — sebelumnya 2 operasi terpisah, klik
+    // dobel bisa nambah stok 2x sebelum status sempat keupdate.
     await db.runTransaction(async (tx) => {
+      const returSnap = await tx.get(returRefRK2);
+      if (!returSnap.exists) throw new Error('Retur tidak ditemukan');
+      if ((returSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
+      // PENTING: barang yang diretur ditambahin sebagai BATCH BARU (bukan cuma nambah saldo
+      // doang) — biar FIFO tetap akurat. Gak ada info batch asal barang ini pas dia keluar dulu
+      // (retur keluar gak nyimpen batchTrxId dari transaksi keluar aslinya), jadi harga batch
+      // baru ini ngikut harga AKTIF Master Stok saat ini (best-effort, sama pola kayak Koreksi
+      // Stok pas nemu stok lebih banyak dari sistem).
       const snap = await tx.get(itemRefRK);
       if (!snap.exists) throw new Error('Barang tidak ditemukan');
       const itemFresh = { id: snap.id, ...snap.data() };
@@ -13407,6 +13466,7 @@ async function approveReturKeluar(id) {
         hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
         ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
+      tx.update(returRefRK2, { status: 'selesai', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
     });
 
     // Jika kondisi bukan OK, masuk ke barang bekas
@@ -13427,16 +13487,10 @@ async function approveReturKeluar(id) {
       });
     }
 
-    await db.collection('returKeluar').doc(id).update({
-      status: 'selesai',
-      approvedBy: currentUserData.name,
-      approvedAt: new Date().toISOString()
-    });
-
     logActivity('retur', 'Approve Retur Keluar', `Unit: ${retur.refTransaksiData?.kodeUnit || '-'} - ${item.nama} -${retur.qty} (${retur.kondisi})`);
     showToast(`Retur keluar di-approve. Stok "${item.nama}" +${retur.qty}${retur.kondisi !== 'OK' ? ', barang masuk BARANG BEKAS' : ''}`);
   } catch(e) {
-    showToast('Gagal approve retur: ' + e.message, true);
+    showToast('Gagal approve retur: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses(_key); }
 }
@@ -13493,7 +13547,7 @@ async function deleteReturKeluar(id) {
     logActivity('retur', 'Hapus Retur Keluar', `Unit: ${retur.refTransaksiData?.kodeUnit || '-'} - ${retur.refTransaksiData?.itemNama || '-'}`);
     showToast('Retur keluar dihapus');
   } catch(e) {
-    showToast('Gagal hapus retur: ' + e.message, true);
+    showToast('Gagal hapus retur: ' + pesanErrorRamah(e), true);
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -13638,7 +13692,7 @@ async function submitKoreksiStok() {
     logActivity('koreksi', 'Ajukan Koreksi Stok', `${selectedKoreksiBarang.kode} ${selectedKoreksiBarang.nama} dari ${sistem} → ${stokActual} (Alasan: ${finalAlasan})`);
     showToast('Koreksi stok diajukan, menunggu approval');
   } catch(e) {
-    showToast('Gagal ajukan koreksi: ' + e.message, true);
+    showToast('Gagal ajukan koreksi: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('submitKoreksiStok'); }
 }
@@ -13729,7 +13783,7 @@ async function hapusKoreksiTerpilih() {
     await bulkDeleteWithUndo('koreksiStok', rows, `${rows.length} Koreksi Stok Terpilih`);
     logActivity('koreksi', 'Hapus Koreksi Stok Terpilih', `${rows.length} item`);
     showToast(`${rows.length} koreksi stok dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 async function hapusKoreksiSemua() {
   const rows = window._koreksiFilteredRows || koreksiStokCache;
@@ -13741,7 +13795,7 @@ async function hapusKoreksiSemua() {
     await bulkDeleteWithUndo('koreksiStok', rows, `${rows.length} Koreksi Stok (Semua)`);
     logActivity('koreksi', 'Hapus Semua Koreksi Stok', `${rows.length} item`);
     showToast(`${rows.length} koreksi stok dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function approveKoreksiStok(id) {
@@ -13756,17 +13810,21 @@ async function approveKoreksiStok(id) {
   if (!await customConfirm(`Approve koreksi stok "${koreksi.barangData?.nama}"?\n\nDari: ${koreksi.barangData?.stokSistem} → Ke: ${koreksi.stokActual}\nSelisih: ${koreksi.selisih > 0 ? '+' : ''}${koreksi.selisih}\nAlasan: ${koreksi.alasan}`)) return;
   
   try {
-    const cekSnap = await db.collection('koreksiStok').doc(id).get();
-    if (!cekSnap.exists) throw new Error('Koreksi tidak ditemukan');
-    if ((cekSnap.data().status||'pending') === 'selesai') throw new Error('Koreksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar gak keterapkan 2x.');
-    // Sama persis pola kayak quick-koreksi di Master Barang: selisih POSITIF (stok fisik lebih
-    // banyak dari sistem) dibikinin batch baru pakai harga aktif saat ini. Selisih NEGATIF
-    // (fisik lebih sedikit/hilang/rusak) dipotong dari batch pakai FIFO. Biar saldo & total qty
-    // di batchesMasuk tetap sinkron — bukan cuma nge-set saldo doang.
+    const koreksiRefApprove = db.collection('koreksiStok').doc(id);
     const itemRefKoreksi = db.collection('items').doc(koreksi.itemId);
+    // FIX BUG: status koreksi dicek ULANG dari Firestore & diupdate jadi 'selesai' di DALAM
+    // transaction yang sama dengan update stok — sebelumnya 2 operasi terpisah, klik dobel
+    // bisa nerapin selisih 2x sebelum status sempat keupdate.
     await db.runTransaction(async (tx) => {
+      const koreksiSnap = await tx.get(koreksiRefApprove);
+      if (!koreksiSnap.exists) throw new Error('Koreksi tidak ditemukan');
+      if ((koreksiSnap.data().status||'pending') === 'selesai') throw new Error('Koreksi ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar gak keterapkan 2x.');
+      // Sama persis pola kayak quick-koreksi di Master Barang: selisih POSITIF (stok fisik lebih
+      // banyak dari sistem) dibikinin batch baru pakai harga aktif saat ini. Selisih NEGATIF
+      // (fisik lebih sedikit/hilang/rusak) dipotong dari batch pakai FIFO. Biar saldo & total qty
+      // di batchesMasuk tetap sinkron — bukan cuma nge-set saldo doang.
       const snap = await tx.get(itemRefKoreksi);
-      if (!snap.exists) return;
+      if (!snap.exists) { tx.update(koreksiRefApprove, { status: 'selesai', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() }); return; }
       const itemFresh = { id: snap.id, ...snap.data() };
       let batches;
       if (koreksi.selisih > 0) {
@@ -13796,6 +13854,7 @@ async function approveKoreksiStok(id) {
         hargaDasar: hargaAktifBaru.hargaDasar, hargaPPN: hargaAktifBaru.hargaPPN,
         ...hitungHargaJualOtomatis(hargaAktifBaru.hargaDasar, hargaAktifBaru.hargaPPN, itemFresh.persenGabungan, itemFresh)
       });
+      tx.update(koreksiRefApprove, { status: 'selesai', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
     });
     
     // Jika selisih negatif (barang hilang/rusak), catat di BARANG BEKAS
@@ -13816,17 +13875,10 @@ async function approveKoreksiStok(id) {
       });
     }
     
-    // Update koreksi status
-    await db.collection('koreksiStok').doc(id).update({
-      status: 'selesai',
-      approvedBy: currentUserData.name,
-      approvedAt: new Date().toISOString()
-    });
-    
     logActivity('koreksi', 'Approve Koreksi Stok', `${koreksi.barangData?.kode} ${koreksi.barangData?.nama} ${koreksi.barangData?.stokSistem} → ${koreksi.stokActual}`);
     showToast(`Koreksi stok di-approve. Stok ${koreksi.selisih > 0 ? 'naik' : 'turun'} ${Math.abs(koreksi.selisih)} unit${koreksi.selisih < 0 && koreksi.alasan.includes('Rusak') ? ', barang masuk BARANG BEKAS' : ''}`);
   } catch(e) {
-    showToast('Gagal approve koreksi: ' + e.message, true);
+    showToast('Gagal approve koreksi: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses(_key); }
 }
@@ -13847,7 +13899,7 @@ async function rejectKoreksiStok(id) {
     logActivity('koreksi', 'Tolak Koreksi Stok', `${koreksi.barangData?.kode} ${koreksi.barangData?.nama}`);
     showToast('Koreksi stok ditolak, stok tetap tidak berubah');
   } catch(e) {
-    showToast('Gagal tolak koreksi: ' + e.message, true);
+    showToast('Gagal tolak koreksi: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -13924,7 +13976,7 @@ async function deleteKoreksiStok(id) {
     logActivity('koreksi', 'Hapus Koreksi Stok', `${koreksi.barangData?.kode} ${koreksi.barangData?.nama}`);
     showToast('Koreksi stok dihapus');
   } catch(e) {
-    showToast('Gagal hapus koreksi: ' + e.message, true);
+    showToast('Gagal hapus koreksi: ' + pesanErrorRamah(e), true);
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -13987,7 +14039,7 @@ async function createOpnameSession() {
     showToast('Session opname dibuat, siap input data');
     switchOpnameTab('list');
   } catch(e) {
-    showToast('Gagal buat session: ' + e.message, true);
+    showToast('Gagal buat session: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -14186,7 +14238,7 @@ async function submitOpnameBarang() {
     logActivity('opname', 'Input Opname Detail', `${selectedOpnameBarang.kode} ${selectedOpnameBarang.nama}`);
     showToast('Barang berhasil di-input');
   } catch(e) {
-    showToast('Gagal input barang: ' + e.message, true);
+    showToast('Gagal input barang: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses('submitOpnameBarang'); }
 }
@@ -14238,7 +14290,7 @@ async function deleteOpnameDetail(detailId) {
     await db.collection('stokOpnameDetail').doc(detailId).delete();
     showToast('Barang dihapus dari opname');
   } catch(e) {
-    showToast('Gagal hapus: ' + e.message, true);
+    showToast('Gagal hapus: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -14270,14 +14322,25 @@ async function finalizeOpname() {
   }
   
   try {
-    const cekSnap = await db.collection('stokOpname').doc(currentOpnameSession.id).get();
-    if (!cekSnap.exists) throw new Error('Session opname tidak ditemukan');
-    if (cekSnap.data().stokSudahDiterapkan) throw new Error('Opname ini udah pernah di-finalize sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak keterapkan 2x.');
-    // FIX BUG: cek barang mana yang SUDAH kepenerapkan duluan (kalau proses finalize sebelumnya
-    // sempat gagal/putus di tengah jalan sebelum sempat nandain stokSudahDiterapkan=true) —
-    // pakai jejak record koreksiStok yang refOpnameId-nya sama session ini. Barang yang udah ada
-    // recordnya DILEWATI, cuma barang yang BELUM diproses yang dilanjutkan. Ini mencegah selisih
-    // yang sama diterapkan DUA KALI ke stok kalau finalize sempat gagal separuh jalan lalu dicoba lagi.
+    const opnameRefFinalize = db.collection('stokOpname').doc(currentOpnameSession.id);
+    // FIX BUG: sebelumnya status cuma dicek pakai .get() BIASA (bukan transaction), jadi kalau
+    // 2 proses finalize kejalan hampir bersamaan (2 tab/device), dua-duanya bisa lolos cek ini
+    // sebelum salah satu selesai nulis apa pun. Sekarang ada "klaim" lewat transaction kecil di
+    // awal: nandain finalizeMulaiAt, dan kalau ada klaim lain yang masih "baru" (<5 menit),
+    // proses ini berhenti duluan sebelum sempat nyentuh barang apa pun. Barang-per-barang di
+    // bawah TETAP pakai pengecekan idempoten yang sudah ada (skip barang yang udah kepenerapkan
+    // dari percobaan finalize sebelumnya yang gagal separuh jalan), jadi retry setelah gagal
+    // (bukan proses bersamaan) tetap aman kayak sebelumnya.
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(opnameRefFinalize);
+      if (!snap.exists) throw new Error('Session opname tidak ditemukan');
+      const dataSesi = snap.data();
+      if (dataSesi.stokSudahDiterapkan) throw new Error('Opname ini udah pernah di-finalize sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak keterapkan 2x.');
+      const mulaiAt = dataSesi.finalizeMulaiAt ? new Date(dataSesi.finalizeMulaiAt).getTime() : 0;
+      const kemungkinanSedangJalanDiTempatLain = mulaiAt && (Date.now() - mulaiAt) < 5 * 60 * 1000;
+      if (kemungkinanSedangJalanDiTempatLain) throw new Error('Finalize opname ini kemungkinan lagi diproses di tab/device lain (mulai kurang dari 5 menit lalu) — tunggu sebentar lalu refresh buat mastiin sebelum coba lagi.');
+      tx.update(opnameRefFinalize, { finalizeMulaiAt: new Date().toISOString() });
+    });
     const sudahDiprosesSnap = await db.collection('koreksiStok').where('refOpnameId', '==', currentOpnameSession.id).get();
     const itemIdSudahDiproses = new Set(sudahDiprosesSnap.docs.map(d => d.data().itemId));
     // Terapin semua selisih ke stok beneran — pakai pola batch-safe yang sama kayak Koreksi
@@ -14359,7 +14422,7 @@ async function finalizeOpname() {
     logActivity('opname', 'Finalize Stok Opname', `Accuracy: ${accuracy}%, ${selisih} barang dikoreksi otomatis`);
     showToast(`Opname finalized. ${selisih} barang dengan selisih udah otomatis disesuaikan stoknya.`);
   } catch(e) {
-    showToast('Gagal finalize: ' + e.message, true);
+    showToast('Gagal finalize: ' + pesanErrorRamah(e), true);
   }
   } finally { _selesaiDiproses(_key); }
 }
@@ -14483,7 +14546,7 @@ async function autoCreateKoreksi() {
     logActivity('opname', 'Auto-Create Koreksi dari Opname', `${created} koreksi dibuat`);
     showToast(`${created} koreksi stok berhasil dibuat (status PENDING)`);
   } catch(e) {
-    showToast('Gagal create koreksi: ' + e.message, true);
+    showToast('Gagal create koreksi: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -14530,7 +14593,7 @@ async function submitUnitAlat() {
     toggleUnitAlatForm();
     logActivity('unit', 'Tambah Unit Alat Berat', `${kode} - ${nama}`);
     showToast('Unit berhasil ditambahkan');
-  } catch(e) { showToast('Gagal simpan unit: ' + e.message, true); }
+  } catch(e) { showToast('Gagal simpan unit: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitUnitAlat'); }
 }
 
@@ -14545,7 +14608,7 @@ async function updateHmKmUnit(id) {
     await db.collection('unitsAlatBerat').doc(id).update({ hmKmSaatIni: num });
     logActivity('unit', 'Update HM/KM Unit', `${u.kode} - ${u.nama} → ${num} ${u.satuan}`);
     showToast('HM/KM unit diperbarui');
-  } catch(e) { showToast('Gagal update: ' + e.message, true); }
+  } catch(e) { showToast('Gagal update: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteUnitAlat(id) {
@@ -14555,7 +14618,7 @@ async function deleteUnitAlat(id) {
   try {
     await db.collection('unitsAlatBerat').doc(id).delete();
     showToast('Unit dihapus');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 function servisStatusBadge(u, jenisKey) {
@@ -14640,7 +14703,7 @@ async function deleteUnitAlatTerpilih() {
   try {
     await bulkDeleteWithUndo('unitsAlatBerat', rows, `${rows.length} Unit Alat Berat Terpilih`);
     showToast(`${rows.length} unit dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteUnitAlatSemua() {
@@ -14649,7 +14712,7 @@ async function deleteUnitAlatSemua() {
   try {
     await bulkDeleteWithUndo('unitsAlatBerat', unitAlatCache, `${unitAlatCache.length} Unit Alat Berat (Semua)`);
     showToast('Semua unit dihapus');
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 function populateSvUnitSelect() {
@@ -15006,7 +15069,7 @@ async function submitServis() {
     logActivity('keluar', 'Catat Servis', `Unit ${unit.kode} - Servis ${jenis} (${hmKm} ${unit.satuan}), ${items.length} barang, mekanik: ${mekanik||'-'} — menunggu approve`);
     showToast('Servis dicatat. Pemakaian barang menunggu approve di Antrian Approval.');
     resetSvForm();
-  } catch(e) { showToast('Gagal simpan servis: ' + e.message, true); }
+  } catch(e) { showToast('Gagal simpan servis: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitServis'); }
 }
 
@@ -15032,7 +15095,7 @@ async function cariServisSemuaData() {
     infoEl.textContent = `📌 Mode pencarian semua data aktif: ditemukan ${hasil.length} riwayat servis dari ${dari || 'awal'} sampai ${sampai || 'sekarang'} (tidak terbatas cache).`;
     renderRiwayatServis();
   } catch(e) {
-    showToast('Gagal mencari: ' + e.message, true);
+    showToast('Gagal mencari: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -15207,7 +15270,7 @@ async function deleteServisTerpilih() {
     saveToUndoStack(`${rows.length} Riwayat Servis Terpilih`, allChanges);
     logActivity('keluar', 'Hapus Riwayat Servis (Bulk)', `${rows.length} riwayat servis dihapus`);
     showToast(`${rows.length} riwayat servis dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteServisSemua() {
@@ -15223,7 +15286,7 @@ async function deleteServisSemua() {
     saveToUndoStack(`${rows.length} Riwayat Servis (Semua)`, allChanges);
     logActivity('keluar', 'Hapus Riwayat Servis (Bulk)', `${rows.length} riwayat servis dihapus`);
     showToast(`${rows.length} riwayat servis dihapus`);
-  } catch(e) { showToast('Gagal hapus: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus: ' + pesanErrorRamah(e), true); }
 }
 
 async function deleteServisTransaksi(id) {
@@ -15242,7 +15305,7 @@ async function deleteServisTransaksi(id) {
     saveToUndoStack(`Buku Servis Unit ${sv.unitKode||'-'} (${sv.jenisServis||''})`, changes);
     logActivity('keluar', sudahApprove ? 'Hapus Riwayat Servis (Approved)' : 'Hapus Riwayat Servis (Pending)', `Unit ${sv.unitKode||'-'} - Servis ${sv.jenisServis||''}`);
     showToast(sudahApprove ? 'Riwayat servis dihapus, stok dikembalikan' : 'Riwayat servis dihapus');
-  } catch(e) { showToast('Gagal hapus riwayat servis: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus riwayat servis: ' + pesanErrorRamah(e), true); }
   finally { _selesaiDiproses(_key); }
 }
 
@@ -15281,7 +15344,7 @@ async function editServisTransaksi(id) {
     logActivity('keluar', 'Edit Riwayat Servis', `Unit ${sv.unitKode||'-'} (${sv.jenisServis||''}) dibuka untuk diedit`);
     showToast('✏️ Data dimuat ke form Buku Servis di atas — edit lalu simpan ulang');
     document.getElementById('svTanggal').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch(e) { showToast('Gagal memuat data untuk edit: ' + e.message, true); }
+  } catch(e) { showToast('Gagal memuat data untuk edit: ' + pesanErrorRamah(e), true); }
   finally { _selesaiDiproses(_key); }
 }
 
@@ -15331,7 +15394,7 @@ async function saveCabang() {
     await loadCabangList();
     subscribeStokGudangUtama(); // MULTI-CABANG: refresh in case Gudang Utama baru ditambah/diubah
     if (!currentCabangId) { currentCabangId = cabangCache[0]?.id || null; subscribeItemsForCabang(); renderCabangSwitcher(); }
-  } catch(e) { showToast('Gagal simpan cabang: ' + e.message, true); }
+  } catch(e) { showToast('Gagal simpan cabang: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -15384,7 +15447,7 @@ async function deleteCabang(id) {
     logActivity('cabang', 'Hapus Cabang', c.nama);
     showToast('Cabang dihapus');
     await loadCabangList();
-  } catch(e) { showToast('Gagal hapus cabang: ' + e.message, true); }
+  } catch(e) { showToast('Gagal hapus cabang: ' + pesanErrorRamah(e), true); }
 }
 
 /* =========================================================================
@@ -15436,7 +15499,7 @@ async function migrasiDataLama() {
       totalMigrasi += docsTanpaCabang.length;
       statusEl.textContent += `  ✅ ${docsTanpaCabang.length} dokumen dimigrasi\n`;
     } catch(e) {
-      statusEl.textContent += `  ❌ Gagal: ${e.message}\n`;
+      statusEl.textContent += `  ❌ Gagal: ${pesanErrorRamah(e)}\n`;
     }
     statusEl.scrollTop = statusEl.scrollHeight;
   }
@@ -15460,7 +15523,7 @@ async function migrasiDataLama() {
     statusEl.textContent += migrasiUser ? `  ✅ ${migrasiUser} user dimigrasi (admin → Super Admin, staff → ${targetNama})\n` : `  → sudah lengkap, tidak ada yang perlu dimigrasi\n`;
     totalMigrasi += migrasiUser;
   } catch(e) {
-    statusEl.textContent += `  ❌ Gagal migrasi users: ${e.message}\n`;
+    statusEl.textContent += `  ❌ Gagal migrasi users: ${pesanErrorRamah(e)}\n`;
   }
 
   statusEl.textContent += `\n🎉 Migrasi selesai — total ${totalMigrasi} dokumen ditandai milik "${targetNama}". Silakan refresh halaman.`;
@@ -15502,7 +15565,7 @@ async function toggleCabangAktif(id) {
     logActivity('cabang', jadiAktif?'Aktifkan Cabang':'Nonaktifkan Cabang', c.nama);
     showToast(`Cabang berhasil di${jadiAktif?'aktifkan':'nonaktifkan'}`);
     await loadCabangList();
-  } catch(e) { showToast('Gagal ubah status: ' + e.message, true); }
+  } catch(e) { showToast('Gagal ubah status: ' + pesanErrorRamah(e), true); }
 }
 
 /* =========================================================================
@@ -15640,7 +15703,7 @@ async function submitOrderCabang() {
     logActivity('ordercabang', 'Order ke Gudang Utama', `${items.length} item dari ${cabangNama(currentCabangId)}`);
     showToast('Permintaan terkirim ke Gudang Utama, menunggu approve');
     resetOcForm();
-  } catch(e) { showToast('Gagal kirim order: ' + e.message, true); }
+  } catch(e) { showToast('Gagal kirim order: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitOrderCabang'); }
 }
 
@@ -15721,57 +15784,94 @@ async function saveOcDiterimaSebagian() {
   });
   if (!inputan.some(it => it.diterimaSekarang > 0)) { showToast('Isi minimal 1 barang yang diterima', true); return; }
   try {
-    // Tambahin ke stok cabang (batch baru per barang, sama pola kayak konfirmasiTerimaOc versi
-    // penuh) — tapi qty-nya cuma yang BENERAN diterima sekarang, bisa kurang dari qty dikirim.
-    const itemsBaru = [];
-    for (const it of inputan) {
-      itemsBaru.push({ ...it, diterima: (Number(it.diterima)||0) + it.diterimaSekarang });
-      if (it.diterimaSekarang <= 0) continue;
-      let itemCabang = itemsCache.find(x => x.kode === it.kode && x.cabangId === currentCabangId);
-      const itemSumber = guItemsCache.find(x => x.kode === it.kode);
-      const infoBatchBaru = {
-        hargaDasar: itemSumber?.hargaDasar||0, hargaPPN: itemSumber?.hargaPPN||0,
-        hargaKI: itemSumber?.hargaKI||0, hargaKSI: itemSumber?.hargaKSI||0, hargaGabungan: itemSumber?.hargaGabungan||0,
-        acuan: `Kiriman dari ${o.cabangTujuanNama} (sebagian)`, tanggal: new Date().toISOString(), trxId: `oc_${o.id}_${it.kode}_${Date.now()}`
-      };
-      if (itemCabang) {
-        const itemRefTerima = db.collection('items').doc(itemCabang.id);
-        await db.runTransaction(async (tx) => {
-          const snap = await tx.get(itemRefTerima);
-          if (!snap.exists) return;
+    const orderRefSebagian = db.collection('orderCabang').doc(o.id);
+    // FIX BUG: sebelumnya gak ada pengecekan status sama sekali di sini (cuma dilindungi guard
+    // klik-dobel di sisi klien) — dan "diterima" dihitung dari cache lokal (o.items) yang bisa
+    // basi kalau ada penerimaan lain yang nyelip duluan dari tab/device lain. Sekarang semua
+    // barang + update order digabung SATU transaction, dan qty "sudah diterima" dibaca ULANG
+    // dari Firestore di dalam transaction (bukan cache), supaya penerimaan yang nyelip dari
+    // pihak lain gak ketimpa/ilang.
+    let semuaSelesaiHasil = false;
+    await db.runTransaction(async (tx) => {
+      const orderSnap = await tx.get(orderRefSebagian);
+      if (!orderSnap.exists) throw new Error('Order tidak ditemukan');
+      const orderFresh = orderSnap.data();
+      if (orderFresh.status === 'diterima') throw new Error('Order ini udah pernah dikonfirmasi terima lengkap sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
+      const itemsFresh = orderFresh.items || items;
+
+      // Hitung ulang diterimaSekarang berdasarkan qty "sudah diterima" yang FRESH dari Firestore,
+      // bukan dari cache lokal yang mungkin udah basi.
+      const inputanFresh = itemsFresh.map((it, idx) => {
+        const el = document.getElementById(`ocDetIn_${idx}`);
+        const sisa = Math.max(0, it.qty - (Number(it.diterima)||0));
+        const diterimaSekarang = el ? Math.max(0, Math.min(Number(el.value)||0, sisa)) : 0;
+        return { ...it, diterimaSekarang };
+      });
+
+      // Tahap baca: semua item cabang yang perlu disentuh (harus di depan semua write).
+      const rencana = [];
+      for (const it of inputanFresh) {
+        if (it.diterimaSekarang <= 0) { rencana.push(null); continue; }
+        let itemCabang = itemsCache.find(x => x.kode === it.kode && x.cabangId === currentCabangId);
+        const itemSumber = guItemsCache.find(x => x.kode === it.kode);
+        const infoBatchBaru = {
+          hargaDasar: itemSumber?.hargaDasar||0, hargaPPN: itemSumber?.hargaPPN||0,
+          hargaKI: itemSumber?.hargaKI||0, hargaKSI: itemSumber?.hargaKSI||0, hargaGabungan: itemSumber?.hargaGabungan||0,
+          acuan: `Kiriman dari ${o.cabangTujuanNama} (sebagian)`, tanggal: new Date().toISOString(), trxId: `oc_${o.id}_${it.kode}_${Date.now()}`
+        };
+        if (itemCabang) {
+          const ref = db.collection('items').doc(itemCabang.id);
+          const snap = await tx.get(ref);
+          rencana.push({ it, itemSumber, infoBatchBaru, ref, snap });
+        } else {
+          rencana.push({ it, itemSumber, infoBatchBaru, ref: null, snap: null });
+        }
+      }
+
+      // Tahap tulis.
+      const itemsBaru = inputanFresh.map((it, i) => {
+        const rc = rencana[i];
+        return { ...it, diterima: (Number(it.diterima)||0) + (rc ? it.diterimaSekarang : 0) };
+      });
+      for (const rc of rencana) {
+        if (!rc) continue;
+        const { it, itemSumber, infoBatchBaru, ref, snap } = rc;
+        if (ref) {
+          if (!snap.exists) continue;
           const itemFresh = { id: snap.id, ...snap.data() };
           const batches = getBatchesMasuk(itemFresh);
           batches.push({ qty: it.diterimaSekarang, ...infoBatchBaru });
           const hargaAktif = hargaAktifDariBatches(batches);
-          tx.update(itemRefTerima, {
+          tx.update(ref, {
             saldo: (itemFresh.saldo||0) + it.diterimaSekarang, batchesMasuk: batches,
             hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
             ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
           });
-        });
-      } else {
-        const newRef = db.collection('items').doc();
-        await newRef.set({
-          kode: it.kode, nama: it.nama, satuan: it.satuan||'', saldo: it.diterimaSekarang,
-          cabangId: currentCabangId, stokMinimum: 0, kategori: itemSumber?.kategori || '', lokasiRak: '',
-          hargaDasar: infoBatchBaru.hargaDasar, hargaPPN: infoBatchBaru.hargaPPN,
-          persenGabungan: itemSumber?.persenGabungan || 0,
-          ...hitungHargaJualOtomatis(infoBatchBaru.hargaDasar, infoBatchBaru.hargaPPN, itemSumber?.persenGabungan, itemSumber),
-          batchesMasuk: [{ qty: it.diterimaSekarang, ...infoBatchBaru }],
-          keterangan: `Dibuat otomatis dari kiriman ${o.cabangTujuanNama}`, createdAt: new Date().toISOString()
-        });
+        } else {
+          const newRef = db.collection('items').doc();
+          tx.set(newRef, {
+            kode: it.kode, nama: it.nama, satuan: it.satuan||'', saldo: it.diterimaSekarang,
+            cabangId: currentCabangId, stokMinimum: 0, kategori: itemSumber?.kategori || '', lokasiRak: '',
+            hargaDasar: infoBatchBaru.hargaDasar, hargaPPN: infoBatchBaru.hargaPPN,
+            persenGabungan: itemSumber?.persenGabungan || 0,
+            ...hitungHargaJualOtomatis(infoBatchBaru.hargaDasar, infoBatchBaru.hargaPPN, itemSumber?.persenGabungan, itemSumber),
+            batchesMasuk: [{ qty: it.diterimaSekarang, ...infoBatchBaru }],
+            keterangan: `Dibuat otomatis dari kiriman ${o.cabangTujuanNama}`, createdAt: new Date().toISOString()
+          });
+        }
       }
-    }
-    const semuaSelesai = itemsBaru.every(it => (Number(it.diterima)||0) >= it.qty);
-    await db.collection('orderCabang').doc(o.id).update({
-      items: itemsBaru, status: semuaSelesai ? 'diterima' : 'sebagian',
-      diterimaAt: semuaSelesai ? new Date().toISOString() : (o.diterimaAt || null),
-      diterimaBy: currentUserData.name
+      const semuaSelesai = itemsBaru.every(it => (Number(it.diterima)||0) >= it.qty);
+      semuaSelesaiHasil = semuaSelesai;
+      tx.update(orderRefSebagian, {
+        items: itemsBaru, status: semuaSelesai ? 'diterima' : 'sebagian',
+        diterimaAt: semuaSelesai ? new Date().toISOString() : (orderFresh.diterimaAt || null),
+        diterimaBy: currentUserData.name
+      });
     });
-    logActivity('ordercabang', semuaSelesai ? 'Konfirmasi Terima Order Cabang (Selesai)' : 'Konfirmasi Terima Order Cabang (Sebagian)', `Dari ${o.cabangTujuanNama}`);
-    showToast(semuaSelesai ? 'Semua barang sudah diterima lengkap' : 'Penerimaan sebagian dicatat, stok sudah ditambahkan');
+    logActivity('ordercabang', semuaSelesaiHasil ? 'Konfirmasi Terima Order Cabang (Selesai)' : 'Konfirmasi Terima Order Cabang (Sebagian)', `Dari ${o.cabangTujuanNama}`);
+    showToast(semuaSelesaiHasil ? 'Semua barang sudah diterima lengkap' : 'Penerimaan sebagian dicatat, stok sudah ditambahkan');
     closeOcDetailModal();
-  } catch(e) { showToast('Gagal simpan penerimaan: ' + e.message, true); }
+  } catch(e) { showToast('Gagal simpan penerimaan: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -15791,9 +15891,7 @@ async function batalkanOcDikirim(orderId) {
   if (o.status !== 'dikirim') { showToast('Pengiriman ini udah gak berstatus "dikirim" (mungkin udah dibatalkan/diproses sebelumnya).', true); return; }
   if (!await customConfirm(`Batalkan pengiriman ini? Stok yang udah kepotong bakal dikembalikan (qty-nya akurat, tapi info harga batch asalnya gak bisa direkonstruksi persis — dianggap harga Rp 0 di batch baru).`)) return;
   try {
-    const cekSnap = await db.collection('orderCabang').doc(orderId).get();
-    if (!cekSnap.exists) throw new Error('Order tidak ditemukan');
-    if (cekSnap.data().status !== 'dikirim') throw new Error('Pengiriman ini udah gak berstatus "dikirim" (kemungkinan diklik dobel) — dibatalkan biar stok gak balik 2x.');
+    const orderRefBatal = db.collection('orderCabang').doc(orderId);
     // PENTING: yang stoknya kepotong itu BUKAN selalu currentCabangId (siapa yang lagi
     // login/klik tombol Batal) — bisa aja GU yang batalin punya sendiri (approve/push) atau
     // GU yang batalin punya cabang lain (retur). Field cabangTujuanId di dokumen ini KONSISTEN
@@ -15801,27 +15899,40 @@ async function batalkanOcDikirim(orderId) {
     // dipakai buat cari item-nya, BUKAN itemsCache (yang cuma nyimpen data cabang aktif doang,
     // bisa gak nemu kalau yang batalin beda cabang sama yang stoknya kepotong).
     const cabangPengirimId = o.cabangTujuanId;
+    // Query buat nyari ref dokumen tiap barang HARUS di luar transaction (Firestore transaction
+    // di SDK ini cuma bisa baca dokumen spesifik, bukan query where/limit) — tapi baca ISI
+    // dokumennya & tulis semuanya tetap di DALAM transaction yang sama biar atomik.
+    const itemRefs = [];
     for (const it of (o.items||[])) {
       const snap = await db.collection('items').where('cabangId','==',cabangPengirimId).where('kode','==',it.kode).limit(1).get();
-      if (snap.empty) continue;
-      const itemRefBatal = snap.docs[0].ref;
-      await db.runTransaction(async (tx) => {
-        const freshSnap = await tx.get(itemRefBatal);
-        if (!freshSnap.exists) return;
-        const itemFresh = { id: freshSnap.id, ...freshSnap.data() };
+      if (!snap.empty) itemRefs.push({ it, ref: snap.docs[0].ref });
+    }
+    // FIX BUG: status order + pengembalian stok semua barang sekarang digabung SATU Firestore
+    // transaction — sebelumnya status dicek terpisah (plain .get(), bukan di dalam transaction)
+    // lalu tiap barang punya transaction sendiri-sendiri di dalam loop, jadi klik dobel/retry
+    // bisa ngembaliin stok yang sama 2x.
+    await db.runTransaction(async (tx) => {
+      const orderSnap = await tx.get(orderRefBatal);
+      if (!orderSnap.exists) throw new Error('Order tidak ditemukan');
+      if (orderSnap.data().status !== 'dikirim') throw new Error('Pengiriman ini udah gak berstatus "dikirim" (kemungkinan diklik dobel) — dibatalkan biar stok gak balik 2x.');
+      const snaps = [];
+      for (const { it, ref } of itemRefs) snaps.push({ it, ref, snap: await tx.get(ref) });
+      for (const { it, ref, snap } of snaps) {
+        if (!snap.exists) continue;
+        const itemFresh = { id: snap.id, ...snap.data() };
         const batches = restoreBatchFIFO(itemFresh, it.qty, null, null);
         const hargaAktif = hargaAktifDariBatches(batches);
-        tx.update(itemRefBatal, {
+        tx.update(ref, {
           saldo: (itemFresh.saldo||0) + it.qty, batchesMasuk: batches,
           hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
           ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
-      });
-    }
-    await db.collection('orderCabang').doc(orderId).update({ status: 'dibatalkan', dibatalkanBy: currentUserData.name, dibatalkanAt: new Date().toISOString() });
+      }
+      tx.update(orderRefBatal, { status: 'dibatalkan', dibatalkanBy: currentUserData.name, dibatalkanAt: new Date().toISOString() });
+    });
     logActivity('ordercabang', 'Batalkan Pengiriman Order Cabang', `${o.items.length} item, stok dikembalikan ke ${cabangNama(cabangPengirimId)}`);
     showToast('Pengiriman dibatalkan, stok sudah dikembalikan');
-  } catch(e) { showToast('Gagal batalkan: ' + e.message, true); }
+  } catch(e) { showToast('Gagal batalkan: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -15907,33 +16018,43 @@ async function approveKirimOc(orderId) {
     }
   }
   try {
-    const cekSnap = await db.collection('orderCabang').doc(orderId).get();
-    if (!cekSnap.exists) throw new Error('Order tidak ditemukan');
-    const statusSkrg = cekSnap.data().status;
-    if (statusSkrg && statusSkrg !== 'menunggu' && statusSkrg !== 'pending') throw new Error('Order ini udah pernah diproses sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
-    // PENTING: potong stok GU pakai FIFO batch (bukan cuma kurangin saldo), transaction per
-    // barang biar saldo & batchesMasuk tetap sinkron — sama pola kayak Kirim Langsung/Retur GU.
-    for (const it of (o.items||[])) {
-      const itemGU = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
-      if (!itemGU) throw new Error(`Barang "${it.kode||it.nama}" gak ketemu lagi di Master Stok GU (kemungkinan diubah/dihapus barusan) — approve dibatalkan, cek data & ulangi.`);
-      const itemRefApprove = db.collection('items').doc(itemGU.id);
-      await db.runTransaction(async (tx) => {
-        const snap = await tx.get(itemRefApprove);
-        if (!snap.exists) return;
+    const orderRefApprove = db.collection('orderCabang').doc(orderId);
+    // FIX BUG: semua barang + status order sekarang diproses dalam SATU Firestore transaction
+    // (bukan status dicek terpisah lalu tiap barang punya transaction sendiri-sendiri di
+    // dalam loop) — sama pola kayak perbaikan approveKeluar/batalkanApproveKeluar. Kalau
+    // koneksi putus di tengah loop yang lama, sebagian barang bisa kepotong stoknya tapi
+    // status masih 'pending', jadi klik/retry approve lagi bisa motong stok yang sama 2x.
+    // Status juga dicek ULANG dari Firestore (bukan cache lokal) buat jaga-jaga ada tab/device
+    // lain yang barusan approve order yang sama.
+    await db.runTransaction(async (tx) => {
+      const orderSnap = await tx.get(orderRefApprove);
+      if (!orderSnap.exists) throw new Error('Order tidak ditemukan');
+      const statusSkrg = orderSnap.data().status;
+      if (statusSkrg && statusSkrg !== 'menunggu' && statusSkrg !== 'pending') throw new Error('Order ini udah pernah diproses sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
+      // PENTING: potong stok GU pakai FIFO batch (bukan cuma kurangin saldo) — sama pola
+      // kayak Kirim Langsung/Retur GU.
+      const itemSnaps = [];
+      for (const it of (o.items||[])) {
+        const itemGU = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
+        if (!itemGU) throw new Error(`Barang "${it.kode||it.nama}" gak ketemu lagi di Master Stok GU (kemungkinan diubah/dihapus barusan) — approve dibatalkan, cek data & ulangi.`);
+        itemSnaps.push({ it, ref: db.collection('items').doc(itemGU.id), snap: await tx.get(db.collection('items').doc(itemGU.id)) });
+      }
+      for (const { it, ref, snap } of itemSnaps) {
+        if (!snap.exists) continue;
         const itemFresh = { id: snap.id, ...snap.data() };
         const batches = kurangiBatchFIFO(itemFresh, it.qty);
         const hargaAktif = hargaAktifDariBatches(batches);
-        tx.update(itemRefApprove, {
+        tx.update(ref, {
           saldo: (itemFresh.saldo||0) - it.qty, batchesMasuk: batches,
           hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
           ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
         });
-      });
-    }
-    await db.collection('orderCabang').doc(orderId).update({ status: 'dikirim', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
+      }
+      tx.update(orderRefApprove, { status: 'dikirim', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
+    });
     logActivity('ordercabang', 'Approve & Kirim Order Cabang', `Ke ${o.cabangAsalNama} - ${o.items.length} item`);
     showToast('Order di-approve, stok Gudang Utama dipotong. Menunggu konfirmasi terima dari ' + o.cabangAsalNama);
-  } catch(e) { showToast('Gagal approve: ' + e.message, true); }
+  } catch(e) { showToast('Gagal approve: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -15943,7 +16064,7 @@ async function tolakOc(orderId) {
     await db.collection('orderCabang').doc(orderId).update({ status: 'ditolak', approvedBy: currentUserData.name, approvedAt: new Date().toISOString() });
     logActivity('ordercabang', 'Tolak Order Cabang', orderId);
     showToast('Order ditolak');
-  } catch(e) { showToast('Gagal menolak: ' + e.message, true); }
+  } catch(e) { showToast('Gagal menolak: ' + pesanErrorRamah(e), true); }
 }
 
 // Cabang konfirmasi barang sampai: stok cabang bertambah (barang dibuat otomatis kalau belum ada di cabang ini)
@@ -15956,57 +16077,78 @@ async function konfirmasiTerimaOc(orderId) {
   if (o.status === 'diterima') { showToast('Order ini udah pernah dikonfirmasi terima sebelumnya.', true); return; }
   if (!await customConfirm('Konfirmasi barang sudah diterima fisik di cabang ini? Stok cabang akan bertambah otomatis.')) return;
   try {
-    const cekSnap = await db.collection('orderCabang').doc(orderId).get();
-    if (!cekSnap.exists) throw new Error('Order tidak ditemukan');
-    if (cekSnap.data().status === 'diterima') throw new Error('Order ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
+    const orderRefTerima = db.collection('orderCabang').doc(orderId);
     const items = o.items || [];
-    for (const it of items) {
-      // FIX BUG: dulu pencocokan kode persis (case-sensitive) — kalau meleset dikit karena
-      // spasi/huruf besar-kecil, barang yang SEBENARNYA sudah ada di cabang ini gak ketemu,
-      // dan malah dibikinkan barang BARU (duplikat) alih-alih nambah stok ke barang yang sudah
-      // ada. Sekarang pakai kodeSama() yang toleran spasi & huruf besar-kecil.
-      let itemCabang = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
-      const itemSumber = guItemsCache.find(x => kodeSama(x.kode, it.kode));
-      const infoBatchBaru = {
-        hargaDasar: itemSumber?.hargaDasar||0, hargaPPN: itemSumber?.hargaPPN||0,
-        hargaKI: itemSumber?.hargaKI||0, hargaKSI: itemSumber?.hargaKSI||0, hargaGabungan: itemSumber?.hargaGabungan||0,
-        acuan: `Kiriman dari ${o.cabangTujuanNama}`, tanggal: new Date().toISOString(), trxId: `oc_${orderId}_${it.kode}`
-      };
-      if (itemCabang) {
-        // PENTING: barang yang diterima ditambahin sebagai BATCH BARU (bukan cuma nambah
-        // saldo doang) — biar harga & acuan kirimannya kelacak, dan FIFO tetap akurat buat
-        // barang keluar berikutnya. Transaction biar baca data item paling baru dulu.
-        const itemRefTerima = db.collection('items').doc(itemCabang.id);
-        await db.runTransaction(async (tx) => {
-          const snap = await tx.get(itemRefTerima);
-          if (!snap.exists) return;
+    // FIX BUG: semua barang (baik yang update stok existing MAUPUN yang bikin item baru) +
+    // status order sekarang diproses dalam SATU Firestore transaction — sebelumnya status
+    // dicek terpisah, item existing punya transaction sendiri-sendiri per barang, dan item
+    // baru malah ditulis pakai .set() TANPA transaction sama sekali. Kalau fungsi ini
+    // kepanggil 2x (klik dobel/retry), sebelumnya barang bisa ketambah stoknya 2x, atau
+    // kalau item baru: kebikin 2 dokumen barang duplikat sekaligus. Status juga dicek ULANG
+    // dari Firestore (bukan cache lokal).
+    await db.runTransaction(async (tx) => {
+      const orderSnap = await tx.get(orderRefTerima);
+      if (!orderSnap.exists) throw new Error('Order tidak ditemukan');
+      if (orderSnap.data().status === 'diterima') throw new Error('Order ini udah pernah dikonfirmasi terima sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak nambah 2x.');
+
+      // Tahap baca: cari & baca semua item cabang yang SUDAH ada dulu (sebelum nulis apapun,
+      // sesuai aturan Firestore transaction: semua read harus di depan semua write).
+      const rencana = [];
+      for (const it of items) {
+        // FIX BUG: dulu pencocokan kode persis (case-sensitive) — kalau meleset dikit karena
+        // spasi/huruf besar-kecil, barang yang SEBENARNYA sudah ada di cabang ini gak ketemu,
+        // dan malah dibikinkan barang BARU (duplikat) alih-alih nambah stok ke barang yang sudah
+        // ada. Sekarang pakai kodeSama() yang toleran spasi & huruf besar-kecil.
+        let itemCabang = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
+        const itemSumber = guItemsCache.find(x => kodeSama(x.kode, it.kode));
+        const infoBatchBaru = {
+          hargaDasar: itemSumber?.hargaDasar||0, hargaPPN: itemSumber?.hargaPPN||0,
+          hargaKI: itemSumber?.hargaKI||0, hargaKSI: itemSumber?.hargaKSI||0, hargaGabungan: itemSumber?.hargaGabungan||0,
+          acuan: `Kiriman dari ${o.cabangTujuanNama}`, tanggal: new Date().toISOString(), trxId: `oc_${orderId}_${it.kode}`
+        };
+        if (itemCabang) {
+          const ref = db.collection('items').doc(itemCabang.id);
+          const snap = await tx.get(ref);
+          rencana.push({ it, itemSumber, infoBatchBaru, ref, snap });
+        } else {
+          rencana.push({ it, itemSumber, infoBatchBaru, ref: null, snap: null });
+        }
+      }
+
+      // Tahap tulis: sekarang baru update/bikin dokumennya.
+      for (const { it, itemSumber, infoBatchBaru, ref, snap } of rencana) {
+        if (ref) {
+          if (!snap.exists) continue;
+          // PENTING: barang yang diterima ditambahin sebagai BATCH BARU (bukan cuma nambah
+          // saldo doang) — biar harga & acuan kirimannya kelacak, dan FIFO tetap akurat buat
+          // barang keluar berikutnya.
           const itemFresh = { id: snap.id, ...snap.data() };
           const batches = getBatchesMasuk(itemFresh);
           batches.push({ qty: it.qty, ...infoBatchBaru });
           const hargaAktif = hargaAktifDariBatches(batches);
-          tx.update(itemRefTerima, {
+          tx.update(ref, {
             saldo: (itemFresh.saldo||0) + it.qty, batchesMasuk: batches,
             hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
             ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
           });
-        });
-      } else {
-        const newRef = db.collection('items').doc();
-        await newRef.set({
-          kode: it.kode, nama: it.nama, satuan: it.satuan||'', saldo: it.qty,
-          cabangId: currentCabangId, stokMinimum: 0, kategori: itemSumber?.kategori || '', lokasiRak: '',
-          hargaDasar: infoBatchBaru.hargaDasar, hargaPPN: infoBatchBaru.hargaPPN,
-          persenGabungan: itemSumber?.persenGabungan || 0,
-          ...hitungHargaJualOtomatis(infoBatchBaru.hargaDasar, infoBatchBaru.hargaPPN, itemSumber?.persenGabungan, itemSumber),
-          batchesMasuk: [{ qty: it.qty, ...infoBatchBaru }],
-          keterangan: `Dibuat otomatis dari kiriman ${o.cabangTujuanNama}${itemSumber ? ' (harga ikut Gudang Utama)' : ''}`, createdAt: new Date().toISOString()
-        });
+        } else {
+          const newRef = db.collection('items').doc();
+          tx.set(newRef, {
+            kode: it.kode, nama: it.nama, satuan: it.satuan||'', saldo: it.qty,
+            cabangId: currentCabangId, stokMinimum: 0, kategori: itemSumber?.kategori || '', lokasiRak: '',
+            hargaDasar: infoBatchBaru.hargaDasar, hargaPPN: infoBatchBaru.hargaPPN,
+            persenGabungan: itemSumber?.persenGabungan || 0,
+            ...hitungHargaJualOtomatis(infoBatchBaru.hargaDasar, infoBatchBaru.hargaPPN, itemSumber?.persenGabungan, itemSumber),
+            batchesMasuk: [{ qty: it.qty, ...infoBatchBaru }],
+            keterangan: `Dibuat otomatis dari kiriman ${o.cabangTujuanNama}${itemSumber ? ' (harga ikut Gudang Utama)' : ''}`, createdAt: new Date().toISOString()
+          });
+        }
       }
-    }
-    await db.collection('orderCabang').doc(orderId).update({ status: 'diterima', diterimaAt: new Date().toISOString(), diterimaBy: currentUserData.name });
+      tx.update(orderRefTerima, { status: 'diterima', diterimaAt: new Date().toISOString(), diterimaBy: currentUserData.name });
+    });
     logActivity('ordercabang', 'Konfirmasi Terima Order Cabang', `Dari ${o.cabangTujuanNama} - ${o.items.length} item`);
     showToast('Barang diterima, stok cabang sudah bertambah');
-  } catch(e) { showToast('Gagal konfirmasi terima: ' + e.message, true); }
+  } catch(e) { showToast('Gagal konfirmasi terima: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses(_key); }
 }
 
@@ -16157,7 +16299,7 @@ async function submitKirimLangsung() {
     logActivity('ordercabang', 'Kirim Langsung ke Cabang', `Ke ${cabangTujuanObj.nama} - ${items.length} item (tanpa permintaan)`);
     showToast('Barang dikirim ke ' + cabangTujuanObj.nama + ', menunggu konfirmasi terima');
     resetPushForm();
-  } catch(e) { showToast('Gagal kirim: ' + e.message, true); }
+  } catch(e) { showToast('Gagal kirim: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitKirimLangsung'); }
 }
 
@@ -16292,7 +16434,7 @@ async function submitReturKeGudangUtama() {
     logActivity('ordercabang', 'Retur ke Gudang Utama', `${items.length} item dari ${cabangNama(currentCabangId)} — ${ket}`);
     showToast('Retur dikirim ke Gudang Utama, menunggu konfirmasi terima');
     resetReturOcForm();
-  } catch(e) { showToast('Gagal kirim retur: ' + e.message, true); }
+  } catch(e) { showToast('Gagal kirim retur: ' + pesanErrorRamah(e), true); }
   } finally { _selesaiDiproses('submitReturKeGudangUtama'); }
 }
 
