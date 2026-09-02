@@ -3479,7 +3479,13 @@ if (firebaseConfig.apiKey === "GANTI_INI") {
       }
       document.getElementById('curName').textContent = currentUserData.name || user.email;
       document.getElementById('curEmail').textContent = user.email;
-      document.getElementById('curRole').textContent = currentUserData.role + (currentUserData.tipePemesan ? ` (${currentUserData.tipePemesan})` : '');
+      // Badge role di sidebar: sebelumnya cuma nampilin field `role` mentah, jadi Super Admin
+      // ikut tertulis "admin" doang — beda sama tabel User & Role yang udah bener. Sekarang
+      // ikut ngecek akses cabang, biar konsisten & user tau persis dia login sebagai apa.
+      const labelRole = isSuperAdmin(currentUserData)
+        ? 'Super Admin'
+        : currentUserData.role + (currentUserData.tipePemesan ? ` (${currentUserData.tipePemesan})` : '');
+      document.getElementById('curRole').textContent = labelRole;
       document.getElementById('curRole').className = 'pill role-' + (currentUserData.role === 'pemesan' ? 'staff' : currentUserData.role);
       if (currentUserData.role !== 'admin') {
         document.getElementById('navUser').style.display = 'none';
@@ -4222,7 +4228,8 @@ function subscribeItemsForCabang() {
 
 /* ===== MULTI-CABANG: listener transaksi & modul lain, di-scope per cabangId, bisa di-resubscribe tiap ganti cabang ===== */
 let txUnsub=null, klUnsub=null, orderBarangUnsub=null, unitsUnsub=null, unitAlatUnsub=null, servisUnsub=null,
-    mutasiUnsub=null, bekasUnsub=null, returMasukUnsub=null, returKeluarUnsub=null, koreksiUnsub=null, opnameUnsub=null;
+    mutasiUnsub=null, bekasUnsub=null, returMasukUnsub=null, returKeluarUnsub=null, koreksiUnsub=null, opnameUnsub=null,
+    logUnsub=null, usersUnsub=null;
 
 function scopedListen(collectionName, setCacheFn, renderFn, sortField, limitN) {
   // PENTING (hemat kuota Firestore): kalau ada sortField+limitN, batasi query di level Firestore
@@ -4311,11 +4318,28 @@ function initListeners() {
   subscribeCabangScopedData(); // MULTI-CABANG: transactions, keluarTransaksi, orderBarang, units, dll — di-scope per cabang aktif
   if (typeof subscribeBekasMasukGU === 'function') subscribeBekasMasukGU(); // MULTI-CABANG: antrian barang bekas kiriman cabang (khusus GU)
   if (currentUserData && currentUserData.role === 'admin') {
-    db.collection('users').onSnapshot(snap => {
+    // Matikan dulu listener lama (kalau initListeners kepanggil ulang, mis. login ulang tanpa
+    // reload) — kalau tidak, listener numpuk dan kuota baca kepakai berkali lipat.
+    if (usersUnsub) { usersUnsub(); usersUnsub = null; }
+    if (logUnsub) { logUnsub(); logUnsub = null; }
+    usersUnsub = db.collection('users').onSnapshot(snap => {
       usersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderUsers(usersCache);
     }, onSnapErr('Daftar User'));
-    db.collection('activityLog').orderBy('timestamp', 'desc').limit(1500).onSnapshot(snap => {
+    // LOG AKTIVITAS — cakupannya menyesuaikan hak akses:
+    // - Super Admin: semua cabang (buat pengawasan menyeluruh)
+    // - Admin cabang: hanya cabang yang jadi haknya
+    // Selain soal privasi antar distrik, ini juga menghemat kuota baca: sebelumnya SETIAP admin
+    // menarik 1.500 log dari seluruh cabang tiap kali login, padahal yang relevan cuma sebagian.
+    // Firestore membatasi 'in' maksimal 30 nilai, jadi kalau aksesnya lebih dari itu diperlakukan
+    // seperti akses penuh (praktis tidak terjadi, tapi biar tidak error diam-diam).
+    const cabangLog = currentCabangAccess === 'ALL' ? null
+                    : (Array.isArray(currentCabangAccess) ? currentCabangAccess : [currentCabangId]);
+    let qLog = db.collection('activityLog');
+    if (cabangLog && cabangLog.length && cabangLog.length <= 30) {
+      qLog = qLog.where('cabangId', 'in', cabangLog);
+    }
+    logUnsub = qLog.orderBy('timestamp', 'desc').limit(1500).onSnapshot(snap => {
       logCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderLog();
     }, onSnapErr('Log Aktivitas'));
@@ -10395,6 +10419,73 @@ function exportOrderCSV(onlySelected) {
   exportAOAToExcel(`order-barang-${new Date().toISOString().slice(0,10)}.xlsx`, 'Order Barang', aoa);
 }
 
+// Membuka menu share HP HARUS dipicu langsung oleh sentuhan pengguna. Menggambar nota makan
+// waktu beberapa detik — untuk 1 nota biasanya masih keburu, tapi begitu 2 nota atau lebih,
+// izin sentuhannya sudah kedaluwarsa dan HP menolak dengan NotAllowedError ("gagal mengirim").
+// Solusinya: gambar disiapkan dulu, lalu tampilkan tombol — share dipicu sentuhan BARU.
+function tampilkanTombolKirim(files, judul) {
+  let bg = document.getElementById('siapKirimBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'siapKirimBg';
+    bg.className = 'modal-bg';
+    bg.innerHTML = `
+      <div class="modal" style="max-width:min(420px,92vw);text-align:center;">
+        <h3 style="margin-bottom:6px;">Nota siap dikirim</h3>
+        <div id="siapKirimInfo" style="font-size:13px;color:var(--ink-dim);margin-bottom:16px;"></div>
+        <div id="siapKirimPratinjau" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;max-height:220px;overflow-y:auto;"></div>
+        <div class="modal-actions" style="justify-content:center;">
+          <button class="btn ghost" onclick="tutupSiapKirim()">Batal</button>
+          <button class="btn" style="background:#2E7D5B;" id="siapKirimBtn">📤 Kirim Sekarang</button>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+  }
+  document.getElementById('siapKirimInfo').textContent =
+    `${files.length} gambar nota sudah dibuat. Tekan tombol di bawah untuk membuka menu berbagi.`;
+  const prat = document.getElementById('siapKirimPratinjau');
+  prat.innerHTML = '';
+  files.forEach(f => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.style.cssText = 'width:72px;height:96px;object-fit:cover;border:1px solid var(--border);border-radius:4px;';
+    prat.appendChild(img);
+  });
+
+  const btn = document.getElementById('siapKirimBtn');
+  const btnBaru = btn.cloneNode(true);   // buang handler lama biar tidak menumpuk
+  btn.parentNode.replaceChild(btnBaru, btn);
+  btnBaru.onclick = async () => {
+    try {
+      if (navigator.canShare && navigator.canShare({ files })) {
+        await navigator.share({ files, title: judul, text: judul });
+        tutupSiapKirim();
+      } else {
+        unduhFilesNota(files);
+        tutupSiapKirim();
+      }
+    } catch(e) {
+      if (e.name === 'AbortError') return;         // pengguna menutup menu share sendiri
+      unduhFilesNota(files);                        // share ditolak -> jatuhkan ke unduhan
+      tutupSiapKirim();
+    }
+  };
+  bg.classList.add('show');
+}
+function tutupSiapKirim() {
+  const bg = document.getElementById('siapKirimBg');
+  if (bg) bg.classList.remove('show');
+}
+function unduhFilesNota(files) {
+  files.forEach(f => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    a.click();
+  });
+  showToast('Gambar nota terdownload. Silakan lampirkan manual ke WhatsApp.');
+}
+
 async function kirimNotaJadiTrxListGenerik(rows, blockFn, judul, fileLabel) {
   if (!rows.length) { showToast('Tidak ada data untuk dikirim', true); return; }
   if (typeof html2canvas === 'undefined') { showToast('Gagal memuat komponen gambar, cek koneksi internet', true); return; }
@@ -10415,18 +10506,12 @@ async function kirimNotaJadiTrxListGenerik(rows, blockFn, judul, fileLabel) {
       const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
       if (blob) files.push(new File([blob], `${fileLabel}-${i+1}.png`, { type: 'image/png' }));
     }
+    t.classList.remove('show');
     if (!files.length) { showToast('Gagal membuat gambar nota', true); return; }
-    showProgress('Membuka menu share...');
-    if (navigator.canShare && navigator.canShare({ files })) {
-      await navigator.share({ files, title: judul, text: judul });
-      t.classList.remove('show');
-    } else {
-      files.forEach(f => { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); });
-      showToast('Gambar nota terdownload. Silakan lampirkan manual ke WhatsApp.');
-    }
+    tampilkanTombolKirim(files, judul);
   } catch(e) {
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + pesanErrorRamah(e), true);
+    if (e.name !== 'AbortError') showToast('Gagal membuat nota: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -11763,23 +11848,14 @@ async function kirimNotaJadiTrxList(rows) {
       const blob = await notaTrxToImageBlob(rows[i]);
       if (blob) files.push(new File([blob], `nota-keluar-${nomorNota(rows[i]).replace(/\//g,'-')}.png`, { type: 'image/png' }));
     }
+    t.classList.remove('show');
     if (!files.length) { showToast('Gagal membuat gambar nota', true); return; }
-    showProgress('Membuka menu share...');
-    if (navigator.canShare && navigator.canShare({ files })) {
-      await navigator.share({ files, title: 'Nota Barang Keluar', text: 'Nota Barang Keluar' });
-      t.classList.remove('show');
-    } else {
-      files.forEach(f => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(f);
-        a.download = f.name;
-        a.click();
-      });
-      showToast('Gambar nota terdownload. Silakan lampirkan manual ke WhatsApp.');
-    }
+    // Lihat catatan di tampilkanTombolKirim(): share harus dipicu sentuhan baru, kalau
+    // dipanggil langsung di sini HP menolaknya begitu notanya lebih dari satu.
+    tampilkanTombolKirim(files, 'Nota Barang Keluar');
   } catch(e) {
     t.classList.remove('show');
-    if (e.name !== 'AbortError') showToast('Gagal mengirim nota: ' + pesanErrorRamah(e), true);
+    if (e.name !== 'AbortError') showToast('Gagal membuat nota: ' + pesanErrorRamah(e), true);
   }
 }
 
@@ -17229,7 +17305,7 @@ function renderSvRows() {
     return `
     <div class="row" style="margin-bottom:8px;align-items:flex-end;">
       <div class="field" style="flex:1;min-width:200px;position:relative;">
-        <label>Cari Barang (Kode/Nama)</label>
+        <label>Cari Barang (Kode/Nama) <span style="color:var(--accent);">#${idx+1}</span></label>
         <input type="text" value="${(item ? item.nama : (r.namaTampil||'')).replace(/"/g,'&quot;')}" placeholder="Ketik kode atau nama barang..."
           oninput="filterSvRowItem(${idx}, this.value)" onfocus="filterSvRowItem(${idx}, this.value)">
         <div id="svRowList_${idx}" style="margin-top:8px;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;display:none;background:var(--surface);z-index:50;position:relative;"></div>
