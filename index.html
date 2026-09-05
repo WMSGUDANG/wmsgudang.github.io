@@ -670,7 +670,7 @@
         </div>
         <div id="orderCariInfo" style="display:none;font-size:12px;color:var(--ink-dim);margin-bottom:10px;"></div>
         <div class="row" style="margin-bottom:14px;">
-          <div class="field" style="flex:1;min-width:220px;"><label>Cari</label><input type="text" id="orderSearch" placeholder="Cari tanggal/supplier/barang/ket..." oninput="renderOrderHist()"></div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Cari</label><input type="text" id="orderSearch" placeholder="Cari tanggal/supplier/barang/ket..." oninput="debouncedRenderReset('orderHist','renderOrderHist')"></div>
           <div class="field"><label>Status</label>
             <select id="orderFilterStatus" onchange="renderOrderHist()">
               <option value="">Semua Status</option>
@@ -843,7 +843,7 @@
       <div class="panel">
         <h3 id="ocHistTitle">Riwayat Order Saya (cabang aktif)</h3>
         <div class="row" style="margin-bottom:14px;">
-          <div class="field" style="flex:1;min-width:220px;"><label>Cari</label><input type="text" id="ocSearch" placeholder="Cari tanggal/tujuan/barang/keterangan..." oninput="renderOrderCabangHist()"></div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Cari</label><input type="text" id="ocSearch" placeholder="Cari tanggal/tujuan/barang/keterangan..." oninput="debouncedRenderReset('ocHist','renderOrderCabangHist')"></div>
           <div class="field"><label>Status</label>
             <select id="ocFilterStatus" onchange="renderOrderCabangHist()">
               <option value="">Semua Status</option>
@@ -1098,7 +1098,7 @@
       </div>
       <div class="panel">
         <h3>Menunggu Approval</h3>
-        <div class="field" style="max-width:320px;margin-bottom:12px;"><label>Cari</label><input type="text" id="pesananPendingSearch" placeholder="Cari pemesan/tipe/barang/ket..." oninput="renderPesananPemesan()"></div>
+        <div class="field" style="max-width:320px;margin-bottom:12px;"><label>Cari</label><input type="text" id="pesananPendingSearch" placeholder="Cari pemesan/tipe/barang/ket..." oninput="debouncedRenderReset('pesananHist','renderPesananPemesan')"></div>
         <div class="row" style="margin-bottom:14px;">
           <button class="btn accent" onclick="approvePesananPemesanTerpilih()">✔️ Approve Terpilih</button>
         </div>
@@ -1110,7 +1110,7 @@
       <div class="panel">
         <h3>Riwayat Pesanan Pemesan</h3>
         <div class="row" style="margin-bottom:14px;">
-          <div class="field" style="flex:1;min-width:220px;"><label>Cari</label><input type="text" id="pesananHistSearch" placeholder="Cari pemesan/tipe/barang..." oninput="renderPesananPemesan()"></div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Cari</label><input type="text" id="pesananHistSearch" placeholder="Cari pemesan/tipe/barang..." oninput="debouncedRenderReset('pesananHist','renderPesananPemesan')"></div>
           <div class="field"><label>Tipe</label>
             <select id="pesananHistFilterTipe" onchange="renderPesananPemesan()">
               <option value="">Semua Tipe</option><option value="KSI">KSI</option><option value="Gabungan">Gabungan</option><option value="KI">KI</option>
@@ -1227,7 +1227,7 @@
           </div>
           <div id="returMasukCariInfo" style="display:none;font-size:12px;color:var(--ink-dim);margin-bottom:10px;"></div>
           <div class="row" style="margin-bottom:14px;">
-            <div class="field" style="flex:1;"><label>Cari</label><input type="text" id="returMasukHistSearch" placeholder="Cari tanggal/barang/alasan..." oninput="renderReturMasukHist()"></div>
+            <div class="field" style="flex:1;"><label>Cari</label><input type="text" id="returMasukHistSearch" placeholder="Cari tanggal/barang/alasan..." oninput="debouncedRenderReset('returMasukHist','renderReturMasukHist')"></div>
             <div class="field"><label>Status</label>
               <select id="returMasukHistStatus" onchange="renderReturMasukHist()">
                 <option value="">Semua</option>
@@ -1316,7 +1316,7 @@
           </div>
           <div id="returKeluarCariInfo" style="display:none;font-size:12px;color:var(--ink-dim);margin-bottom:10px;"></div>
           <div class="row" style="margin-bottom:14px;">
-            <div class="field" style="flex:1;"><label>Cari</label><input type="text" id="returKeluarHistSearch" placeholder="Cari tanggal/barang/unit/mekanik..." oninput="renderReturKeluarHist()"></div>
+            <div class="field" style="flex:1;"><label>Cari</label><input type="text" id="returKeluarHistSearch" placeholder="Cari tanggal/barang/unit/mekanik..." oninput="debouncedRenderReset('returKeluarHist','renderReturKeluarHist')"></div>
             <div class="field"><label>Status</label>
               <select id="returKeluarHistStatus" onchange="renderReturKeluarHist()">
                 <option value="">Semua</option>
@@ -1437,7 +1437,7 @@
         </div>
         <div id="koreksiCariInfo" style="display:none;font-size:12px;color:var(--ink-dim);margin-bottom:10px;"></div>
         <div class="row" style="margin-bottom:14px;">
-          <div class="field" style="flex:1;"><label>Cari</label><input type="text" id="koreksiHistSearch" placeholder="Cari tanggal/barang/alasan..." oninput="renderKoreksiHist()"></div>
+          <div class="field" style="flex:1;"><label>Cari</label><input type="text" id="koreksiHistSearch" placeholder="Cari tanggal/barang/alasan..." oninput="debouncedRenderReset('koreksiHist','renderKoreksiHist')"></div>
           <div class="field"><label>Status</label>
             <select id="koreksiHistStatus" onchange="renderKoreksiHist()">
               <option value="">Semua</option>
@@ -1965,7 +1965,7 @@
       </div>
       <div class="panel">
         <div class="row">
-          <div class="field" style="flex:1;min-width:200px;"><label>Cari</label><input type="text" id="bekasSearch" placeholder="Cari tanggal/barang/unit/mekanik/kondisi/status/ket..." oninput="renderBekas()"></div>
+          <div class="field" style="flex:1;min-width:200px;"><label>Cari</label><input type="text" id="bekasSearch" placeholder="Cari tanggal/barang/unit/mekanik/kondisi/status/ket..." oninput="debouncedRenderReset('bekas','renderBekas')"></div>
           <div class="field"><label>Kondisi</label>
             <select id="bekasFilterKondisi" onchange="renderBekas()">
               <option value="">Semua Kondisi</option>
@@ -2139,7 +2139,7 @@
           <div style="font-size:11px;color:var(--ink-dim);margin-top:4px;">Wajib isi "Dari Tanggal" & "Sampai Tanggal" dulu di bawah — biar query-nya gak baca seluruh riwayat semua cabang sekaligus</div>
         </div>
         <div class="row">
-          <div class="field" style="flex:1;min-width:200px;"><label>Cari</label><input type="text" id="lapSearch" placeholder="Cari kode/nama/keterangan/user..." oninput="renderLaporan()"></div>
+          <div class="field" style="flex:1;min-width:200px;"><label>Cari</label><input type="text" id="lapSearch" placeholder="Cari kode/nama/keterangan/user..." oninput="debouncedRenderReset('laporan','renderLaporan')"></div>
           <div class="field"><label>Tipe</label>
             <select id="lapFilterTipe" onchange="renderLaporan()">
               <option value="">Semua</option>
@@ -2233,7 +2233,7 @@
       </div>
       <div class="panel">
         <div class="row">
-          <div class="field" style="flex:1;min-width:200px;"><label>Cari Barang</label><input type="text" id="rhSearch" placeholder="Cari kode/nama/supplier..." oninput="renderRiwayatHarga()"></div>
+          <div class="field" style="flex:1;min-width:200px;"><label>Cari Barang</label><input type="text" id="rhSearch" placeholder="Cari kode/nama/supplier..." oninput="debouncedRenderReset('rh','renderRiwayatHarga')"></div>
           <div class="field"><label>Supplier</label>
             <select id="rhFilterSupplier" onchange="renderRiwayatHarga()"><option value="">Semua Supplier</option></select>
           </div>
@@ -2478,7 +2478,7 @@
         <div class="row" style="max-width:520px;">
           <div class="field" style="flex:1;">
             <label>Transparansi Konten <span id="bgOpacityLabel" style="color:var(--ink-dim);font-weight:400;"></span></label>
-            <input type="range" id="bgOpacityRange" min="70" max="100" step="1" oninput="terapkanBgSettings()">
+            <input type="range" id="bgOpacityRange" min="30" max="100" step="1" oninput="terapkanBgSettings()">
             <div style="font-size:11px;color:var(--ink-dim);margin-top:4px;">Makin kecil, gambar latar makin kelihatan menembus panel.</div>
           </div>
           <div class="field" style="flex:1;">
@@ -4273,13 +4273,13 @@ function subscribeCabangScopedData() {
   // PENTING: data lama Riwayat Harga yang ditarik manual itu khusus per cabang. Kalau gak
   // dikosongin pas ganti cabang, transaksi cabang lama bakal ikut kehitung di riwayat harga
   // cabang baru — angkanya jadi salah tanpa ada tanda apa-apa.
-  rhTxLama = []; rhTanggalTertua = null; rhHabisDimuat = false;
+  rhTxLama = []; rhTanggalTertua = null; rhHabisDimuat = false; _riwayatHargaCache = null;
   [txUnsub, klUnsub, orderBarangUnsub, unitsUnsub, unitAlatUnsub, servisUnsub, mutasiUnsub, bekasUnsub, returMasukUnsub, returKeluarUnsub, koreksiUnsub, opnameUnsub]
     .forEach(u => { if (u) u(); });
 
   // PRIORITAS 1 — ditarik LANGSUNG: dibutuhin Dashboard biar begitu buka app langsung ada
   // isinya (statistik, antrian approval, grafik). Ini yang bikin app "kerasa" responsif.
-  txUnsub = scopedListen('transactions', rows => txCache = rows, () => { renderDashboard(); renderMasukHist(); renderApprovalQueue(); }, 'tanggal', 3000);
+  txUnsub = scopedListen('transactions', rows => { txCache = rows; _acuanListCache = null; _riwayatHargaCache = null; }, () => { renderDashboard(); renderMasukHist(); renderApprovalQueue(); }, 'tanggal', 3000);
   klUnsub = scopedListen('keluarTransaksi', rows => keluarCache = rows, () => { renderKeluarHist(); renderApprovalQueue(); renderPesananPemesan(); if (typeof renderDashCabangSpesifik === 'function') renderDashCabangSpesifik(); }, 'tanggal', 3000);
 
   // PRIORITAS 2 — ditunda dikit (bukan dihilangkan): 10 koleksi ini gak dibutuhin Dashboard
@@ -4841,7 +4841,13 @@ function renderHargaNaik() {
 // Data Barang Masuk LAMA yang ditarik manual lewat tombol "Muat Data Lebih Lama" — variabelnya
 // dideklarasikan di atas bersama cache lain (dipakai juga oleh subscribeCabangScopedData).
 
+// Cache hasil hitung Riwayat Harga — dulu computeRiwayatHargaSemua() (gabung+grup+sort SEMUA
+// transaksi Barang Masuk, termasuk data lama yang ditarik manual) dihitung ULANG dari nol
+// tiap 1 huruf diketik di kolom Cari, bikin Chrome sempat freeze pas ngetik kalau data udah
+// banyak. Sekarang hasilnya di-cache, cuma dihitung ulang kalau transaksi/data lama berubah.
+let _riwayatHargaCache = null;
 function computeRiwayatHargaSemua() {
+  if (_riwayatHargaCache) return _riwayatHargaCache;
   const log = [];
   const perItem = {};
   // Gabungkan cache (3000 terbaru) + data lama yang ditarik manual. Dedup pakai id dokumen,
@@ -4875,7 +4881,8 @@ function computeRiwayatHargaSemua() {
       });
     }
   });
-  return log.sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||''));
+  _riwayatHargaCache = log.sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||''));
+  return _riwayatHargaCache;
 }
 
 let grafikHargaInstance = null;
@@ -5120,6 +5127,7 @@ async function muatRiwayatHargaLebihLama() {
       showToast('Sudah sampai data paling awal — gak ada Barang Masuk yang lebih lama lagi.');
     } else {
       rhTxLama = rhTxLama.concat(baru);
+      _riwayatHargaCache = null;
       const tanggalBatch = baru.map(t => t.tanggal).filter(Boolean).sort();
       if (tanggalBatch.length) rhTanggalTertua = tanggalBatch[0];
       if (baru.length < BATCH) rhHabisDimuat = true; // batch gak penuh = udah mentok
@@ -6343,28 +6351,51 @@ function renderDupPrimarySection() {
   `;
 }
 async function mergeItemsIntoPrimary(primary, others) {
-  let totalSaldo = primary.saldo || 0;
-  let batches = getBatchesMasuk(primary);
-  let acuanListGabungan = Array.isArray(primary.acuanList) ? primary.acuanList.slice() : [];
-  others.forEach(o => {
-    totalSaldo += (o.saldo || 0);
-    batches = batches.concat(getBatchesMasuk(o));
-    acuanListGabungan = tambahAcuanKeList(acuanListGabungan, o.acuan);
-    (o.acuanList || []).forEach(a => { acuanListGabungan = tambahAcuanKeList(acuanListGabungan, a); });
-  });
-  batches.sort((a,b) => (a.tanggal||'').localeCompare(b.tanggal||''));
-  const hargaAktif = hargaAktifDariBatches(batches);
-  // FIX BUG: sebelumnya cuma hargaDasar/hargaPPN (Modal) yang diupdate di sini, Harga Jual
-  // (KI/KSI/Gabungan) di level Master Barang gak ikut di-refresh — padahal batch yang jadi FIFO
-  // aktif abis digabung bisa aja datang dari salah satu barang "others" (bukan dari primary),
-  // jadi Modal bisa berubah tapi Harga Jual-nya nyangkut di nilai lama. Sekarang disamakan
-  // pola-nya kayak approveMasuk/approveKeluar/dll: Harga Jual SELALU dihitung ulang dari Modal
-  // terbaru + aturan persenGabungan/gabunganManual milik PRIMARY (bukan ambil polos dari batch).
-  await db.collection('items').doc(primary.id).update({
-    saldo: totalSaldo, batchesMasuk: batches,
-    hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
-    ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, primary.persenGabungan, primary),
-    acuan: hargaAktif.acuan, acuanList: acuanListGabungan
+  // FIX BUG: langkah "gabungin saldo primary + others" ini dulu ditulis pakai .update() biasa
+  // (bukan transaction), dan barang "others" baru DIHAPUS di paling akhir setelah semua riwayat
+  // dipindahkan. Kalau proses ini gagal/internet putus di TENGAH jalan (misal abis primary
+  // ke-update tapi belum sempat hapus "others"), retry ulang bakal NGITUNG SALDO OTHERS DUA
+  // KALI ke primary (karena saldo others belum di-nol-in/dihapus, masih kebaca lagi pas retry) —
+  // stok jadi dobel. Sekarang langkah "gabung saldo ke primary + kosongkan others" digabung
+  // jadi SATU Firestore transaction — begitu berhasil, others udah pasti ke-nol-in saldonya,
+  // jadi retry (kalau ada langkah berikutnya yang gagal) gak akan dobel-hitung lagi.
+  const primaryRef = db.collection('items').doc(primary.id);
+  const otherRefs = others.map(o => db.collection('items').doc(o.id));
+  await db.runTransaction(async (tx) => {
+    const primarySnap = await tx.get(primaryRef);
+    const otherSnaps = [];
+    for (const ref of otherRefs) otherSnaps.push(await tx.get(ref));
+    if (!primarySnap.exists) throw new Error('Barang utama tidak ditemukan (mungkin sudah dihapus/digabung sebelumnya).');
+    const primaryFresh = { id: primarySnap.id, ...primarySnap.data() };
+    let totalSaldo = primaryFresh.saldo || 0;
+    let batches = getBatchesMasuk(primaryFresh);
+    let acuanListGabungan = Array.isArray(primaryFresh.acuanList) ? primaryFresh.acuanList.slice() : [];
+    otherSnaps.forEach((snap, i) => {
+      if (!snap.exists) return; // udah pernah digabung/dihapus sebelumnya (retry aman, gak dobel)
+      const o = { id: snap.id, ...snap.data() };
+      totalSaldo += (o.saldo || 0);
+      batches = batches.concat(getBatchesMasuk(o));
+      acuanListGabungan = tambahAcuanKeList(acuanListGabungan, o.acuan);
+      (o.acuanList || []).forEach(a => { acuanListGabungan = tambahAcuanKeList(acuanListGabungan, a); });
+    });
+    batches.sort((a,b) => (a.tanggal||'').localeCompare(b.tanggal||''));
+    const hargaAktif = hargaAktifDariBatches(batches);
+    // Harga Jual SELALU dihitung ulang dari Modal terbaru + aturan persenGabungan/gabunganManual
+    // milik PRIMARY (bukan ambil polos dari batch) — batch aktif abis digabung bisa aja datang
+    // dari salah satu barang "others", jadi Modal bisa berubah tapi Harga Jual jangan nyangkut lama.
+    tx.update(primaryRef, {
+      saldo: totalSaldo, batchesMasuk: batches,
+      hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+      ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, primaryFresh.persenGabungan, primaryFresh),
+      acuan: hargaAktif.acuan, acuanList: acuanListGabungan
+    });
+    // Kosongkan saldo/batch "others" SEKARANG JUGA (bukan nunggu dihapus di akhir) — begitu
+    // transaction ini berhasil, others udah gak punya saldo apa-apa lagi, jadi kalaupun proses
+    // pemindahan riwayat di bawah gagal & di-retry, others gak akan ke-double-count lagi.
+    otherSnaps.forEach((snap, i) => {
+      if (!snap.exists) return;
+      tx.update(otherRefs[i], { saldo: 0, batchesMasuk: [], digabungKe: primary.id, digabungAt: new Date().toISOString() });
+    });
   });
 
   const otherIds = others.map(o => o.id);
@@ -6395,6 +6426,8 @@ async function mergeItemsIntoPrimary(primary, others) {
     chunk.forEach(o => batch.update(db.collection(o.col).doc(o.id), o.data));
     await batch.commit();
   }
+  // Hapus "others" (aman di-retry — dokumen yang udah kehapus sebelumnya cukup dilewati,
+  // Firestore gak error kalau delete() dokumen yang emang udah gak ada).
   for (const other of others) { await db.collection('items').doc(other.id).delete(); }
   return ops.length;
 }
@@ -8023,28 +8056,45 @@ function updateHargaDiff(idx) {
   el.innerHTML = html;
 }
 
-function initMasukAcuanDropdown(idx) {
-  const inputEl = document.getElementById(`masukAcuan_${idx}`);
-  const ddEl = document.getElementById(`masukAcuanDD_${idx}`);
-  if (!inputEl || !ddEl) return;
-  
-  const q = (inputEl.value || '').toLowerCase().trim();
-  
-  // Ambil semua acuan unik yang pernah digunakan dari transaksi masuk yang sudah selesai
-  const acuanList = [...new Set(
+// Cache daftar Nama Acuan — dulu dihitung ULANG (filter+dedup+sort dari SEMUA transaksi)
+// tiap 1 huruf diketik, bikin Chrome freeze/"Not Responding" begitu transaksi udah numpuk
+// ribuan. Sekarang dihitung sekali aja & disimpan di sini; baru dihitung ulang kalau
+// txCache berubah (ditandai null dari listener 'transactions' pas ada data baru masuk).
+let _acuanListCache = null;
+function getAcuanListCached() {
+  if (_acuanListCache) return _acuanListCache;
+  _acuanListCache = [...new Set(
     txCache
       .filter(t => t.type === 'masuk' && t.status === 'selesai' && t.acuan)
       .map(t => t.acuan)
   )].sort();
-  
+  return _acuanListCache;
+}
+function initMasukAcuanDropdown(idx) {
+  const inputEl = document.getElementById(`masukAcuan_${idx}`);
+  const ddEl = document.getElementById(`masukAcuanDD_${idx}`);
+  if (!inputEl || !ddEl) return;
+  // Debounce 150ms — biar pas ngetik cepat, pencarian gak dipaksa jalan tiap huruf
+  // (sama polanya kayak pencarian Nama Barang di baris Stok Masuk yang udah lancar).
+  clearTimeout(inputEl._acuanDebounce);
+  inputEl._acuanDebounce = setTimeout(() => renderMasukAcuanDropdown(idx), 150);
+}
+function renderMasukAcuanDropdown(idx) {
+  const inputEl = document.getElementById(`masukAcuan_${idx}`);
+  const ddEl = document.getElementById(`masukAcuanDD_${idx}`);
+  if (!inputEl || !ddEl) return;
+
+  const q = (inputEl.value || '').toLowerCase().trim();
+  const acuanList = getAcuanListCached();
+
   // Filter berdasarkan input
   const matches = q ? acuanList.filter(a => a.toLowerCase().includes(q)) : acuanList.slice(0, 10);
-  
+
   if (matches.length === 0) {
     ddEl.style.display = 'none';
     return;
   }
-  
+
   ddEl.innerHTML = matches.map(acuan => `
     <div style="padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;" 
          onmouseover="this.style.background='var(--accent-dim)'" 
@@ -8053,7 +8103,7 @@ function initMasukAcuanDropdown(idx) {
       ${acuan}
     </div>
   `).join('');
-  
+
   ddEl.style.display = 'block';
 }
 
@@ -8733,7 +8783,12 @@ function renderPesananPemesan() {
   const selAllHist = document.getElementById('pesananHistSelectAll');
   if (selAllHist) selAllHist.checked = semuaPesanan.length > 0 && semuaPesanan.every(r => getSelectionSet('pesananHist').has(r.id));
 
-  histTbl.innerHTML = semuaPesanan.length ? semuaPesanan.map((r, idx) => `
+  histTbl.innerHTML = semuaPesanan.length ? (() => {
+    // Render dibatasi bertahap — riwayat pesanan (KI/KSI/Gabungan) bisa numpuk banyak dari
+    // tahun ke tahun, beda sama tabel "Menunggu Approval" di atas yang emang selalu kecil.
+    const pesananHistLimit = getRenderLimit('pesananHist');
+    const shown = semuaPesanan.slice(0, pesananHistLimit);
+    return shown.map((r, idx) => `
     <tr>
       <td><input type="checkbox" ${getSelectionSet('pesananHist').has(r.id)?'checked':''} onchange="toggleSelectOneGeneric('pesananHist','${r.id}',this.checked)"></td>
       <td>${idx+1}</td>
@@ -8750,7 +8805,8 @@ function renderPesananPemesan() {
         <button class="btn" style="padding:3px 8px;font-size:11px;background:#8E44AD;" onclick="kirimNotaJadiSingleKeluar('${r.id}')">📤</button>
       </td>
     </tr>
-  `).join('') : `<tr><td colspan="8" class="empty">${qHist||fTipe||fStatus ? 'Tidak ditemukan' : 'Belum ada pesanan dari Pemesan di cabang ini'}</td></tr>`;
+  `).join('') + loadMoreRowHtml('pesananHist', 'renderPesananPemesan', semuaPesanan.length, shown.length, 8);
+  })() : `<tr><td colspan="8" class="empty">${qHist||fTipe||fStatus ? 'Tidak ditemukan' : 'Belum ada pesanan dari Pemesan di cabang ini'}</td></tr>`;
 }
 
 // Approve massal dari checkbox terpilih di tabel "Menunggu Approval" — reuse approveKeluar(id,
@@ -9858,13 +9914,22 @@ function initOrderAcuanDropdown(idx) {
   const inputEl = document.getElementById(`orderAcuan_${idx}`);
   const ddEl = document.getElementById(`orderAcuanDD_${idx}`);
   if (!inputEl || !ddEl) return;
+  // Debounce 150ms — sama alasannya kayak initMasukAcuanDropdown: hitungan daftar acuan
+  // (dari getAcuanListCached, sudah di-cache) tetap murah, tapi jeda ini jaga-jaga biar ngetik
+  // cepat gak numpuk render dropdown tiap huruf.
+  clearTimeout(inputEl._acuanDebounce);
+  inputEl._acuanDebounce = setTimeout(() => renderOrderAcuanDropdown(idx), 150);
+}
+function renderOrderAcuanDropdown(idx) {
+  const inputEl = document.getElementById(`orderAcuan_${idx}`);
+  const ddEl = document.getElementById(`orderAcuanDD_${idx}`);
+  if (!inputEl || !ddEl) return;
 
   const q = (inputEl.value || '').toLowerCase().trim();
-  const acuanList = [...new Set(
-    txCache
-      .filter(t => t.type === 'masuk' && t.status === 'selesai' && t.acuan)
-      .map(t => t.acuan)
-  )].sort();
+  // Dulu ngitung ulang dari SEMUA transaksi tiap huruf diketik (sama bug-nya kayak yang di
+  // Stok Masuk) — sekarang pakai daftar acuan yang udah di-cache (getAcuanListCached), cuma
+  // dihitung ulang kalau ada transaksi baru, bukan tiap keystroke.
+  const acuanList = getAcuanListCached();
 
   const matches = q ? acuanList.filter(a => a.toLowerCase().includes(q)) : acuanList.slice(0, 10);
 
@@ -10164,7 +10229,11 @@ function renderOrderHist() {
   }
   if (!rows.length) { tbl.innerHTML = '<tr><td colspan="10" class="empty">Belum ada order</td></tr>'; orderHistFilteredIds = []; return; }
   orderHistFilteredIds = rows.map(r => r.id);
-  tbl.innerHTML = rows.map((r, i) => {
+  // Render dibatasi bertahap — orderHistFilteredIds (dipakai Export/Cetak/Share) tetap
+  // nyimpen SEMUA id yang cocok filter, cuma tampilan tabelnya yang dipotong.
+  const orderLimit = getRenderLimit('orderHist');
+  const orderShown = rows.slice(0, orderLimit);
+  tbl.innerHTML = orderShown.map((r, i) => {
     const statusMap = { pending: ['Belum Dikirim','low'], dikirim: ['Sudah Dikirim (Ditunggu)','in'], sebagian: ['Sebagian Datang','warn'], selesai: ['Selesai','ok'] };
     const st = statusMap[r.status] || statusMap.pending;
     const prog = orderProgress(r);
@@ -10196,7 +10265,7 @@ function renderOrderHist() {
         <button class="btn danger" style="padding:3px 8px;font-size:11px;" onclick="deleteOrder('${r.id}')">🗑</button>
       </td>
     </tr>`;
-  }).join('');
+  }).join('') + loadMoreRowHtml('orderHist', 'renderOrderHist', rows.length, orderShown.length, 10);
 }
 
 let orderDetailId = null;
@@ -10423,7 +10492,7 @@ function exportOrderCSV(onlySelected) {
 // waktu beberapa detik — untuk 1 nota biasanya masih keburu, tapi begitu 2 nota atau lebih,
 // izin sentuhannya sudah kedaluwarsa dan HP menolak dengan NotAllowedError ("gagal mengirim").
 // Solusinya: gambar disiapkan dulu, lalu tampilkan tombol — share dipicu sentuhan BARU.
-function tampilkanTombolKirim(files, judul) {
+function tampilkanTombolKirim(files, judul, gagal) {
   let bg = document.getElementById('siapKirimBg');
   if (!bg) {
     bg = document.createElement('div');
@@ -10441,8 +10510,13 @@ function tampilkanTombolKirim(files, judul) {
       </div>`;
     document.body.appendChild(bg);
   }
-  document.getElementById('siapKirimInfo').textContent =
-    `${files.length} gambar nota sudah dibuat. Tekan tombol di bawah untuk membuka menu berbagi.`;
+  // FIX BUG: kalau ada nota yang gagal dibuat gambarnya, info-nya sekarang JELAS nunjukin
+  // ada yang kurang — sebelumnya cuma nampilin jumlah gambar yang BERHASIL doang, jadi kalau
+  // misal 11 nota diminta tapi cuma 10 berhasil, teksnya bilang "10 gambar nota sudah dibuat"
+  // TANPA nyebut yang ke-11 gagal — user bisa gak sadar ada yang kelewat/ilang.
+  document.getElementById('siapKirimInfo').innerHTML = gagal > 0
+    ? `${files.length} gambar nota berhasil dibuat. <span style="color:var(--danger);font-weight:600;">⚠️ ${gagal} nota GAGAL dibuat</span> (gak ikut di sini) — coba lagi kalau butuh semuanya.`
+    : `${files.length} gambar nota sudah dibuat. Tekan tombol di bawah untuk membuka menu berbagi.`;
   const prat = document.getElementById('siapKirimPratinjau');
   prat.innerHTML = '';
   files.forEach(f => {
@@ -10494,6 +10568,12 @@ async function kirimNotaJadiTrxListGenerik(rows, blockFn, judul, fileLabel) {
   showProgress(`Menyiapkan nota... 0/${rows.length}`);
   try {
     const files = [];
+    // FIX BUG: dulu kalau canvas.toBlob() gagal buat 1 nota di tengah proses banyak nota
+    // sekaligus (bisa kejadian pas HP lagi berat/memori penuh), nota itu DIAM-DIAM DILEWATI
+    // tanpa pemberitahuan apa-apa — user cuma lihat jumlah gambar akhir lebih sedikit dari
+    // yang di-centang/diminta, tanpa tau nota mana yang gagal atau kenapa. Sekarang dihitung
+    // & ditandai jelas ke user kalau ada yang gagal, biar gak bingung "kok kurang 1".
+    let gagal = 0;
     for (let i = 0; i < rows.length; i++) {
       showProgress(`Membuat nota... ${i+1}/${rows.length}`);
       const holder = document.createElement('div');
@@ -10505,10 +10585,14 @@ async function kirimNotaJadiTrxListGenerik(rows, blockFn, judul, fileLabel) {
       document.body.removeChild(holder);
       const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
       if (blob) files.push(new File([blob], `${fileLabel}-${i+1}.png`, { type: 'image/png' }));
+      else gagal++;
     }
     t.classList.remove('show');
     if (!files.length) { showToast('Gagal membuat gambar nota', true); return; }
-    tampilkanTombolKirim(files, judul);
+    if (gagal > 0) {
+      showToast(`⚠️ ${gagal} dari ${rows.length} nota GAGAL dibuat gambarnya (coba lagi kalau perlu semuanya) — ${files.length} nota lainnya tetap siap dikirim.`, true);
+    }
+    tampilkanTombolKirim(files, judul, gagal);
   } catch(e) {
     t.classList.remove('show');
     if (e.name !== 'AbortError') showToast('Gagal membuat nota: ' + pesanErrorRamah(e), true);
@@ -10621,14 +10705,19 @@ function updateKlRowQty(idx, val, subtotalElId) {
   klRows[idx].qty = Number(val);
   const priceField = priceFieldForTipe();
   const r = klRows[idx];
-  const item = itemsCache.find(i => i.id === r.itemId);
+  // Dulu tiap baris nyari barangnya sendiri-sendiri dari 2092 barang (itemsCache.find di
+  // dalam forEach) — kalau nota ada banyak baris, ini keulang kuadratik TIAP 1 digit diketik
+  // (nyari SEMUA baris lagi, bukan cuma baris yang lagi diketik). Sekarang barang di-index
+  // sekali jadi Map, baru dipakai buat semua baris — jauh lebih ringan.
+  const itemMap = new Map(itemsCache.map(i => [i.id, i]));
+  const item = itemMap.get(r.itemId);
   const harga = hargaEfektifKlRow(r, item, priceField);
   const subtotal = harga * (Number(r.qty) || 0);
   const subtotalEl = document.getElementById(subtotalElId);
   if (subtotalEl) subtotalEl.value = rupiah(subtotal);
   let total = 0;
   klRows.forEach(rr => {
-    const it = itemsCache.find(i => i.id === rr.itemId);
+    const it = itemMap.get(rr.itemId);
     const h = hargaEfektifKlRow(rr, it, priceField);
     total += h * (Number(rr.qty) || 0);
   });
@@ -10643,14 +10732,15 @@ function updateKlRowHargaManual(idx, val, subtotalElId) {
   klRows[idx].hargaManual = (val === '' || val === null) ? null : Number(val);
   const priceField = priceFieldForTipe();
   const r = klRows[idx];
-  const item = itemsCache.find(i => i.id === r.itemId);
+  const itemMap = new Map(itemsCache.map(i => [i.id, i]));
+  const item = itemMap.get(r.itemId);
   const harga = hargaEfektifKlRow(r, item, priceField);
   const subtotal = harga * (Number(r.qty) || 0);
   const subtotalEl = document.getElementById(subtotalElId);
   if (subtotalEl) subtotalEl.value = rupiah(subtotal);
   let total = 0;
   klRows.forEach(rr => {
-    const it = itemsCache.find(i => i.id === rr.itemId);
+    const it = itemMap.get(rr.itemId);
     const h = hargaEfektifKlRow(rr, it, priceField);
     total += h * (Number(rr.qty) || 0);
   });
@@ -11843,16 +11933,24 @@ async function kirimNotaJadiTrxList(rows) {
   showProgress(`Menyiapkan nota... 0/${rows.length}`);
   try {
     const files = [];
+    // FIX BUG: sama kayak yang dibenerin di kirimNotaJadiTrxListGenerik (Stok Masuk/Order/
+    // Klosingan) — dulu nota yang gagal dibuat gambarnya (blob null) DIAM-DIAM dilewati tanpa
+    // pemberitahuan. Sekarang dihitung & ditandai jelas ke user kalau ada yang gagal.
+    let gagal = 0;
     for (let i = 0; i < rows.length; i++) {
       showProgress(`Membuat nota... ${i+1}/${rows.length}`);
       const blob = await notaTrxToImageBlob(rows[i]);
       if (blob) files.push(new File([blob], `nota-keluar-${nomorNota(rows[i]).replace(/\//g,'-')}.png`, { type: 'image/png' }));
+      else gagal++;
     }
     t.classList.remove('show');
     if (!files.length) { showToast('Gagal membuat gambar nota', true); return; }
+    if (gagal > 0) {
+      showToast(`⚠️ ${gagal} dari ${rows.length} nota GAGAL dibuat gambarnya (coba lagi kalau perlu semuanya) — ${files.length} nota lainnya tetap siap dikirim.`, true);
+    }
     // Lihat catatan di tampilkanTombolKirim(): share harus dipicu sentuhan baru, kalau
     // dipanggil langsung di sini HP menolaknya begitu notanya lebih dari satu.
-    tampilkanTombolKirim(files, 'Nota Barang Keluar');
+    tampilkanTombolKirim(files, 'Nota Barang Keluar', gagal);
   } catch(e) {
     t.classList.remove('show');
     if (e.name !== 'AbortError') showToast('Gagal membuat nota: ' + pesanErrorRamah(e), true);
@@ -12117,7 +12215,12 @@ function renderBekas() {
     btnKirim.style.display = (gu && currentCabangId !== gu.id) ? '' : 'none';
   }
 
-  tbl.innerHTML = rows.length ? rows.map(r => `
+  // Render dibatasi bertahap (pola sama kayak Barang Masuk/Keluar) — bekasCache bisa numpuk
+  // banyak tahun ke tahun, render semua sekaligus ke tabel bikin lag pas ngetik di kolom Cari.
+  const bekasLimit = getRenderLimit('bekas');
+  const bekasTotalMatch = rows.length;
+  const bekasShown = rows.slice(0, bekasLimit);
+  tbl.innerHTML = (bekasShown.length ? bekasShown.map(r => `
     <tr>
       <td><input type="checkbox" class="bekas-select-cb" value="${r.id}" ${getSelectionSet('bekas').has(r.id)?'checked':''} onchange="toggleSelectOneGeneric('bekas','${r.id}',this.checked)"></td>
       <td>${fmtDate(r.tanggal)}</td><td><span class="mono" style="font-weight:600;color:var(--accent);">${r.kode||'-'}</span> ${r.nama}${r.fotoBase64 ? ` <button class="btn ghost" style="padding:2px 6px;font-size:10px;" onclick="lihatFotoBekas('${r.id}')" title="Lihat foto">📷</button>` : ''}</td><td>${r.qty}</td>
@@ -12151,7 +12254,7 @@ function renderBekas() {
         ${r.kondisi === 'Bisa Diperbaiki' && r.statusGudang !== 'Dipakai Ulang' ? `<button class="btn" style="padding:4px 8px;font-size:12px;background:#2E7D5B;" onclick="masukkanBekasKeStok('${r.id}')">♻️ Sudah Diperbaiki, Masukkan ke Stok</button>` : ''}
       </td>
     </tr>
-  `).join('') : '<tr><td colspan="10" class="empty">Belum ada barang bekas tercatat</td></tr>';
+  `).join('') : '<tr><td colspan="10" class="empty">Belum ada barang bekas tercatat</td></tr>') + loadMoreRowHtml('bekas', 'renderBekas', bekasTotalMatch, bekasShown.length, 10);
 
   const diGudang = bekasCache.filter(r => r.statusGudang === 'Di Gudang');
   document.getElementById('bekasStatGantung').textContent = bekasCache.filter(r => r.statusGudang === 'Gantung').length;
@@ -13062,12 +13165,19 @@ function renderLaporan() {
   const tbl = document.getElementById('lapTable');
   const tipeLabelMap = { masuk: 'Masuk', keluar: 'Keluar', mutasi: 'Mutasi', returMasuk: 'Retur Masuk', returKeluar: 'Retur Keluar', koreksi: 'Koreksi Stok' };
   const tipePillMap = { masuk: 'in', keluar: 'out', returMasuk: 'low', returKeluar: 'low', koreksi: 'role-admin' };
-  tbl.innerHTML = all.length ? all.map((r, idx) => `
+  // Render ke DOM DIBATASI (pola sama kayak Master Barang) — kalau rentang tanggal lebar atau
+  // mode gabungan semua cabang, "all" bisa ribuan baris; nge-render semuanya sekaligus ke tabel
+  // itu yang bikin HP/Chrome lag parah pas ngetik di kolom Cari. Total/rekap di bawah tetap
+  // dihitung dari SEMUA baris (all), cuma tampilan tabelnya yang dipotong bertahap.
+  const lapLimit = getRenderLimit('laporan');
+  const lapTotalMatch = all.length;
+  const lapShown = all.slice(0, lapLimit);
+  tbl.innerHTML = (lapShown.length ? lapShown.map((r, idx) => `
     <tr>
       <td><input type="checkbox" class="lap-select-cb" value="${r.srcId}" ${getSelectionSet('laporan').has(r.srcId)?'checked':''} onchange="toggleSelectOneGeneric('laporan','${r.srcId}',this.checked)"></td>
       <td>${fmtDate(r.tanggal)}</td><td>${r.cabang||'-'}</td><td><span class="pill ${tipePillMap[r.tipe]||''}">${tipeLabelMap[r.tipe]||r.tipe}</span></td>
       <td class="mono">${r.kode}</td><td>${r.nama}</td><td>${r.qty}</td><td>${r.nilai?rupiah(r.nilai):'-'}</td><td>${r.ket||'-'}</td><td>${r.user||'-'}</td></tr>
-  `).join('') : '<tr><td colspan="10" class="empty">Tidak ada data pada filter ini</td></tr>';
+  `).join('') : '<tr><td colspan="10" class="empty">Tidak ada data pada filter ini</td></tr>') + loadMoreRowHtml('laporan', 'renderLaporan', lapTotalMatch, lapShown.length, 10);
 
   const totalMasuk = all.filter(r => r.tipe === 'masuk').reduce((s,r) => s + (r.nilai||0), 0);
   const rowsKeluar = all.filter(r => r.tipe === 'keluar');
@@ -15034,7 +15144,11 @@ function renderReturMasukHist() {
   rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('returMasukSortOrder'));
   window._returMasukFilteredRows = rows;
   
-  document.getElementById('returMasukHistTable').innerHTML = rows.length ? rows.map((r, idx) => `
+  // Render dibatasi bertahap — riwayat retur bisa numpuk banyak dari tahun ke tahun.
+  const retMasukLimit = getRenderLimit('returMasukHist');
+  const retMasukTotalMatch = rows.length;
+  const retMasukShown = rows.slice(0, retMasukLimit);
+  document.getElementById('returMasukHistTable').innerHTML = (retMasukShown.length ? retMasukShown.map((r, idx) => `
     <tr>
       <td><input type="checkbox" class="retur-masuk-select-cb" value="${r.id}" ${getSelectionSet('returMasuk').has(r.id)?'checked':''} onchange="toggleSelectOneGeneric('returMasuk','${r.id}',this.checked)"></td>
       <td>${idx+1}</td>
@@ -15050,7 +15164,7 @@ function renderReturMasukHist() {
         <button class="btn danger" style="padding:3px 7px;font-size:11px;margin-left:2px;" onclick="deleteReturMasuk('${r.id}')">🗑</button>
       </td>
     </tr>
-  `).join('') : '<tr><td colspan="9" class="empty">Belum ada retur / tidak ditemukan</td></tr>';
+  `).join('') : '<tr><td colspan="9" class="empty">Belum ada retur / tidak ditemukan</td></tr>') + loadMoreRowHtml('returMasukHist', 'renderReturMasukHist', retMasukTotalMatch, retMasukShown.length, 9);
 }
 
 function toggleReturMasukSelectAll(checked) {
@@ -15125,12 +15239,17 @@ async function approveReturMasuk(id, skipConfirm) {
       const returSnap = await tx.get(returRefRM2);
       if (!returSnap.exists) throw new Error('Retur tidak ditemukan');
       if ((returSnap.data().status||'pending') === 'selesai') throw new Error('Retur ini udah pernah di-approve sebelumnya (kemungkinan diklik dobel) — dibatalkan biar stok gak kepotong 2x.');
-      // PENTING: potong stok pakai FIFO batch (bukan cuma kurangin saldo doang) — sama pola
-      // kayak Barang Keluar, biar saldo & batchesMasuk tetap sinkron.
+      // PENTING: potong stok dari batch SPESIFIK yang diretur (retur.refTransaksiId = trxId
+      // batch itu, karena batch dibuat pakai id transaksi Masuk aslinya) — BUKAN FIFO umum.
+      // Kalau barang ini punya lebih dari 1 batch (misal ada stok lama harga beda + batch
+      // yang lagi diretur ini), FIFO umum bisa motong batch yang SALAH (yang tertua, bukan
+      // yang beneran mau dikembalikan ke supplier) — bikin modal/HPP jadi gak akurat.
+      // Fallback ke FIFO tetap ada (dalam kurangiBatchSpesifik) kalau batch aslinya udah gak
+      // ketemu/gak cukup (misal udah kepake duluan sebagian di Stok Keluar lain).
       const snap = await tx.get(itemRefRM);
       if (!snap.exists) throw new Error('Item tidak ditemukan');
       itemFresh = { id: snap.id, ...snap.data() };
-      const batches = kurangiBatchFIFO(itemFresh, retur.qty);
+      const batches = kurangiBatchSpesifik(itemFresh, retur.refTransaksiId, retur.qty);
       const hargaAktif = hargaAktifDariBatches(batches);
       tx.update(itemRefRM, {
         saldo: (itemFresh.saldo||0) - retur.qty, batchesMasuk: batches,
@@ -15402,7 +15521,11 @@ function renderReturKeluarHist() {
   rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('returKeluarSortOrder'));
   window._returKeluarFilteredRows = rows;
   
-  document.getElementById('returKeluarHistTable').innerHTML = rows.length ? rows.map((r, idx) => `
+  // Render dibatasi bertahap — sama alasannya kayak Retur Masuk.
+  const retKeluarLimit = getRenderLimit('returKeluarHist');
+  const retKeluarTotalMatch = rows.length;
+  const retKeluarShown = rows.slice(0, retKeluarLimit);
+  document.getElementById('returKeluarHistTable').innerHTML = (retKeluarShown.length ? retKeluarShown.map((r, idx) => `
     <tr>
       <td><input type="checkbox" class="retur-keluar-select-cb" value="${r.id}" ${getSelectionSet('returKeluar').has(r.id)?'checked':''} onchange="toggleSelectOneGeneric('returKeluar','${r.id}',this.checked)"></td>
       <td>${idx+1}</td>
@@ -15420,7 +15543,7 @@ function renderReturKeluarHist() {
         <button class="btn danger" style="padding:3px 7px;font-size:11px;margin-left:2px;" onclick="deleteReturKeluar('${r.id}')">🗑</button>
       </td>
     </tr>
-  `).join('') : '<tr><td colspan="11" class="empty">Belum ada retur / tidak ditemukan</td></tr>';
+  `).join('') : '<tr><td colspan="11" class="empty">Belum ada retur / tidak ditemukan</td></tr>') + loadMoreRowHtml('returKeluarHist', 'renderReturKeluarHist', retKeluarTotalMatch, retKeluarShown.length, 11);
 }
 
 function toggleReturKeluarSelectAll(checked) {
@@ -15780,7 +15903,11 @@ function renderKoreksiHist() {
   rows = sortTanggalTerbaru(rows, 'tanggal', null, getSortArahTanggal('koreksiSortOrder'));
   window._koreksiFilteredRows = rows;
   
-  document.getElementById('koreksiHistTable').innerHTML = rows.length ? rows.map((k, idx) => `
+  // Render dibatasi bertahap — sama alasannya kayak riwayat lain.
+  const koreksiLimit = getRenderLimit('koreksiHist');
+  const koreksiTotalMatch = rows.length;
+  const koreksiShown = rows.slice(0, koreksiLimit);
+  document.getElementById('koreksiHistTable').innerHTML = (koreksiShown.length ? koreksiShown.map((k, idx) => `
     <tr>
       <td><input type="checkbox" class="koreksi-select-cb" value="${k.id}" ${getSelectionSet('koreksi').has(k.id)?'checked':''} onchange="toggleSelectOneGeneric('koreksi','${k.id}',this.checked)"></td>
       <td>${idx+1}</td>
@@ -15808,7 +15935,7 @@ function renderKoreksiHist() {
         <button class="btn danger" style="padding:3px 7px;font-size:11px;${k.status==='pending'?'margin-left:2px;':''};" onclick="deleteKoreksiStok('${k.id}')">🗑</button>
       </td>
     </tr>
-  `).join('') : '<tr><td colspan="10" class="empty">Belum ada koreksi / tidak ditemukan</td></tr>';
+  `).join('') : '<tr><td colspan="10" class="empty">Belum ada koreksi / tidak ditemukan</td></tr>') + loadMoreRowHtml('koreksiHist', 'renderKoreksiHist', koreksiTotalMatch, koreksiShown.length, 10);
 }
 
 function toggleKoreksiSelectAll(checked) {
@@ -17233,8 +17360,11 @@ function updateSvRowQtySilent(idx, val, subtotalElId) {
 function updateSvRowStatusBekas(idx, val) { svRows[idx].statusBekas = val; }
 function updateSvTotalDisplay() {
   const pf = svPriceField();
+  // Sama kayak Stok Keluar: dulu tiap baris nyari barangnya sendiri dari 2092 barang tiap
+  // ketik qty. Sekarang barang di-index sekali jadi Map dulu, baru dipakai buat semua baris.
+  const itemMap = new Map(itemsCache.map(i => [i.id, i]));
   const total = svRows.reduce((s, r) => {
-    const item = itemsCache.find(i => i.id === r.itemId);
+    const item = itemMap.get(r.itemId);
     if (!item) return s;
     const harga = item[pf] || 0;
     return s + harga * (Number(r.qty) || 0);
@@ -18435,6 +18565,7 @@ async function saveOcDiterimaSebagian() {
   const _key = `saveOcDiterimaSebagian_${o.id}`;
   if (_cekLagiDiproses(_key)) return;
   try {
+  if (await isPeriodeTerkunci(o.tanggal)) { showToast('Order ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau konfirmasi terima.', true); _selesaiDiproses(_key); return; }
   const items = o.items || [];
   const inputan = items.map((it, idx) => {
     const el = document.getElementById(`ocDetIn_${idx}`);
@@ -18472,8 +18603,13 @@ async function saveOcDiterimaSebagian() {
       const rencana = [];
       for (const it of inputanFresh) {
         if (it.diterimaSekarang <= 0) { rencana.push(null); continue; }
-        let itemCabang = itemsCache.find(x => x.kode === it.kode && x.cabangId === currentCabangId);
-        const itemSumber = guItemsCache.find(x => x.kode === it.kode);
+        // FIX BUG: sama kayak yang sudah dibenerin di konfirmasiTerimaOc (terima PENUH) — ini
+        // alur terima SEBAGIAN sempat ketinggalan masih pakai pencocokan kode PERSIS (case-
+        // sensitive), padahal beda spasi/huruf besar-kecil dikit aja bisa bikin barang yang
+        // SEBENARNYA sudah ada di cabang ini gak ketemu, terus malah dibikinkan barang BARU
+        // (duplikat) alih-alih nambah stok ke barang yang sudah ada.
+        let itemCabang = itemsCache.find(x => kodeSama(x.kode, it.kode) && x.cabangId === currentCabangId);
+        const itemSumber = guItemsCache.find(x => kodeSama(x.kode, it.kode));
         const infoBatchBaru = {
           hargaDasar: itemSumber?.hargaDasar||0, hargaPPN: itemSumber?.hargaPPN||0,
           hargaKI: itemSumber?.hargaKI||0, hargaKSI: itemSumber?.hargaKSI||0, hargaGabungan: itemSumber?.hargaGabungan||0,
@@ -18624,7 +18760,11 @@ function renderOrderCabangHist() {
   const selAll = document.getElementById('ocHistSelectAll');
   if (selAll) selAll.checked = rows.length > 0 && rows.every(o => getSelectionSet('ocHist').has(o.id));
   const statusLabel = { pending: 'Menunggu Approve', dikirim: 'Dikirim (Ditunggu Cabang)', sebagian: 'Diterima Sebagian', diterima: 'Selesai Diterima', dibatalkan: 'Dibatalkan', ditolak: 'Ditolak' };
-  tbl.innerHTML = rows.length ? rows.map((o, idx) => `
+  // Render dibatasi bertahap — biar konsisten & aman kalau riwayat order antar cabang ini
+  // numpuk banyak dari tahun ke tahun.
+  const ocLimit = getRenderLimit('ocHist');
+  const ocShown = rows.slice(0, ocLimit);
+  tbl.innerHTML = (ocShown.length ? ocShown.map((o, idx) => `
     <tr>
       <td><input type="checkbox" ${getSelectionSet('ocHist').has(o.id)?'checked':''} onchange="toggleSelectOneGeneric('ocHist','${o.id}',this.checked)"></td>
       <td>${idx+1}</td>
@@ -18635,7 +18775,7 @@ function renderOrderCabangHist() {
       <td>${badgePerkiraanVsAktual(o)}</td>
       <td>${o.status === 'dikirim' ? `<button class="btn accent" style="padding:4px 10px;font-size:11px;" onclick="openOcDetailModal('${o.id}')">✅ Konfirmasi Diterima</button> <button class="btn danger" style="padding:4px 10px;font-size:11px;" onclick="batalkanOcDikirim('${o.id}')">✕ Batal</button>` : (o.status === 'sebagian' ? `<button class="btn accent" style="padding:4px 10px;font-size:11px;" onclick="openOcDetailModal('${o.id}')">✅ Lanjut Terima Sisa</button>` : '-')}</td>
     </tr>
-  `).join('') : '<tr><td colspan="8" class="empty">Belum ada order dari cabang ini</td></tr>';
+  `).join('') : '<tr><td colspan="8" class="empty">Belum ada order dari cabang ini</td></tr>') + loadMoreRowHtml('ocHist', 'renderOrderCabangHist', rows.length, ocShown.length, 8);
 }
 
 function gatherOcHistTerpilih() {
@@ -18709,6 +18849,7 @@ async function approveKirimOc(orderId) {
   const o = orderCabangCache.find(x => x.id === orderId);
   if (!o) return;
   if (o.status && o.status !== 'menunggu' && o.status !== 'pending') { showToast('Order ini udah pernah diproses sebelumnya (status: ' + o.status + ').', true); return; }
+  if (await isPeriodeTerkunci(o.tanggal)) { showToast('Order ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau approve.', true); return; }
   // FIX BUG: sebelumnya kalau barang gak ketemu di Master Stok Gudang Utama (mismatch kode),
   // sistem DIAM-DIAM MELEWATI barang itu (stok GU gak kepotong, gak ada peringatan sama
   // sekali) — sementara di sisi cabang penerima, barang yang gak ketemu malah OTOMATIS DIBIKIN
@@ -18785,6 +18926,7 @@ async function konfirmasiTerimaOc(orderId) {
   const o = orderCabangCache.find(x => x.id === orderId);
   if (!o) return;
   if (o.status === 'diterima') { showToast('Order ini udah pernah dikonfirmasi terima sebelumnya.', true); return; }
+  if (await isPeriodeTerkunci(o.tanggal)) { showToast('Order ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau konfirmasi terima.', true); return; }
   if (!await customConfirm('Konfirmasi barang sudah diterima fisik di cabang ini? Stok cabang akan bertambah otomatis.')) return;
   try {
     const orderRefTerima = db.collection('orderCabang').doc(orderId);
@@ -18963,6 +19105,7 @@ async function submitKirimLangsung() {
   const ket = document.getElementById('pushKet').value.trim();
   const validRows = pushRows.filter(r => r.itemId && Number(r.qty) > 0);
   if (!validRows.length) { showToast('Tambahkan minimal 1 barang dengan qty valid', true); return; }
+  if (await isPeriodeTerkunci(tanggal)) { showToast('Tanggal kirim ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau kirim.', true); return; }
 
   for (const r of validRows) {
     const itemGU = itemsCache.find(i => i.id === r.itemId && i.cabangId === currentCabangId);
@@ -18976,35 +19119,53 @@ async function submitKirimLangsung() {
     for (const r of validRows) {
       const item = itemsCache.find(i => i.id === r.itemId);
       if (!item) throw new Error(`Barang "${r.namaTampil||r.itemId}" sudah tidak ada di Master Barang — coba refresh halaman dan pilih ulang.`);
-      items.push({ kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() });
-      // PENTING: potong stok pakai FIFO batch (bukan cuma kurangin saldo doang) — kalau enggak,
-      // saldo & total qty di batchesMasuk jadi gak sinkron, sama kasusnya kayak bug yang udah
-      // dibenerin di Barang Masuk/Keluar/Koreksi Stok. Pakai Firestore transaction per barang
-      // (bukan db.batch() kayak sebelumnya) karena butuh BACA data item paling baru dulu sebelum
-      // ngitung batch-nya, gak bisa dilakuin dalam 1 batch write biasa.
-      const itemRefPush = db.collection('items').doc(item.id);
-      await db.runTransaction(async (tx) => {
-        const snap = await tx.get(itemRefPush);
-        if (!snap.exists) return;
-        const itemFresh = { id: snap.id, ...snap.data() };
-        const batches = kurangiBatchFIFO(itemFresh, Number(r.qty));
-        const hargaAktif = hargaAktifDariBatches(batches);
-        tx.update(itemRefPush, {
-          saldo: (itemFresh.saldo||0) - Number(r.qty), batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
-          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
-        });
-      });
+      items.push({ itemId: item.id, kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() });
     }
+    // FIX BUG: dulu tiap barang dipotong stoknya pakai Firestore transaction TERPISAH
+    // satu-satu di dalam loop, baru di akhir loop baru dibikin dokumen orderCabang (catatan
+    // kiriman buat cabang tujuan konfirmasi terima). Kalau koneksi putus di TENGAH loop
+    // (misal barang ke-1 & ke-2 udah kepotong stoknya, tapi belum sampai bikin dokumen
+    // orderCabang di akhir), stok GU HILANG TANPA JEJAK — gak ada catatan kiriman buat cabang
+    // tujuan konfirmasi terima, padahal stoknya udah kepotong beneran. Sekarang semua
+    // pemotongan stok + pembuatan dokumen kiriman digabung jadi SATU transaction — sama
+    // pola kayak fix approveKeluar/approveMasuk, biar kejadian "semua berubah bareng, atau
+    // gak ada satupun yang berubah" kalau ada kegagalan di tengah jalan.
     const orderRef = db.collection('orderCabang').doc();
-    await orderRef.set({
-      tanggal, keterangan: ket, items, totalItem: items.length,
-      cabangAsalId: cabangTujuanId, cabangAsalNama: cabangTujuanObj.nama,
-      cabangTujuanId: gu.id, cabangTujuanNama: gu.nama,
-      status: 'dikirim', sumber: 'push',
-      tanggalPerkiraan: document.getElementById('pushTanggalPerkiraan')?.value || null,
-      user: currentUserData.name, createdAt: new Date().toISOString(),
-      approvedBy: currentUserData.name, approvedAt: new Date().toISOString()
+    await db.runTransaction(async (tx) => {
+      // --- TAHAP BACA (semua get() duluan, sesuai aturan Firestore transaction) ---
+      const itemSnaps = [];
+      for (const it of items) itemSnaps.push(await tx.get(db.collection('items').doc(it.itemId)));
+
+      // --- TAHAP HITUNG (di memori) ---
+      const itemWrites = [];
+      for (let i = 0; i < items.length; i++) {
+        const snap = itemSnaps[i];
+        if (!snap.exists) throw new Error(`Barang "${items[i].nama||items[i].kode}" gak ketemu lagi di Master Stok (kemungkinan diubah/dihapus barusan) — kirim dibatalkan, gak ada stok yang berubah.`);
+        const itemFresh = { id: snap.id, ...snap.data() };
+        const batches = kurangiBatchFIFO(itemFresh, items[i].qty);
+        const hargaAktif = hargaAktifDariBatches(batches);
+        itemWrites.push({
+          ref: db.collection('items').doc(items[i].itemId),
+          data: {
+            saldo: (itemFresh.saldo||0) - items[i].qty, batchesMasuk: batches,
+            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+            ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
+          }
+        });
+      }
+
+      // --- TAHAP TULIS (semua sekaligus, dalam transaction yang sama) ---
+      itemWrites.forEach(w => tx.update(w.ref, w.data));
+      const itemsUntukOrder = items.map(({ itemId, ...simpan }) => simpan);
+      tx.set(orderRef, {
+        tanggal, keterangan: ket, items: itemsUntukOrder, totalItem: itemsUntukOrder.length,
+        cabangAsalId: cabangTujuanId, cabangAsalNama: cabangTujuanObj.nama,
+        cabangTujuanId: gu.id, cabangTujuanNama: gu.nama,
+        status: 'dikirim', sumber: 'push',
+        tanggalPerkiraan: document.getElementById('pushTanggalPerkiraan')?.value || null,
+        user: currentUserData.name, createdAt: new Date().toISOString(),
+        approvedBy: currentUserData.name, approvedAt: new Date().toISOString()
+      });
     });
     logActivity('ordercabang', 'Kirim Langsung ke Cabang', `Ke ${cabangTujuanObj.nama} - ${items.length} item (tanpa permintaan)`);
     showToast('Barang dikirim ke ' + cabangTujuanObj.nama + ', menunggu konfirmasi terima');
@@ -19101,6 +19262,7 @@ async function submitReturKeGudangUtama() {
   const validRows = returOcRows.filter(r => r.itemId && Number(r.qty) > 0);
   if (!validRows.length) { showToast('Tambahkan minimal 1 barang dengan qty valid', true); return; }
   if (!ket) { showToast('Isi alasan/keterangan retur dulu', true); return; }
+  if (await isPeriodeTerkunci(tanggal)) { showToast('Tanggal retur ini di periode yang udah ditutup (Klosingan Bulanan). Buka ulang closing-nya dulu kalau mau retur.', true); return; }
 
   for (const r of validRows) {
     const item = itemsCache.find(i => i.id === r.itemId && i.cabangId === currentCabangId);
@@ -19114,32 +19276,46 @@ async function submitReturKeGudangUtama() {
     for (const r of validRows) {
       const item = itemsCache.find(i => i.id === r.itemId);
       if (!item) throw new Error(`Barang "${r.namaTampil||r.itemId}" sudah tidak ada di Master Barang — coba refresh halaman dan pilih ulang.`);
-      items.push({ kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() });
-      // Sama kayak Kirim Langsung — potong stok pakai FIFO batch, transaction per barang biar
-      // saldo & batchesMasuk tetap sinkron.
-      const itemRefRetur = db.collection('items').doc(item.id);
-      await db.runTransaction(async (tx) => {
-        const snap = await tx.get(itemRefRetur);
-        if (!snap.exists) return;
-        const itemFresh = { id: snap.id, ...snap.data() };
-        const batches = kurangiBatchFIFO(itemFresh, Number(r.qty));
-        const hargaAktif = hargaAktifDariBatches(batches);
-        tx.update(itemRefRetur, {
-          saldo: (itemFresh.saldo||0) - Number(r.qty), batchesMasuk: batches,
-          hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
-          ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
-        });
-      });
+      items.push({ itemId: item.id, kode: item.kode, nama: item.nama, satuan: item.satuan||'', qty: Number(r.qty), diterima: 0, catatan: (r.catatan||'').trim() });
     }
+    // FIX BUG: sama kayak fix di submitKirimLangsung — dulu tiap barang dipotong stoknya
+    // pakai transaction TERPISAH satu-satu, baru dokumen orderCabang (catatan retur buat GU
+    // konfirmasi terima) dibikin di akhir loop. Kalau koneksi putus di tengah, stok cabang
+    // ini bisa hilang tanpa jejak (udah kepotong tapi GU gak pernah dapet catatan returnya).
+    // Sekarang semua potongan stok + pembuatan dokumen retur digabung jadi SATU transaction.
     const orderRef = db.collection('orderCabang').doc();
-    await orderRef.set({
-      tanggal, keterangan: ket, items, totalItem: items.length,
-      cabangAsalId: gu.id, cabangAsalNama: gu.nama,
-      cabangTujuanId: currentCabangId, cabangTujuanNama: cabangNama(currentCabangId),
-      status: 'dikirim', sumber: 'retur',
-      tanggalPerkiraan: document.getElementById('returOcTanggalPerkiraan')?.value || null,
-      user: currentUserData.name, createdAt: new Date().toISOString(),
-      approvedBy: currentUserData.name, approvedAt: new Date().toISOString()
+    await db.runTransaction(async (tx) => {
+      const itemSnaps = [];
+      for (const it of items) itemSnaps.push(await tx.get(db.collection('items').doc(it.itemId)));
+
+      const itemWrites = [];
+      for (let i = 0; i < items.length; i++) {
+        const snap = itemSnaps[i];
+        if (!snap.exists) throw new Error(`Barang "${items[i].nama||items[i].kode}" gak ketemu lagi di Master Stok (kemungkinan diubah/dihapus barusan) — retur dibatalkan, gak ada stok yang berubah.`);
+        const itemFresh = { id: snap.id, ...snap.data() };
+        const batches = kurangiBatchFIFO(itemFresh, items[i].qty);
+        const hargaAktif = hargaAktifDariBatches(batches);
+        itemWrites.push({
+          ref: db.collection('items').doc(items[i].itemId),
+          data: {
+            saldo: (itemFresh.saldo||0) - items[i].qty, batchesMasuk: batches,
+            hargaDasar: hargaAktif.hargaDasar, hargaPPN: hargaAktif.hargaPPN,
+            ...hitungHargaJualOtomatis(hargaAktif.hargaDasar, hargaAktif.hargaPPN, itemFresh.persenGabungan, itemFresh)
+          }
+        });
+      }
+
+      itemWrites.forEach(w => tx.update(w.ref, w.data));
+      const itemsUntukOrder = items.map(({ itemId, ...simpan }) => simpan);
+      tx.set(orderRef, {
+        tanggal, keterangan: ket, items: itemsUntukOrder, totalItem: itemsUntukOrder.length,
+        cabangAsalId: gu.id, cabangAsalNama: gu.nama,
+        cabangTujuanId: currentCabangId, cabangTujuanNama: cabangNama(currentCabangId),
+        status: 'dikirim', sumber: 'retur',
+        tanggalPerkiraan: document.getElementById('returOcTanggalPerkiraan')?.value || null,
+        user: currentUserData.name, createdAt: new Date().toISOString(),
+        approvedBy: currentUserData.name, approvedAt: new Date().toISOString()
+      });
     });
     logActivity('ordercabang', 'Retur ke Gudang Utama', `${items.length} item dari ${cabangNama(currentCabangId)} — ${ket}`);
     showToast('Retur dikirim ke Gudang Utama, menunggu konfirmasi terima');
